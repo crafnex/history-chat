@@ -100,7 +100,7 @@
     </div>
 
     <!-- ================= 0-A. スマホ（iOS / Android）PWAインストール案内モーダル ================= -->
-    <div id="pwa-install-modal" class="hidden absolute inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4">
+    <div id="pwa-install-modal" class="hidden absolute inset-0 z-[70] bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4">
       <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-4.5 border border-slate-200 space-y-3.5">
         <div class="flex items-center justify-between pb-2 border-b border-slate-100">
           <div class="flex items-center gap-2.5">
@@ -154,7 +154,21 @@
               <p class="text-[10px] text-slate-500" id="ob-subtitle">あなた自身の無料枠で安全に偉人と会話できます</p>
             </div>
           </div>
-          <button onclick="closeOnboardingModal()" id="ob-close-btn" class="hidden text-slate-400 hover:text-slate-600 text-lg font-bold px-1.5 py-0.5 rounded-md hover:bg-slate-100">✕</button>
+          <button onclick="closeOnboardingModal()" id="ob-close-btn" class="text-slate-400 hover:text-slate-600 text-lg font-bold px-2 py-0.5 rounded-md hover:bg-slate-100 transition">✕</button>
+        </div>
+
+        <!-- 📲 スマホへのインストール推奨バナー -->
+        <div class="mb-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl p-2.5 flex items-center justify-between shadow-sm shrink-0">
+          <div class="flex items-center gap-2 overflow-hidden mr-2">
+            <span class="text-xl shrink-0">📲</span>
+            <div>
+              <div class="text-xs font-bold leading-tight">まずはスマホにインストール！</div>
+              <div class="text-[10px] text-amber-100 leading-tight">ホーム画面に追加してからゆっくりキーを入力できます</div>
+            </div>
+          </div>
+          <button type="button" onclick="promptPwaInstall()" class="bg-white hover:bg-amber-50 active:scale-95 text-amber-800 font-bold px-2.5 py-1.5 rounded-lg text-xs shadow-xs transition shrink-0 whitespace-nowrap">
+            インストール
+          </button>
         </div>
 
         <!-- ステップ1: AIを選ぶ -->
@@ -232,6 +246,13 @@
         <div id="ob-delete-area" class="hidden pt-2 text-center">
           <button type="button" onclick="deleteCurrentApiKey()" class="text-[11px] text-red-600 hover:text-red-700 underline font-medium">
             🗑️ 登録済みのキーをこの端末から完全削除する
+          </button>
+        </div>
+
+        <!-- あとで設定する（スキップ）ボタン -->
+        <div class="pt-2 text-center border-t border-slate-100 mt-2 shrink-0">
+          <button type="button" onclick="closeOnboardingModal()" class="text-xs text-slate-500 hover:text-slate-800 font-medium py-1 px-3 rounded-lg hover:bg-slate-100 transition inline-flex items-center gap-1">
+            <span>⏩ あとで設定する（まずは画面を見る）</span>
           </button>
         </div>
 
@@ -475,7 +496,7 @@
             <div class="pt-2 border-t border-slate-200/80 flex items-center justify-between text-[11px] text-slate-500">
               <span class="flex items-center gap-1">
                 <span>📱 バージョン:</span>
-                <span id="app-version-badge" class="font-mono font-bold text-slate-700 bg-white border border-slate-200 px-1.5 py-0.5 rounded">v1.0.0</span>
+                <span id="app-version-badge" class="font-mono font-bold text-slate-700 bg-white border border-slate-200 px-1.5 py-0.5 rounded">v1.0.1</span>
               </span>
               <button type="button" onclick="checkForAppUpdate(true)" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 px-2 py-0.5 rounded-md font-medium text-slate-700 shadow-2xs flex items-center gap-1 transition">
                 <span>🔄 最新版を確認</span>
@@ -610,7 +631,7 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.0.0';
+const APP_CLIENT_VERSION = 'v1.0.1';
 let waitingServiceWorker = null;
 let swRegistration = null;
 
@@ -2642,10 +2663,7 @@ function openOnboardingModal(isInitial = false) {
     if (deleteArea) deleteArea.classList.remove("hidden");
   } else {
     currentObProvider = "gemini";
-    if (closeBtn) {
-      if (isInitial) closeBtn.classList.add("hidden");
-      else closeBtn.classList.remove("hidden");
-    }
+    if (closeBtn) closeBtn.classList.remove("hidden");
     if (deleteArea) deleteArea.classList.add("hidden");
   }
 
