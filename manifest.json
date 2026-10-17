@@ -1,0 +1,33 @@
+{
+  "name": "偉人AIグループチャット",
+  "short_name": "偉人チャット",
+  "description": "200人の歴史偉人・賢人・レジェンドと議論できるAIチャットアプリ",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "lang": "ja",
+  "categories": ["education", "entertainment", "productivity"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
