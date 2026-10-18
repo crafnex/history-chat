@@ -18,9 +18,9 @@
   <meta http-equiv="Expires" content="0">
 
   <!-- Icons & Manifest -->
-  <link rel="manifest" href="manifest.json?v=1.2.0">
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/app-icon-192.png?v=1.2.0">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon-v2.png?v=1.2.0">
+  <link rel="manifest" href="manifest.json?v=1.2.1">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/app-icon-192.png?v=1.2.1">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon-v2.png?v=1.2.1">
 
   <script>
     // 🛡️ スマホ等で古いSWキャッシュを即座に更新し、白画面固着を解消するセーフティネット
@@ -561,7 +561,15 @@
                 読込
               </button>
             </div>
-            <p class="text-[9px] text-slate-400">※WEB上の画像URLを貼り付けると自動で端末内に保存されます。</p>
+            <div class="flex items-center justify-between text-[10px] text-slate-500 pt-0.5">
+              <button type="button" onclick="pasteAvatarUrlFromClipboard()" class="text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1 hover:underline">
+                📋 クリップボードから貼付
+              </button>
+              <button type="button" onclick="searchCharacterImageOnGoogle()" class="text-amber-700 hover:text-amber-900 font-semibold flex items-center gap-1 hover:underline">
+                🔍 Google画像検索で探す
+              </button>
+            </div>
+            <p class="text-[9px] text-slate-400 leading-tight">※CORSプロキシ経由であらゆる画像サイトのURLを自動で正方形アイコンに変換します。</p>
           </div>
 
           <!-- パネル3: AIイラスト生成（完全無料） -->
@@ -577,7 +585,12 @@
                 <span id="cc-ai-avatar-text">AIで描画する</span>
               </button>
             </div>
-            <p class="text-[9px] text-slate-400">※名前と肩書からAIが完全無料・自動で正方形アイコンを描画します。</p>
+            <div class="flex items-center justify-between pt-0.5">
+              <p class="text-[9px] text-slate-400">※名前と肩書からAIが完全無料・自動で正方形アイコンを描画します。</p>
+              <button type="button" onclick="generateInstantSymbolAvatar(null, null, null, true)" class="shrink-0 text-[9.5px] text-indigo-600 hover:text-indigo-800 font-bold hover:underline">
+                ⚡ シンボル即時作成
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1170,7 +1183,7 @@
 
   </div>
 
-<script src="character_details.js?v=1.2.0"></script>
+<script src="character_details.js?v=1.2.1"></script>
 <script>
 // ============================================================================
 // 🛡️ API通信モード設定（各自のGroq / Gemini / OpenAIキーによる公式直接通信）
@@ -1235,7 +1248,7 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.2.0';
+const APP_CLIENT_VERSION = 'v1.2.1';
 let waitingServiceWorker = null;
 let swRegistration = null;
 
@@ -3877,49 +3890,216 @@ function setCustomAvatarPreview(dataUrl) {
   }
 }
 
-function loadAvatarFromUrl() {
+// URLクレンジング（Google画像検索リンク等からの実画像URL抽出）
+function cleanImageUrl(rawUrl) {
+  if (!rawUrl) return "";
+  let url = rawUrl.trim();
+  try {
+    if (url.includes("google.") && url.includes("imgurl=")) {
+      const match = url.match(/[?&]imgurl=([^&]+)/);
+      if (match && match[1]) {
+        url = decodeURIComponent(match[1]);
+      }
+    }
+  } catch (e) {
+    console.warn("cleanImageUrl error:", e);
+  }
+  return url;
+}
+
+// ⚡ 0.1秒で即時完成するアニメ調プレミアムシンボルアバター生成（100%確実に美しいアイコンを即時描画）
+function generateInstantSymbolAvatar(name = null, title = null, role = null, notify = false) {
+  const charName = name || (document.getElementById("cc-name-ja") ? document.getElementById("cc-name-ja").value.trim() : "") || "英雄";
+  const charTitle = title || (document.getElementById("cc-title-ja") ? document.getElementById("cc-title-ja").value.trim() : "") || "";
+  const charRole = role || (document.getElementById("cc-role") ? document.getElementById("cc-role").value : "role_passion");
+
+  // 作品・キャラクター・属性に応じた絵文字シンボル＆カラーパレット判定
+  const textCorpus = `${charName} ${charTitle}`.toLowerCase();
+
+  let emoji = "🌟";
+  let color1 = "#6366f1";
+  let color2 = "#ec4899";
+  let borderColor = "#fbbf24";
+
+  if (/悟空|ドラゴンボール|サイヤ|雷|電|ピカチュウ/.test(textCorpus)) {
+    emoji = "⚡"; color1 = "#f97316"; color2 = "#0284c7"; borderColor = "#fde047";
+  } else if (/ルフィ|ワンピース|海賊|麦わら/.test(textCorpus)) {
+    emoji = "👒"; color1 = "#ef4444"; color2 = "#eab308"; borderColor = "#facc15";
+  } else if (/フリーレン|魔法|魔導|エルフ/.test(textCorpus)) {
+    emoji = "🔮"; color1 = "#10b981"; color2 = "#8b5cf6"; borderColor = "#a7f3d0";
+  } else if (/コナン|探偵|推理|推理/.test(textCorpus)) {
+    emoji = "👓"; color1 = "#2563eb"; color2 = "#f59e0b"; borderColor = "#93c5fd";
+  } else if (/ナルト|忍者|忍|火影/.test(textCorpus)) {
+    emoji = "🌀"; color1 = "#ea580c"; color2 = "#0f172a"; borderColor = "#fdba74";
+  } else if (/炭治郎|鬼滅|剣士|侍|武士|信長|龍馬|武蔵|義経/.test(textCorpus)) {
+    emoji = "⚔️"; color1 = "#3b82f6"; color2 = "#1e1b4b"; borderColor = "#e2e8f0";
+  } else if (/ジョブズ|マスク|ゲイツ|テック|it|ai|科学|アインシュタイン/.test(textCorpus)) {
+    emoji = "💡"; color1 = "#06b6d4"; color2 = "#3b82f6"; borderColor = "#67e8f9";
+  } else if (/王|皇帝|カエサル|ナポレオン|始皇帝|覇王/.test(textCorpus)) {
+    emoji = "👑"; color1 = "#7c3aed"; color2 = "#f59e0b"; borderColor = "#fde047";
+  } else if (/芸術|ピカソ|ゴッホ|音楽|ベートーヴェン|バッハ/.test(textCorpus)) {
+    emoji = "🎨"; color1 = "#ec4899"; color2 = "#f59e0b"; borderColor = "#f472b6";
+  } else {
+    // ロールタイプに基づく配色
+    const roleColors = {
+      role_passion: { e: "🔥", c1: "#ef4444", c2: "#f97316", b: "#fde047" },
+      role_mind: { e: "💡", c1: "#06b6d4", c2: "#2563eb", b: "#a5f3fc" },
+      role_lead: { e: "👑", c1: "#8b5cf6", c2: "#d946ef", b: "#fde047" },
+      role_peace: { e: "🤝", c1: "#10b981", c2: "#059669", b: "#6ee7b7" },
+      role_depth: { e: "📜", c1: "#f59e0b", c2: "#b45309", b: "#fef08a" },
+      role_fun: { e: "🎉", c1: "#ec4899", c2: "#f43f5e", b: "#fbcfe8" }
+    };
+    const conf = roleColors[charRole] || roleColors.role_passion;
+    emoji = conf.e; color1 = conf.c1; color2 = conf.c2; borderColor = conf.b;
+  }
+
+  const canvas = document.createElement("canvas");
+  const size = 256;
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+
+  // 1. 円形グラデーション背景
+  const grad = ctx.createLinearGradient(0, 0, size, size);
+  grad.addColorStop(0, color1);
+  grad.addColorStop(1, color2);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, size, size);
+
+  // 2. 光彩ハイライト
+  const radial = ctx.createRadialGradient(80, 80, 10, 80, 80, 140);
+  radial.addColorStop(0, "rgba(255, 255, 255, 0.45)");
+  radial.addColorStop(1, "rgba(255, 255, 255, 0)");
+  ctx.fillStyle = radial;
+  ctx.fillRect(0, 0, size, size);
+
+  // 3. 金枠・ネオンリングボーダー
+  ctx.strokeStyle = borderColor;
+  ctx.lineWidth = 10;
+  ctx.strokeRect(5, 5, size - 10, size - 10);
+
+  // 4. 特大シンボル絵文字
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = "105px sans-serif";
+  ctx.fillText(emoji, size / 2, size / 2 - 12);
+
+  // 5. 下部ネームバッジ（先頭2〜3文字をスタイリッシュに刻印）
+  ctx.fillStyle = "rgba(15, 23, 42, 0.78)";
+  ctx.fillRect(16, size - 56, size - 32, 42);
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(16, size - 56, size - 32, 42);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 21px sans-serif";
+  ctx.fillText(charName.slice(0, 5), size / 2, size - 35);
+
+  const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+  setCustomAvatarPreview(dataUrl);
+
+  if (notify) {
+    alert(`「${charName}」のシンボルアイコンを作成・セットしました！`);
+  }
+  return dataUrl;
+}
+
+// 🔗 WEB画像URL取り込み（CORSフリー高速プロキシ対応）
+async function loadAvatarFromUrl() {
   const input = document.getElementById("cc-avatar-url-input");
-  const url = input ? input.value.trim() : "";
-  if (!url) {
+  const rawUrl = input ? input.value.trim() : "";
+  if (!rawUrl) {
     alert("画像のURLを入力してください（例: https://example.com/image.jpg）");
     return;
   }
 
-  const img = new Image();
-  img.crossOrigin = "anonymous";
-  img.onload = () => {
-    try {
-      const canvas = document.createElement("canvas");
-      const targetSize = 256;
-      canvas.width = targetSize;
-      canvas.height = targetSize;
-      const ctx = canvas.getContext("2d");
-      const minDim = Math.min(img.width, img.height);
-      const sx = (img.width - minDim) / 2;
-      const sy = (img.height - minDim) / 2;
-      ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, targetSize, targetSize);
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
-      setCustomAvatarPreview(dataUrl);
+  const cleanUrl = cleanImageUrl(rawUrl);
+
+  // 世界標準の無料オープン画像プロキシ（images.weserv.nl）経由でCORSを完全回避
+  const proxyUrl = `https://images.weserv.nl/?url=${encodeURIComponent(cleanUrl)}&w=256&h=256&fit=cover&output=jpg`;
+
+  try {
+    const res = await fetch(proxyUrl);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const blob = await res.blob();
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setCustomAvatarPreview(e.target.result);
       if (input) input.value = "";
-    } catch (err) {
-      console.warn("Canvas CORS restriction, using direct URL:", err);
-      setCustomAvatarPreview(url);
-    }
-  };
-  img.onerror = () => {
-    alert("画像の読み込みに失敗しました。画像URL（.png, .jpg 等）が正しいかご確認ください。");
-  };
-  img.src = url;
+      alert("WEB画像の取り込みが完了しました！正方形アイコンとして端末に保存されました。");
+    };
+    reader.readAsDataURL(blob);
+  } catch (err) {
+    console.warn("Proxy load failed, trying direct image load:", err);
+    // フォールバック: 直接Image()で試行
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = 256; canvas.height = 256;
+        const ctx = canvas.getContext("2d");
+        const minDim = Math.min(img.width, img.height);
+        const sx = (img.width - minDim) / 2;
+        const sy = (img.height - minDim) / 2;
+        ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, 256, 256);
+        setCustomAvatarPreview(canvas.toDataURL("image/jpeg", 0.82));
+        if (input) input.value = "";
+        alert("画像の取り込みが完了しました！");
+      } catch (e) {
+        // 直接URLとしてセット
+        setCustomAvatarPreview(cleanUrl);
+        if (input) input.value = "";
+        alert("画像をセットしました！");
+      }
+    };
+    img.onerror = () => {
+      // 最後の安全網: 直接URL表示
+      setCustomAvatarPreview(cleanUrl);
+      alert("画像のURLをアイコンとしてセットしました！");
+    };
+    img.src = cleanUrl;
+  }
 }
 
-// 🎨 AI画像生成機能（Pollinations.ai / 無料・キー不要）
+// クリップボードからのワンタップ貼り付け＆読込
+async function pasteAvatarUrlFromClipboard() {
+  try {
+    const text = await navigator.clipboard.readText();
+    const input = document.getElementById("cc-avatar-url-input");
+    if (input && text && text.startsWith("http")) {
+      input.value = text.trim();
+      loadAvatarFromUrl();
+    } else {
+      alert("クリップボードに画像URL（https://...）が見つかりませんでした。先にブラウザで画像URLをコピーしてください。");
+    }
+  } catch (e) {
+    alert("クリップボードの読み取りが拒否されました。入力欄に直接貼り付けて「読込」を押してください。");
+  }
+}
+
+// Google画像検索でキャラを探す導線
+function searchCharacterImageOnGoogle() {
+  const name = document.getElementById("cc-name-ja").value.trim();
+  const title = document.getElementById("cc-title-ja").value.trim();
+  const query = `${name} ${title} アイコン イラスト`.trim();
+  const searchUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(query || "アニメ アイコン")}`;
+  window.open(searchUrl, "_blank");
+}
+
+// 🎨 AI画像生成機能（即時シンボルアイコン先行セット ＋ AI描画シームレス差し替え）
 async function generateAiAvatar(isAuto = false) {
   const name = document.getElementById("cc-name-ja").value.trim();
   const title = document.getElementById("cc-title-ja").value.trim();
+  const role = document.getElementById("cc-role").value || "role_passion";
+
   if (!name) {
     if (!isAuto) alert("先に「名前」を入力してください（例: 孫悟空、フリーレン、坂本龍馬 など）");
     return;
   }
+
+  // ★ 1. まず即座に0.1秒で超高品質シンボルアイコンを描画・セット！（これで保存しても絶対にアイコンが表示される）
+  generateInstantSymbolAvatar(name, title, role, false);
 
   const styleSelect = document.getElementById("cc-ai-avatar-style");
   const style = styleSelect ? styleSelect.value : "anime";
@@ -3944,44 +4124,26 @@ async function generateAiAvatar(isAuto = false) {
   const seed = Math.floor(Math.random() * 100000);
   const encoded = encodeURIComponent(stylePrompt);
   const pollinationsUrl = `https://image.pollinations.ai/prompt/${encoded}?width=256&height=256&seed=${seed}&nologo=true`;
+  const proxiedPollinationsUrl = `https://images.weserv.nl/?url=${encodeURIComponent(pollinationsUrl)}&w=256&h=256&fit=cover&output=jpg`;
 
   try {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    await new Promise((resolve, reject) => {
-      img.onload = resolve;
-      img.onerror = () => reject(new Error("AI画像エンドポイントの取得に失敗しました。"));
-      img.src = pollinationsUrl;
-    });
+    // タイムアウト付きフェッチ（8秒）
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-    const canvas = document.createElement("canvas");
-    canvas.width = 256;
-    canvas.height = 256;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0, 256, 256);
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
-    setCustomAvatarPreview(dataUrl);
-  } catch (err) {
-    console.warn("AI avatar generation fallback:", err);
-    if (!isAuto) {
-      // フォールバック: スタイリッシュなグラデーション文字アイコン
-      const canvas = document.createElement("canvas");
-      canvas.width = 256;
-      canvas.height = 256;
-      const ctx = canvas.getContext("2d");
-      const grad = ctx.createLinearGradient(0, 0, 256, 256);
-      grad.addColorStop(0, "#6366f1");
-      grad.addColorStop(1, "#ec4899");
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 256, 256);
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 100px sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(name.slice(0, 2), 128, 128);
-      const fallbackDataUrl = canvas.toDataURL("image/jpeg", 0.85);
-      setCustomAvatarPreview(fallbackDataUrl);
+    const res = await fetch(proxiedPollinationsUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const blob = await res.blob();
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setCustomAvatarPreview(e.target.result);
+      };
+      reader.readAsDataURL(blob);
     }
+  } catch (err) {
+    console.warn("AI avatar remote generation skipped or timed out, keeping instant symbol avatar:", err);
   } finally {
     if (btn) btn.disabled = false;
     if (btnIcon) btnIcon.className = "";
@@ -4224,6 +4386,12 @@ async function autoGenerateCharacterProfile() {
   if (btnText) btnText.innerText = "生成中...";
   if (btnIcon) btnIcon.className = "animate-spin inline-block";
 
+  // ★ 開始と同時にまず0.1秒で超美麗シンボルアイコンを即座にセット！（これで保存しても絶対にアイコンが表示される）
+  const curAvatar = document.getElementById("cc-avatar-data").value;
+  if (!curAvatar) {
+    generateInstantSymbolAvatar(name, title, null, false);
+  }
+
   const prompt = `あなたは歴史・著名人、およびアニメ・漫画・ゲーム・映画・架空キャラクターに関する最高峰の専門家です。
 以下の人物またはキャラクターについて、チャットAIで本物そっくりにロールプレイし、かつ詳細図鑑画面で表示するための完全な設定データを日本語で作成してください。
 
@@ -4300,11 +4468,8 @@ async function autoGenerateCharacterProfile() {
         if (data.advice.bestFor) document.getElementById("cc-advice-best").value = data.advice.bestFor;
       }
 
-      // もしアイコン画像がまだ未設定なら、自動でAI描画を実行してセット
-      const curAvatar = document.getElementById("cc-avatar-data").value;
-      if (!curAvatar) {
-        generateAiAvatar(true);
-      }
+      // バックグラウンドでAIイラスト生成を試行（取得できたら自動差し替え）
+      generateAiAvatar(true);
     } else {
       alert("AIの自動生成結果を読み取れませんでした。もう一度お試しください。");
     }
@@ -4327,8 +4492,10 @@ function saveCustomCharacter() {
   const role = document.getElementById("cc-role").value || "role_passion";
   const tone = document.getElementById("cc-tone").value.trim();
   const philosophy = document.getElementById("cc-philosophy").value.trim() || `${nameJa}の信条に従い語る。`;
-  const quote = document.getElementById("cc-quote").value.trim() || `${nameJa}の信条`;
-  const customAvatar = document.getElementById("cc-avatar-data").value || "";
+  let customAvatar = document.getElementById("cc-avatar-data").value || "";
+  if (!customAvatar) {
+    customAvatar = generateInstantSymbolAvatar(nameJa, titleJa, role, false);
+  }
 
   // 詳細図鑑データ
   const bio = document.getElementById("cc-bio").value.trim() || philosophy;
