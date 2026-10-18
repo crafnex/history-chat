@@ -74,30 +74,41 @@
       overflow: hidden;
     }
 
-    /* ================= 文字サイズ切り替えシステム (小・中・大) ================= */
+    /* ================= 🔤 文字サイズ切り替えシステム (小・中・大) ================= */
     :root {
-      --msg-font-size: 13px;
-      --msg-line-height: 1.55;
-      --name-font-size: 12px;
-      --title-font-size: 10px;
-      --card-title-size: 12px;
-      --card-sub-size: 10px;
-    }
-    body.font-size-md {
       --msg-font-size: 15px;
       --msg-line-height: 1.6;
       --name-font-size: 13.5px;
       --title-font-size: 11.5px;
-      --card-title-size: 13.5px;
-      --card-sub-size: 11.5px;
+      --card-title-size: 13px;
+      --card-sub-size: 11px;
     }
-    body.font-size-lg {
-      --msg-font-size: 17px;
+    html.font-size-sm, body.font-size-sm {
+      font-size: 14px;
+      --msg-font-size: 13px;
+      --msg-line-height: 1.5;
+      --name-font-size: 12px;
+      --title-font-size: 10px;
+      --card-title-size: 11.5px;
+      --card-sub-size: 9.5px;
+    }
+    html.font-size-md, body.font-size-md {
+      font-size: 16px;
+      --msg-font-size: 15px;
+      --msg-line-height: 1.6;
+      --name-font-size: 13.5px;
+      --title-font-size: 11.5px;
+      --card-title-size: 13px;
+      --card-sub-size: 11px;
+    }
+    html.font-size-lg, body.font-size-lg {
+      font-size: 18px;
+      --msg-font-size: 17.5px;
       --msg-line-height: 1.65;
       --name-font-size: 15.5px;
       --title-font-size: 13px;
       --card-title-size: 15px;
-      --card-sub-size: 13px;
+      --card-sub-size: 12.5px;
     }
 
     /* メッセージ吹き出し動的フォント */
@@ -120,12 +131,18 @@
       font-size: var(--card-sub-size) !important;
     }
 
-    /* 主要ラベル・テキストの拡大 */
+    /* 全体UIテキストの動的スケーリング (小・中・大) */
+    body.font-size-sm #ui-topic-label,
+    body.font-size-sm #ui-mode-label,
+    body.font-size-sm #ui-selected-label,
+    body.font-size-sm #chat-room-title {
+      font-size: 11.5px !important;
+    }
     body.font-size-md #ui-topic-label,
     body.font-size-md #ui-mode-label,
     body.font-size-md #ui-selected-label,
     body.font-size-md #chat-room-title {
-      font-size: 13.5px !important;
+      font-size: 13px !important;
     }
     body.font-size-lg #ui-topic-label,
     body.font-size-lg #ui-mode-label,
@@ -134,14 +151,30 @@
       font-size: 15.5px !important;
     }
 
+    body.font-size-sm #topic-input,
+    body.font-size-sm #user-msg-input {
+      font-size: 12.5px !important;
+    }
     body.font-size-md #topic-input,
     body.font-size-md #user-msg-input {
       font-size: 14px !important;
     }
     body.font-size-lg #topic-input,
     body.font-size-lg #user-msg-input {
-      font-size: 16px !important;
+      font-size: 16.5px !important;
     }
+
+    body.font-size-sm #start-btn { font-size: 13px !important; }
+    body.font-size-md #start-btn { font-size: 14.5px !important; }
+    body.font-size-lg #start-btn { font-size: 17px !important; }
+
+    body.font-size-sm .cat-btn { font-size: 10px !important; }
+    body.font-size-md .cat-btn { font-size: 11px !important; }
+    body.font-size-lg .cat-btn { font-size: 12.5px !important; }
+
+    body.font-size-sm #settings-modal, body.font-size-sm #character-detail-modal, body.font-size-sm #onboarding-modal { font-size: 12px; }
+    body.font-size-md #settings-modal, body.font-size-md #character-detail-modal, body.font-size-md #onboarding-modal { font-size: 13.5px; }
+    body.font-size-lg #settings-modal, body.font-size-lg #character-detail-modal, body.font-size-lg #onboarding-modal { font-size: 15.5px; }
   </style>
 </head>
 <body class="flex justify-center items-center min-h-[100dvh] p-0 sm:p-2 md:p-3 bg-[#0f172a] font-size-md">
@@ -207,6 +240,119 @@
         <button onclick="closePwaInstallModal()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm">
           閉じる
         </button>
+      </div>
+    </div>
+
+    <!-- ================= 0.0 アプリ設定モーダル (文字サイズ・言語・アップデート・キー管理) ================= -->
+    <div id="settings-modal" class="hidden absolute inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-3" onclick="if(event.target === this) closeSettingsModal()">
+      <div class="bg-white w-full max-w-md max-h-[92%] rounded-2xl shadow-2xl overflow-y-auto flex flex-col p-4 border border-slate-200 space-y-3.5 animate-in fade-in zoom-in-95 duration-200">
+        
+        <!-- モーダルヘッダー -->
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100 shrink-0">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">⚙️</span>
+            <div>
+              <h2 class="text-sm sm:text-base font-bold text-slate-800" id="st-modal-title">アプリ設定</h2>
+              <p class="text-[10px] text-slate-500" id="st-modal-sub">文字サイズ・言語・アップデート・APIキー</p>
+            </div>
+          </div>
+          <button type="button" onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 transition">✕</button>
+        </div>
+
+        <!-- 🔄 1. アップデート＆バージョン管理 -->
+        <div class="space-y-2">
+          <!-- 保留中の更新がある場合に常時ハイライト表示される更新バナー（×で消した後でもここからいつでも更新可能） -->
+          <div id="settings-update-available" class="hidden bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white p-3 rounded-xl shadow-md space-y-2">
+            <div class="flex items-center gap-2">
+              <span class="text-xl shrink-0">⚡</span>
+              <div>
+                <div class="font-bold text-xs" id="st-up-ready-title">新しいバージョンが利用可能です！</div>
+                <div class="text-[10px] text-amber-100 leading-tight" id="st-up-ready-sub">最新の修正・新機能がダウンロード完了しています</div>
+              </div>
+            </div>
+            <button type="button" onclick="applyAppUpdate()" class="w-full bg-white hover:bg-amber-50 active:scale-98 text-amber-900 font-bold py-2 rounded-lg text-xs shadow transition flex items-center justify-center gap-1.5">
+              <span>🚀 今すぐ最新版を適用して更新する</span>
+            </button>
+          </div>
+
+          <!-- バージョン情報 & 手動確認 -->
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between">
+            <div>
+              <div class="text-xs font-bold text-slate-800" id="st-ver-title">📱 現在のバージョン</div>
+              <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.0.4</div>
+            </div>
+            <button type="button" onclick="checkForAppUpdate(true)" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition flex items-center gap-1">
+              <span>🔄 最新版を確認</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 🔤 2. 文字サイズ設定 -->
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <span>🔤</span>
+              <span id="st-font-title">文字サイズ</span>
+            </label>
+            <span id="st-font-current-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">中 (標準)</span>
+          </div>
+          <div class="grid grid-cols-3 gap-1.5">
+            <button type="button" onclick="setFontSize('sm')" id="st-font-btn-sm" class="py-2 rounded-lg border text-xs font-medium text-center transition">小</button>
+            <button type="button" onclick="setFontSize('md')" id="st-font-btn-md" class="py-2 rounded-lg border text-xs font-bold text-center transition">中 (標準)</button>
+            <button type="button" onclick="setFontSize('lg')" id="st-font-btn-lg" class="py-2 rounded-lg border text-xs font-medium text-center transition">大</button>
+          </div>
+          <p class="text-[10px] text-slate-500 leading-snug" id="st-font-desc">チャット本文・キャラクターカード・ボタンなどアプリ全体に適用されます。</p>
+        </div>
+
+        <!-- 🌐 3. 言語切り替え -->
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
+          <label class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+            <span>🌐</span>
+            <span id="st-lang-title">表示言語 (Language)</span>
+          </label>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" onclick="selectLanguageFromSettings('ja')" id="st-lang-btn-ja" class="py-2 px-3 rounded-lg border font-bold text-xs flex items-center justify-center gap-1.5 transition">
+              <span>🇯🇵</span> 日本語
+            </button>
+            <button type="button" onclick="selectLanguageFromSettings('en')" id="st-lang-btn-en" class="py-2 px-3 rounded-lg border font-medium text-xs flex items-center justify-center gap-1.5 transition">
+              <span>🇺🇸</span> English
+            </button>
+          </div>
+        </div>
+
+        <!-- 🔑 4. AI・APIキー設定への案内 -->
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <span>🤖</span>
+              <span id="st-ai-title">AIモデル・APIキー</span>
+            </label>
+            <span id="st-ai-provider-badge" class="text-[10px] font-semibold text-slate-600 bg-white border border-slate-200 px-1.5 py-0.5 rounded">おまかせ</span>
+          </div>
+          <button type="button" onclick="closeSettingsModal(); openOnboardingModal();" class="w-full bg-white hover:bg-indigo-50 border border-indigo-200 text-indigo-700 font-semibold text-xs py-2 rounded-lg shadow-2xs transition flex items-center justify-center gap-1.5">
+            <span>🔑 APIキー設定画面を開く</span>
+          </button>
+        </div>
+
+        <!-- 📲 5. ホーム画面追加 (PWA) 案内 -->
+        <div id="st-pwa-box" class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
+          <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+            <span>📲</span>
+            <span id="st-pwa-title">ホーム画面に追加 (PWA)</span>
+          </div>
+          <p class="text-[10px] text-slate-500 leading-snug" id="st-pwa-desc">全画面でアプリのように快適にご利用いただけます。</p>
+          <button type="button" onclick="promptPwaInstall()" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-98 text-white font-bold text-xs py-2 rounded-lg shadow-xs transition flex items-center justify-center gap-1.5">
+            <span>📲 インストール案内を開く</span>
+          </button>
+        </div>
+
+        <!-- 閉じるボタン -->
+        <div class="pt-1">
+          <button type="button" onclick="closeSettingsModal()" class="w-full bg-slate-800 hover:bg-slate-900 active:bg-slate-950 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm">
+            閉じる
+          </button>
+        </div>
+
       </div>
     </div>
 
@@ -466,25 +612,20 @@
           <h1 class="text-base sm:text-lg font-bold text-slate-800" id="ui-title">🏛️ 偉人・著名人200人 AIグループチャット</h1>
           <p class="text-[11px] text-slate-500" id="ui-subtitle">議論・お悩み相談・ブレスト・全肯定・雑談</p>
         </div>
-        <div class="flex items-center gap-1 sm:gap-1.5 flex-wrap justify-end">
-          <!-- 文字サイズ切り替え (小・中・大) -->
-          <div class="flex items-center bg-white border border-slate-300 rounded-lg p-0.5 shadow-2xs">
-            <span class="text-[10px] text-slate-400 font-bold px-1 select-none">🔤</span>
-            <button type="button" onclick="setFontSize('sm')" class="font-btn-sm text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded font-medium text-slate-600 hover:bg-slate-100 transition">小</button>
-            <button type="button" onclick="setFontSize('md')" class="font-btn-md text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded font-bold bg-indigo-600 text-white shadow-xs transition">中</button>
-            <button type="button" onclick="setFontSize('lg')" class="font-btn-lg text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded font-medium text-slate-600 hover:bg-slate-100 transition">大</button>
-          </div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <!-- 🔤 押すたびに順番に切り替わるワンタップボタン (小・中・大) -->
+          <button type="button" onclick="cycleFontSize()" id="font-cycle-btn-setup" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 px-2 py-1 rounded-lg text-xs font-bold text-slate-700 shadow-2xs flex items-center gap-1 transition" title="文字サイズ切り替え">
+            <span>🔤</span> <span id="font-cycle-label-setup">中</span>
+          </button>
 
           <button id="pwa-install-btn" onclick="promptPwaInstall()" class="hidden text-[11px] bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold px-2 py-1 rounded-lg shadow-xs flex items-center gap-1 transition">
             <span>📲 インストール</span>
           </button>
-          <button onclick="openOnboardingModal()" class="text-[11px] bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-2 py-1 rounded-lg font-medium shadow-xs flex items-center gap-1 transition">
-            <span id="header-key-indicator">🔑 キー設定</span>
+
+          <!-- ⚙️ 設定画面ボタン -->
+          <button type="button" onclick="openSettingsModal()" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 px-2.5 py-1 rounded-lg text-xs font-bold text-slate-700 shadow-2xs flex items-center gap-1 transition">
+            <span>⚙️</span> <span id="ui-settings-btn-setup">設定</span>
           </button>
-          <select id="lang-select" onchange="changeLanguage()" class="bg-white border border-slate-300 text-slate-700 text-xs rounded-lg px-2 py-1 font-medium shadow-sm focus:outline-none">
-            <option value="ja">🇯🇵 日本語</option>
-            <option value="en">🇺🇸 English</option>
-          </select>
         </div>
       </div>
 
@@ -573,7 +714,7 @@
             <div class="pt-2 border-t border-slate-200/80 flex items-center justify-between text-[11px] text-slate-500">
               <span class="flex items-center gap-1">
                 <span>📱 バージョン:</span>
-                <span id="app-version-badge" class="font-mono font-bold text-slate-700 bg-white border border-slate-200 px-1.5 py-0.5 rounded">v1.0.2</span>
+                <span id="app-version-badge" class="font-mono font-bold text-slate-700 bg-white border border-slate-200 px-1.5 py-0.5 rounded">v1.0.4</span>
               </span>
               <button type="button" onclick="checkForAppUpdate(true)" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 px-2 py-0.5 rounded-md font-medium text-slate-700 shadow-2xs flex items-center gap-1 transition">
                 <span>🔄 最新版を確認</span>
@@ -601,16 +742,17 @@
           </div>
         </div>
         <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
-          <!-- 文字サイズ切り替え -->
-          <div class="flex items-center bg-slate-800/90 border border-slate-600 rounded-lg p-0.5 shadow-2xs">
-            <span class="text-[9px] text-slate-400 font-bold px-0.5 select-none">🔤</span>
-            <button type="button" onclick="setFontSize('sm')" class="font-btn-sm text-[10px] px-1.5 py-0.5 rounded font-medium text-slate-300 hover:text-white transition">小</button>
-            <button type="button" onclick="setFontSize('md')" class="font-btn-md text-[10px] px-1.5 py-0.5 rounded font-bold bg-indigo-600 text-white shadow-xs transition">中</button>
-            <button type="button" onclick="setFontSize('lg')" class="font-btn-lg text-[10px] px-1.5 py-0.5 rounded font-medium text-slate-300 hover:text-white transition">大</button>
-          </div>
+          <!-- 🔤 押すたびに順番に切り替わるワンタップボタン (小・中・大) -->
+          <button type="button" onclick="cycleFontSize()" id="font-cycle-btn-chat" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border border-slate-600 px-2 py-1 rounded-lg text-xs font-bold text-slate-200 shadow-2xs flex items-center gap-1 transition" title="文字サイズ切り替え">
+            <span>🔤</span> <span id="font-cycle-label-chat">中</span>
+          </button>
           <button id="pause-btn" onclick="togglePauseQueue()" class="text-[11px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-200 font-medium flex items-center gap-1">⏸️ 一時停止</button>
           <button id="speed-btn" onclick="toggleSpeed()" class="text-[11px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-200 font-medium">🐢 1.0x</button>
           <button id="flush-btn" onclick="flushDisplayQueue()" class="text-[11px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-200 font-medium">一括表示</button>
+          <!-- ⚙️ 設定画面ボタン -->
+          <button type="button" onclick="openSettingsModal()" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border border-slate-600 px-2 py-1 rounded-lg text-xs font-bold text-slate-200 shadow-2xs flex items-center gap-1 transition" title="設定">
+            <span>⚙️</span>
+          </button>
         </div>
       </div>
 
@@ -715,7 +857,7 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.0.3';
+const APP_CLIENT_VERSION = 'v1.0.4';
 let waitingServiceWorker = null;
 let swRegistration = null;
 
@@ -723,6 +865,8 @@ function showAppUpdateBanner(worker) {
   waitingServiceWorker = worker;
   const banner = document.getElementById("pwa-update-banner");
   if (banner) banner.classList.remove("hidden");
+  const settingsUpdateBanner = document.getElementById("settings-update-available");
+  if (settingsUpdateBanner) settingsUpdateBanner.classList.remove("hidden");
 }
 
 function dismissAppUpdateBanner() {
@@ -2490,7 +2634,9 @@ const UI_TEXTS = {
     modalBestAdviceLabel: "💡 こんなお悩み・テーマに最適:",
     modalAddBtn: "参加メンバーに追加する",
     modalRemoveBtn: "参加メンバーから外す",
-    modalCloseBtn: "閉じる"
+    modalCloseBtn: "閉じる",
+    settingsBtn: "設定",
+    fontLabels: { sm: "小", md: "中", lg: "大" }
   },
   en: {
     title: "🏛️ 200 Legends & Modern Titans AI Group Chat",
@@ -2541,7 +2687,9 @@ const UI_TEXTS = {
     modalBestAdviceLabel: "💡 Best For:",
     modalAddBtn: "Add to Group",
     modalRemoveBtn: "Remove from Group",
-    modalCloseBtn: "Close"
+    modalCloseBtn: "Close",
+    settingsBtn: "Settings",
+    fontLabels: { sm: "S", md: "M", lg: "L" }
   }
 };
 
@@ -2859,6 +3007,12 @@ function deleteCurrentApiKey() {
 const STORAGE_KEY_FONT_SIZE = "history_chat_font_size";
 let currentFontSize = "md"; // デフォルト「中（見やすい標準サイズ）」
 
+function cycleFontSize() {
+  const order = ["sm", "md", "lg"];
+  const nextIdx = (order.indexOf(currentFontSize) + 1) % order.length;
+  setFontSize(order[nextIdx]);
+}
+
 function setFontSize(size) {
   if (!["sm", "md", "lg"].includes(size)) size = "md";
   currentFontSize = size;
@@ -2867,24 +3021,122 @@ function setFontSize(size) {
 }
 
 function applyFontSize(size) {
+  // html と body の両方にクラスを反映（rem基準とpx基準の完全スケーリング）
+  document.documentElement.classList.remove("font-size-sm", "font-size-md", "font-size-lg");
+  document.documentElement.classList.add(`font-size-${size}`);
   document.body.classList.remove("font-size-sm", "font-size-md", "font-size-lg");
   document.body.classList.add(`font-size-${size}`);
 
-  // トップバーおよびチャット画面の切り替えボタングループのアクティブ表示更新
+  // ワンタップ切り替えボタンのラベルを更新
+  const fontLabels = (UI_TEXTS[currentLang] && UI_TEXTS[currentLang].fontLabels) || { sm: "小", md: "中", lg: "大" };
+  const labelText = fontLabels[size] || "中";
+
+  const setupLabel = document.getElementById("font-cycle-label-setup");
+  if (setupLabel) setupLabel.innerText = labelText;
+
+  const chatLabel = document.getElementById("font-cycle-label-chat");
+  if (chatLabel) chatLabel.innerText = labelText;
+
+  // 設定モーダル内のボタングループのアクティブ表示更新
   ["sm", "md", "lg"].forEach(s => {
-    document.querySelectorAll(`.font-btn-${s}`).forEach(btn => {
+    const btn = document.getElementById(`st-font-btn-${s}`);
+    if (btn) {
       if (s === size) {
-        btn.className = `font-btn-${s} text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded font-bold bg-indigo-600 text-white shadow-xs transition`;
+        btn.className = "py-2 rounded-lg border text-xs font-bold text-center transition bg-indigo-600 text-white border-indigo-700 shadow-xs";
       } else {
-        btn.className = `font-btn-${s} text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition`;
+        btn.className = "py-2 rounded-lg border text-xs font-medium text-center transition bg-white text-slate-700 border-slate-200 hover:bg-slate-100";
       }
-    });
+    }
   });
+
+  // 設定モーダル内のバッジ更新
+  const badge = document.getElementById("st-font-current-badge");
+  if (badge) {
+    const badgeMap = {
+      ja: { sm: "小", md: "中 (標準)", lg: "大" },
+      en: { sm: "Small", md: "Medium (Default)", lg: "Large" }
+    };
+    badge.innerText = (badgeMap[currentLang] || badgeMap.ja)[size] || size;
+  }
 }
 
 function initFontSize() {
   const saved = localStorage.getItem(STORAGE_KEY_FONT_SIZE) || "md";
   setFontSize(saved);
+}
+
+// ============================================================================
+// ⚙️ アプリ設定モーダル管理 (文字サイズ・言語・アップデート・キー管理)
+// ============================================================================
+function openSettingsModal() {
+  const modal = document.getElementById("settings-modal");
+  if (!modal) return;
+  updateSettingsModalState();
+  modal.classList.remove("hidden");
+}
+
+function closeSettingsModal() {
+  const modal = document.getElementById("settings-modal");
+  if (modal) modal.classList.add("hidden");
+}
+
+function updateSettingsModalState() {
+  // 1. 保留中のアップデートがあるか確認・同期
+  const updateBox = document.getElementById("settings-update-available");
+  if (updateBox) {
+    if (waitingServiceWorker || (swRegistration && swRegistration.waiting)) {
+      updateBox.classList.remove("hidden");
+    } else {
+      updateBox.classList.add("hidden");
+    }
+  }
+
+  // 2. バージョン表記の同期
+  const verLabel = document.getElementById("settings-version-label");
+  if (verLabel) verLabel.innerText = APP_CLIENT_VERSION;
+
+  // 3. AIプロバイダーバッジの同期
+  const aiBadge = document.getElementById("st-ai-provider-badge");
+  if (aiBadge) {
+    const active = getActiveKeyInfo();
+    if (active) {
+      const pNames = { gemini: "Gemini", groq: "Groq", openai: "ChatGPT" };
+      aiBadge.innerText = pNames[active.provider] || active.provider;
+      aiBadge.className = "text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded";
+    } else {
+      aiBadge.innerText = "未設定";
+      aiBadge.className = "text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-300 px-2 py-0.5 rounded";
+    }
+  }
+
+  // 4. 言語ボタンのアクティブハイライト更新
+  const btnJa = document.getElementById("st-lang-btn-ja");
+  const btnEn = document.getElementById("st-lang-btn-en");
+  if (btnJa && btnEn) {
+    if (currentLang === "ja") {
+      btnJa.className = "py-2 px-3 rounded-lg border font-bold text-xs flex items-center justify-center gap-1.5 transition bg-indigo-600 text-white border-indigo-700 shadow-xs";
+      btnEn.className = "py-2 px-3 rounded-lg border font-medium text-xs flex items-center justify-center gap-1.5 transition bg-white text-slate-700 border-slate-200 hover:bg-slate-100";
+    } else {
+      btnJa.className = "py-2 px-3 rounded-lg border font-medium text-xs flex items-center justify-center gap-1.5 transition bg-white text-slate-700 border-slate-200 hover:bg-slate-100";
+      btnEn.className = "py-2 px-3 rounded-lg border font-bold text-xs flex items-center justify-center gap-1.5 transition bg-indigo-600 text-white border-indigo-700 shadow-xs";
+    }
+  }
+
+  // 5. 文字サイズのUI同期
+  applyFontSize(currentFontSize);
+}
+
+function selectLanguageFromSettings(lang) {
+  currentLang = lang;
+  updateStaticUiTexts();
+  renderModeTabs();
+  renderSelectedChips();
+  renderCharacters();
+  setRandomTopic();
+  updateSettingsModalState();
+  if (currentDetailCharId) {
+    openCharacterDetail(currentDetailCharId);
+  }
 }
 
 window.onload = () => {
@@ -2920,6 +3172,13 @@ function updateStaticUiTexts() {
   setEl("chat-topic-badge", currentLang === "en" ? "📌 Topic" : "📌 議題");
   setEl("ui-ai-provider-label", currentLang === "en" ? "Select AI Provider" : "使用するAIプロバイダー");
   setEl("ui-custom-key-label", currentLang === "en" ? "API Key (Your Quota)" : "APIキー（自前枠で利用）");
+  setEl("ui-settings-btn-setup", t.settingsBtn || "設定");
+
+  // ワンタップ文字サイズボタンのラベル更新
+  const fontLabels = t.fontLabels || { sm: "小", md: "中", lg: "大" };
+  const currentFontText = fontLabels[currentFontSize] || "中";
+  setEl("font-cycle-label-setup", currentFontText);
+  setEl("font-cycle-label-chat", currentFontText);
 
   const isEn = currentLang === "en";
   setEl("ob-title", isEn ? "AI Initial Setup (100% Free)" : "AIの初期設定（完全無料）");
@@ -2929,6 +3188,19 @@ function updateStaticUiTexts() {
   setEl("ob-step3-label", isEn ? "3. Paste Your API Key" : "3. 取得したAPIキーを貼り付ける");
   setEl("ob-start-btn-text", isEn ? "Save Key & Start Chatting!" : "キーを保存して偉人チャットを始める！");
   setEl("ob-sec-title", isEn ? "Privacy & Security Guarantee" : "プライバシー＆セキュリティの安心保証");
+
+  // 設定モーダル内の多言語テキスト
+  setEl("st-modal-title", isEn ? "App Settings" : "アプリ設定");
+  setEl("st-modal-sub", isEn ? "Font size, language, updates, and AI API key" : "文字サイズ・言語・アップデート・APIキー");
+  setEl("st-up-ready-title", isEn ? "New Version Available!" : "新しいバージョンが利用可能です！");
+  setEl("st-up-ready-sub", isEn ? "Latest features & fixes are downloaded" : "最新の修正・新機能がダウンロード完了しています");
+  setEl("st-ver-title", isEn ? "📱 Current Version" : "📱 現在のバージョン");
+  setEl("st-font-title", isEn ? "Font Size" : "文字サイズ");
+  setEl("st-font-desc", isEn ? "Applied app-wide to messages, cards, buttons, etc." : "チャット本文・キャラクターカード・ボタンなどアプリ全体に適用されます。");
+  setEl("st-lang-title", isEn ? "Language" : "表示言語 (Language)");
+  setEl("st-ai-title", isEn ? "AI Model & API Key" : "AIモデル・APIキー");
+  setEl("st-pwa-title", isEn ? "Add to Home Screen (PWA)" : "ホーム画面に追加 (PWA)");
+  setEl("st-pwa-desc", isEn ? "Enjoy fullscreen app-like experience." : "全画面でアプリのように快適にご利用いただけます。");
 
   // モーダル内テキストの多言語化
   setEl("char-modal-role-label", t.modalRoleLabel);
