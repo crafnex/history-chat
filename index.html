@@ -556,7 +556,7 @@
           <!-- パネル2: WEB画像URLから取り込み -->
           <div id="cc-panel-url" class="hidden space-y-1.5 pt-0.5">
             <div class="flex gap-1.5">
-              <input type="url" id="cc-avatar-url-input" placeholder="https://... 画像URLを貼り付け" class="flex-1 min-w-0 bg-white border border-slate-300 focus:border-indigo-500 rounded-lg px-2 py-1 text-[11px] outline-hidden">
+              <input type="text" id="cc-avatar-url-input" placeholder="https://... または data:image/... を貼り付け" class="flex-1 min-w-0 bg-white border border-slate-300 focus:border-indigo-500 rounded-lg px-2 py-1 text-[11px] outline-hidden">
               <button type="button" onclick="loadAvatarFromUrl()" class="shrink-0 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-[10.5px] px-2.5 py-1 rounded-lg shadow-2xs transition">
                 読込
               </button>
@@ -569,7 +569,7 @@
                 🔍 Google画像検索で探す
               </button>
             </div>
-            <p class="text-[9px] text-slate-400 leading-tight">※CORSプロキシ経由であらゆる画像サイトのURLを自動で正方形アイコンに変換します。</p>
+            <p class="text-[9px] text-slate-400 leading-tight">※画像URLの貼り付け、またはWEB画像をコピーしてこの画面でCtrl+V（ペースト）するだけで即座にアイコンになります。</p>
           </div>
 
           <!-- パネル3: AIイラスト生成（完全無料） -->
@@ -1248,7 +1248,7 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.2.1';
+const APP_CLIENT_VERSION = 'v1.2.2';
 let waitingServiceWorker = null;
 let swRegistration = null;
 
@@ -4004,74 +4004,134 @@ function generateInstantSymbolAvatar(name = null, title = null, role = null, not
   return dataUrl;
 }
 
-// 🔗 WEB画像URL取り込み（CORSフリー高速プロキシ対応）
-async function loadAvatarFromUrl() {
+// 🔗 WEB画像URL/Base64取り込み（Base64直接対応・高速リサイズ＆フォールバック）
+async function loadAvatarFromUrl(targetUrl = null) {
   const input = document.getElementById("cc-avatar-url-input");
-  const rawUrl = input ? input.value.trim() : "";
+  const rawUrl = (targetUrl || (input ? input.value : "")).trim();
   if (!rawUrl) {
-    alert("画像のURLを入力してください（例: https://example.com/image.jpg）");
+    alert("画像のURLまたは画像データを入力してください（例: https://example.com/image.jpg または data:image/...）");
+    return;
+  }
+
+  // ★ 1. もし Base64 画像データ（data:image/...）の場合、ネットワーク通信を介さず即座に Canvas 処理
+  if (rawUrl.startsWith("data:image/")) {
+    processImageSourceToAvatar(rawUrl, "WEB画像（Base64）の取り込みが完了しました！");
+    if (input) input.value = "";
     return;
   }
 
   const cleanUrl = cleanImageUrl(rawUrl);
 
-  // 世界標準の無料オープン画像プロキシ（images.weserv.nl）経由でCORSを完全回避
-  const proxyUrl = `https://images.weserv.nl/?url=${encodeURIComponent(cleanUrl)}&w=256&h=256&fit=cover&output=jpg`;
+  // ★ 2. 通常の画像URLの場合
+  // まずは直接 Image() を試行（CORS anonymous）
+  const img = new Image();
+  img.crossOrigin = "anonymous";
 
-  try {
-    const res = await fetch(proxyUrl);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const blob = await res.blob();
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setCustomAvatarPreview(e.target.result);
+  img.onload = () => {
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = 256; canvas.height = 256;
+      const ctx = canvas.getContext("2d");
+      const minDim = Math.min(img.width, img.height);
+      const sx = (img.width - minDim) / 2;
+      const sy = (img.height - minDim) / 2;
+      ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, 256, 256);
+      setCustomAvatarPreview(canvas.toDataURL("image/jpeg", 0.85));
       if (input) input.value = "";
-      alert("WEB画像の取り込みが完了しました！正方形アイコンとして端末に保存されました。");
-    };
-    reader.readAsDataURL(blob);
-  } catch (err) {
-    console.warn("Proxy load failed, trying direct image load:", err);
-    // フォールバック: 直接Image()で試行
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      try {
-        const canvas = document.createElement("canvas");
-        canvas.width = 256; canvas.height = 256;
-        const ctx = canvas.getContext("2d");
-        const minDim = Math.min(img.width, img.height);
-        const sx = (img.width - minDim) / 2;
-        const sy = (img.height - minDim) / 2;
-        ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, 256, 256);
-        setCustomAvatarPreview(canvas.toDataURL("image/jpeg", 0.82));
+      alert("WEB画像の取り込みが完了しました！");
+    } catch (e) {
+      tryFallbackProxy(cleanUrl);
+    }
+  };
+
+  img.onerror = () => {
+    tryFallbackProxy(cleanUrl);
+  };
+
+  img.src = cleanUrl;
+
+  async function tryFallbackProxy(url) {
+    // プロキシ経由で fetch を試行
+    const proxyUrl = `https://images.weserv.nl/?url=${encodeURIComponent(url)}&w=256&h=256&fit=cover&output=jpg`;
+    try {
+      const res = await fetch(proxyUrl);
+      if (!res.ok) throw new Error("Proxy error " + res.status);
+      const blob = await res.blob();
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setCustomAvatarPreview(e.target.result);
         if (input) input.value = "";
-        alert("画像の取り込みが完了しました！");
-      } catch (e) {
-        // 直接URLとしてセット
-        setCustomAvatarPreview(cleanUrl);
-        if (input) input.value = "";
-        alert("画像をセットしました！");
-      }
-    };
-    img.onerror = () => {
-      // 最後の安全網: 直接URL表示
-      setCustomAvatarPreview(cleanUrl);
+        alert("WEB画像を取り込みました！");
+      };
+      reader.readAsDataURL(blob);
+    } catch (err) {
+      // 最終フォールバック: URLを直接プレビューに設定
+      console.warn("Proxy also failed, using raw url:", err);
+      setCustomAvatarPreview(url);
+      if (input) input.value = "";
       alert("画像のURLをアイコンとしてセットしました！");
-    };
-    img.src = cleanUrl;
+    }
   }
 }
 
-// クリップボードからのワンタップ貼り付け＆読込
+// 汎用: Imageソース（Base64またはURL）を正方形Canvasに描画してセットする関数
+function processImageSourceToAvatar(src, successMsg = "画像をセットしました！") {
+  const img = new Image();
+  img.onload = () => {
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = 256; canvas.height = 256;
+      const ctx = canvas.getContext("2d");
+      const minDim = Math.min(img.width, img.height);
+      const sx = (img.width - minDim) / 2;
+      const sy = (img.height - minDim) / 2;
+      ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, 256, 256);
+      setCustomAvatarPreview(canvas.toDataURL("image/jpeg", 0.85));
+      if (successMsg) alert(successMsg);
+    } catch (e) {
+      setCustomAvatarPreview(src);
+      if (successMsg) alert(successMsg);
+    }
+  };
+  img.onerror = () => {
+    setCustomAvatarPreview(src);
+    if (successMsg) alert(successMsg);
+  };
+  img.src = src;
+}
+
+// クリップボードからのワンタップ貼り付け＆読込（画像バイナリ・URL・Base64両対応）
 async function pasteAvatarUrlFromClipboard() {
   try {
+    // 1. まずクリップボード内の生画像データを検出
+    if (navigator.clipboard && navigator.clipboard.read) {
+      try {
+        const items = await navigator.clipboard.read();
+        for (const item of items) {
+          const imageType = item.types.find(t => t.startsWith("image/"));
+          if (imageType) {
+            const blob = await item.getType(imageType);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              processImageSourceToAvatar(e.target.result, "クリップボードの画像をアイコンにセットしました！");
+            };
+            reader.readAsDataURL(blob);
+            return;
+          }
+        }
+      } catch (err) {
+        // 画像バイナリ読込が許可されないブラウザではテキスト判定へ進む
+      }
+    }
+
+    // 2. テキスト（URLまたはBase64データURL）を検出
     const text = await navigator.clipboard.readText();
     const input = document.getElementById("cc-avatar-url-input");
-    if (input && text && text.startsWith("http")) {
-      input.value = text.trim();
-      loadAvatarFromUrl();
+    if (text && (text.startsWith("http") || text.startsWith("data:image/"))) {
+      if (input) input.value = text.trim();
+      loadAvatarFromUrl(text.trim());
     } else {
-      alert("クリップボードに画像URL（https://...）が見つかりませんでした。先にブラウザで画像URLをコピーしてください。");
+      alert("クリップボードに画像URL（https://... または data:image/...）が見つかりませんでした。先にブラウザで画像またはURLをコピーしてください。");
     }
   } catch (e) {
     alert("クリップボードの読み取りが拒否されました。入力欄に直接貼り付けて「読込」を押してください。");
@@ -4087,7 +4147,7 @@ function searchCharacterImageOnGoogle() {
   window.open(searchUrl, "_blank");
 }
 
-// 🎨 AI画像生成機能（即時シンボルアイコン先行セット ＋ AI描画シームレス差し替え）
+// 🎨 AI画像生成機能（即時シンボルアイコン先行セット ＋ Pollinations公式API直接通信＆Base64保存）
 async function generateAiAvatar(isAuto = false) {
   const name = document.getElementById("cc-name-ja").value.trim();
   const title = document.getElementById("cc-title-ja").value.trim();
@@ -4098,7 +4158,7 @@ async function generateAiAvatar(isAuto = false) {
     return;
   }
 
-  // ★ 1. まず即座に0.1秒で超高品質シンボルアイコンを描画・セット！（これで保存しても絶対にアイコンが表示される）
+  // ★ 1. まず即座に0.1秒で超高品質シンボルアイコンを描画・セット！（これで保存しても絶対に美しいアイコンが表示される）
   generateInstantSymbolAvatar(name, title, role, false);
 
   const styleSelect = document.getElementById("cc-ai-avatar-style");
@@ -4119,37 +4179,82 @@ async function generateAiAvatar(isAuto = false) {
   const origText = btnText ? btnText.innerText : "AIで描画する";
   if (btn) btn.disabled = true;
   if (btnIcon) btnIcon.className = "animate-spin inline-block";
-  if (btnText) btnText.innerText = "描画中...";
+  if (btnText) btnText.innerText = "描画中(約10秒)...";
 
-  const seed = Math.floor(Math.random() * 100000);
+  const seed = Math.floor(Math.random() * 1000000);
   const encoded = encodeURIComponent(stylePrompt);
+  // Pollinations AI公式API（元々 Access-Control-Allow-Origin: * のため直接fetch可能・プロキシ不要）
   const pollinationsUrl = `https://image.pollinations.ai/prompt/${encoded}?width=256&height=256&seed=${seed}&nologo=true`;
-  const proxiedPollinationsUrl = `https://images.weserv.nl/?url=${encodeURIComponent(pollinationsUrl)}&w=256&h=256&fit=cover&output=jpg`;
 
   try {
-    // タイムアウト付きフェッチ（8秒）
+    // タイムアウト付きフェッチ（25秒）
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
 
-    const res = await fetch(proxiedPollinationsUrl, { signal: controller.signal });
+    const res = await fetch(pollinationsUrl, {
+      signal: controller.signal,
+      headers: { "Accept": "image/*" }
+    });
     clearTimeout(timeoutId);
 
     if (res.ok) {
       const blob = await res.blob();
       const reader = new FileReader();
       reader.onload = (e) => {
-        setCustomAvatarPreview(e.target.result);
+        processImageSourceToAvatar(e.target.result, null);
+        alert(`🎨 「${name}」のAIアイコン描画が完了しました！`);
       };
       reader.readAsDataURL(blob);
+    } else {
+      throw new Error(`HTTP ${res.status}`);
     }
   } catch (err) {
     console.warn("AI avatar remote generation skipped or timed out, keeping instant symbol avatar:", err);
+    if (!isAuto) {
+      alert("AI画像サーバーが混雑または応答待ちとなりました。代わりに自動作成された「名前入りシンボルアイコン」がセットされています。このまま保存できます！");
+    }
   } finally {
     if (btn) btn.disabled = false;
     if (btnIcon) btnIcon.className = "";
     if (btnText) btnText.innerText = origText;
   }
 }
+
+// モーダル表示中の画像・URL直接貼り付け（Ctrl+V / Cmd+V）ハンドラ
+document.addEventListener("paste", (e) => {
+  const modal = document.getElementById("custom-char-modal");
+  if (!modal || modal.classList.contains("hidden")) return;
+
+  // 1. クリップボード内の生画像データをチェック
+  const items = (e.clipboardData || (e.originalEvent && e.originalEvent.clipboardData))?.items;
+  if (items) {
+    for (const item of items) {
+      if (item.type && item.type.indexOf("image") !== -1) {
+        const file = item.getAsFile();
+        if (file) {
+          e.preventDefault();
+          const reader = new FileReader();
+          reader.onload = (evt) => {
+            processImageSourceToAvatar(evt.target.result, "貼り付けた画像を正方形アイコンとしてセットしました！");
+          };
+          reader.readAsDataURL(file);
+          return;
+        }
+      }
+    }
+  }
+
+  // 2. テキストが画像URLまたはBase64の場合、URL入力欄にフォーカスしていなければ自動取り込み
+  const text = (e.clipboardData || window.clipboardData)?.getData("text")?.trim();
+  const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : "";
+  const isInputActive = activeTag === "input" || activeTag === "textarea";
+  if (text && (text.startsWith("data:image/") || (text.startsWith("http") && /\.(jpg|jpeg|png|webp|gif)($|\?)/i.test(text)))) {
+    if (!isInputActive) {
+      e.preventDefault();
+      loadAvatarFromUrl(text);
+    }
+  }
+});
 
 function openCustomCharModal(editCharId = null) {
   const modal = document.getElementById("custom-char-modal");
@@ -4483,87 +4588,125 @@ async function autoGenerateCharacterProfile() {
   }
 }
 
-// キャラクター保存処理（リッチ詳細図鑑データ対応）
+// キャラクター保存処理（リッチ詳細図鑑データ対応・安全例外保護）
 function saveCustomCharacter() {
-  const editId = document.getElementById("cc-edit-id").value;
-  const nameJa = document.getElementById("cc-name-ja").value.trim();
-  const titleJa = document.getElementById("cc-title-ja").value.trim();
-  const era = document.getElementById("cc-era").value.trim() || "オリジナル";
-  const role = document.getElementById("cc-role").value || "role_passion";
-  const tone = document.getElementById("cc-tone").value.trim();
-  const philosophy = document.getElementById("cc-philosophy").value.trim() || `${nameJa}の信条に従い語る。`;
-  let customAvatar = document.getElementById("cc-avatar-data").value || "";
-  if (!customAvatar) {
-    customAvatar = generateInstantSymbolAvatar(nameJa, titleJa, role, false);
-  }
+  try {
+    const editId = document.getElementById("cc-edit-id").value;
+    const nameJa = document.getElementById("cc-name-ja").value.trim();
+    const titleJa = document.getElementById("cc-title-ja").value.trim();
+    const era = document.getElementById("cc-era").value.trim() || "オリジナル";
+    const role = document.getElementById("cc-role").value || "role_passion";
+    const tone = document.getElementById("cc-tone").value.trim();
+    const philosophy = document.getElementById("cc-philosophy").value.trim() || `${nameJa}の信条に従い語る。`;
+    const quoteEl = document.getElementById("cc-quote");
+    const quote = quoteEl ? quoteEl.value.trim() : "";
+    const finalQuote = quote || philosophy;
 
-  // 詳細図鑑データ
-  const bio = document.getElementById("cc-bio").value.trim() || philosophy;
-  const f1T = document.getElementById("cc-feat1-title").value.trim();
-  const f1D = document.getElementById("cc-feat1-desc").value.trim();
-  const f2T = document.getElementById("cc-feat2-title").value.trim();
-  const f2D = document.getElementById("cc-feat2-desc").value.trim();
-  const f3T = document.getElementById("cc-feat3-title").value.trim();
-  const f3D = document.getElementById("cc-feat3-desc").value.trim();
-  const dislike = document.getElementById("cc-dislike").value.trim() || "理不尽な甘えや妥協";
-  const decision = document.getElementById("cc-decision").value.trim() || `「${philosophy}」を最重要の行動軸とする`;
-  const q1 = document.getElementById("cc-quote1").value.trim();
-  const q2 = document.getElementById("cc-quote2").value.trim();
-  const q3 = document.getElementById("cc-quote3").value.trim();
-  const advRole = document.getElementById("cc-advice-role").value.trim() || tone;
-  const advBest = document.getElementById("cc-advice-best").value.trim() || `${titleJa}の視点から現状を打破したいとき`;
+    if (!nameJa) {
+      alert("「名前」を入力してください。");
+      document.getElementById("cc-name-ja")?.focus();
+      return;
+    }
+    if (!titleJa) {
+      alert("「肩書・作品名」を入力してください。");
+      document.getElementById("cc-title-ja")?.focus();
+      return;
+    }
+    if (!tone) {
+      alert("「口調・話し方ルール」を入力してください（例: 一人称はオレ、仲間想いな口調 など）。");
+      document.getElementById("cc-tone")?.focus();
+      return;
+    }
 
-  const featsList = [];
-  if (f1T || f1D) featsList.push({ num: "01", title: { ja: f1T || "第1の活躍", en: f1T || "Feat 1" }, desc: { ja: f1D || philosophy, en: f1D || philosophy } });
-  if (f2T || f2D) featsList.push({ num: "02", title: { ja: f2T || "最大の試練", en: f2T || "Feat 2" }, desc: { ja: f2D || philosophy, en: f2D || philosophy } });
-  if (f3T || f3D) featsList.push({ num: "03", title: { ja: f3T || "到達点・伝説", en: f3T || "Feat 3" }, desc: { ja: f3D || philosophy, en: f3D || philosophy } });
-  if (featsList.length === 0) {
-    featsList.push({ num: "01", title: { ja: "独自の道の確立", en: "Unique Path" }, desc: { ja: philosophy, en: philosophy } });
-  }
+    let customAvatar = document.getElementById("cc-avatar-data").value || "";
+    if (!customAvatar) {
+      customAvatar = generateInstantSymbolAvatar(nameJa, titleJa, role, false);
+    }
 
-  const quotesList = [quote];
-  if (q1 && !quotesList.includes(q1)) quotesList.push(q1);
-  if (q2 && !quotesList.includes(q2)) quotesList.push(q2);
-  if (q3 && !quotesList.includes(q3)) quotesList.push(q3);
+    // 詳細図鑑データ
+    const bio = document.getElementById("cc-bio").value.trim() || philosophy;
+    const f1T = document.getElementById("cc-feat1-title").value.trim();
+    const f1D = document.getElementById("cc-feat1-desc").value.trim();
+    const f2T = document.getElementById("cc-feat2-title").value.trim();
+    const f2D = document.getElementById("cc-feat2-desc").value.trim();
+    const f3T = document.getElementById("cc-feat3-title").value.trim();
+    const f3D = document.getElementById("cc-feat3-desc").value.trim();
+    const dislike = document.getElementById("cc-dislike").value.trim() || "理不尽な甘えや妥協";
+    const decision = document.getElementById("cc-decision").value.trim() || `「${philosophy}」を最重要の行動軸とする`;
+    const q1 = document.getElementById("cc-quote1").value.trim();
+    const q2 = document.getElementById("cc-quote2").value.trim();
+    const q3 = document.getElementById("cc-quote3").value.trim();
+    const advRole = document.getElementById("cc-advice-role").value.trim() || tone;
+    const advBest = document.getElementById("cc-advice-best").value.trim() || `${titleJa}の視点から現状を打破したいとき`;
 
-  if (!nameJa) {
-    alert("「名前」を入力してください。");
-    return;
-  }
-  if (!titleJa) {
-    alert("「肩書・作品名」を入力してください。");
-    return;
-  }
-  if (!tone) {
-    alert("「口調・話し方ルール」を入力してください（例: 一人称はオレ、仲間想いな口調 など）。");
-    return;
-  }
+    const featsList = [];
+    if (f1T || f1D) featsList.push({ num: "01", title: { ja: f1T || "第1の活躍", en: f1T || "Feat 1" }, desc: { ja: f1D || philosophy, en: f1D || philosophy } });
+    if (f2T || f2D) featsList.push({ num: "02", title: { ja: f2T || "最大の試練", en: f2T || "Feat 2" }, desc: { ja: f2D || philosophy, en: f2D || philosophy } });
+    if (f3T || f3D) featsList.push({ num: "03", title: { ja: f3T || "到達点・伝説", en: f3T || "Feat 3" }, desc: { ja: f3D || philosophy, en: f3D || philosophy } });
+    if (featsList.length === 0) {
+      featsList.push({ num: "01", title: { ja: "独自の道の確立", en: "Unique Path" }, desc: { ja: philosophy, en: philosophy } });
+    }
 
-  const roleColorMap = {
-    role_passion: "bg-red-500/20 border-red-500/40 text-red-200",
-    role_mind: "bg-cyan-500/20 border-cyan-500/40 text-cyan-200",
-    role_lead: "bg-purple-500/20 border-purple-500/40 text-purple-200",
-    role_peace: "bg-emerald-500/20 border-emerald-500/40 text-emerald-200",
-    role_depth: "bg-amber-500/20 border-amber-500/40 text-amber-200",
-    role_fun: "bg-pink-500/20 border-pink-500/40 text-pink-200"
-  };
+    const quotesList = [finalQuote];
+    if (q1 && !quotesList.includes(q1)) quotesList.push(q1);
+    if (q2 && !quotesList.includes(q2)) quotesList.push(q2);
+    if (q3 && !quotesList.includes(q3)) quotesList.push(q3);
 
-  if (editId) {
-    const idx = customCharacters.findIndex(c => c.id === editId);
-    if (idx !== -1) {
-      customCharacters[idx] = {
-        ...customCharacters[idx],
-        name: { ja: nameJa, en: (customCharacters[idx].name && customCharacters[idx].name.en) || nameJa },
-        title: { ja: titleJa, en: (customCharacters[idx].title && customCharacters[idx].title.en) || titleJa },
+    const roleColorMap = {
+      role_passion: "bg-red-500/20 border-red-500/40 text-red-200",
+      role_mind: "bg-cyan-500/20 border-cyan-500/40 text-cyan-200",
+      role_lead: "bg-purple-500/20 border-purple-500/40 text-purple-200",
+      role_peace: "bg-emerald-500/20 border-emerald-500/40 text-emerald-200",
+      role_depth: "bg-amber-500/20 border-amber-500/40 text-amber-200",
+      role_fun: "bg-pink-500/20 border-pink-500/40 text-pink-200"
+    };
+
+    if (editId) {
+      const idx = customCharacters.findIndex(c => c.id === editId);
+      if (idx !== -1) {
+        customCharacters[idx] = {
+          ...customCharacters[idx],
+          name: { ja: nameJa, en: (customCharacters[idx].name && customCharacters[idx].name.en) || nameJa },
+          title: { ja: titleJa, en: (customCharacters[idx].title && customCharacters[idx].title.en) || titleJa },
+          era: era,
+          role: role,
+          tone: tone,
+          philosophy: philosophy,
+          quote: finalQuote,
+          bio: { ja: bio, en: bio },
+          feats: featsList,
+          mindset: {
+            core: { ja: finalQuote, en: finalQuote },
+            dislike: { ja: dislike, en: dislike },
+            decision: { ja: decision, en: decision }
+          },
+          quotes: { ja: quotesList, en: quotesList },
+          advice: {
+            role: { ja: advRole, en: advRole },
+            bestFor: { ja: advBest, en: advBest }
+          },
+          customAvatar: customAvatar || customCharacters[idx].customAvatar,
+          color: roleColorMap[role] || "bg-amber-100 border-amber-400 text-amber-900"
+        };
+      }
+    } else {
+      const newChar = {
+        id: "custom_" + Date.now(),
+        isCustom: true,
+        category: "CUSTOM",
+        avatar: "🌟",
+        customAvatar: customAvatar,
+        name: { ja: nameJa, en: nameJa },
+        title: { ja: titleJa, en: titleJa },
         era: era,
         role: role,
         tone: tone,
         philosophy: philosophy,
-        quote: quote,
+        quote: finalQuote,
         bio: { ja: bio, en: bio },
         feats: featsList,
         mindset: {
-          core: { ja: quote, en: quote },
+          core: { ja: finalQuote, en: finalQuote },
           dislike: { ja: dislike, en: dislike },
           decision: { ja: decision, en: decision }
         },
@@ -4572,50 +4715,25 @@ function saveCustomCharacter() {
           role: { ja: advRole, en: advRole },
           bestFor: { ja: advBest, en: advBest }
         },
-        customAvatar: customAvatar || customCharacters[idx].customAvatar,
         color: roleColorMap[role] || "bg-amber-100 border-amber-400 text-amber-900"
       };
+      customCharacters.unshift(newChar);
+      if (selectedIds.length < 5 && !selectedIds.includes(newChar.id)) {
+        selectedIds.push(newChar.id);
+      }
     }
-  } else {
-    const newChar = {
-      id: "custom_" + Date.now(),
-      isCustom: true,
-      category: "CUSTOM",
-      avatar: "🌟",
-      customAvatar: customAvatar,
-      name: { ja: nameJa, en: nameJa },
-      title: { ja: titleJa, en: titleJa },
-      era: era,
-      role: role,
-      tone: tone,
-      philosophy: philosophy,
-      quote: quote,
-      bio: { ja: bio, en: bio },
-      feats: featsList,
-      mindset: {
-        core: { ja: quote, en: quote },
-        dislike: { ja: dislike, en: dislike },
-        decision: { ja: decision, en: decision }
-      },
-      quotes: { ja: quotesList, en: quotesList },
-      advice: {
-        role: { ja: advRole, en: advRole },
-        bestFor: { ja: advBest, en: advBest }
-      },
-      color: roleColorMap[role] || "bg-amber-100 border-amber-400 text-amber-900"
-    };
-    customCharacters.unshift(newChar);
-    if (selectedIds.length < 5 && !selectedIds.includes(newChar.id)) {
-      selectedIds.push(newChar.id);
-    }
-  }
 
-  saveCustomCharacters();
-  rebuildCharactersList();
-  renderSelectedChips();
-  renderCharacters();
-  closeCustomCharModal();
-  setCategory("CUSTOM");
+    saveCustomCharacters();
+    rebuildCharactersList();
+    renderSelectedChips();
+    renderCharacters();
+    closeCustomCharModal();
+    setCategory("CUSTOM");
+    alert(`✅ 「${nameJa}」を保存しました！「🌟 自作」一覧に追加されました。`);
+  } catch (err) {
+    console.error("saveCustomCharacter error:", err);
+    alert("キャラクターの保存中にエラーが発生しました: " + (err.message || err));
+  }
 }
 
 // キャラクター削除処理
