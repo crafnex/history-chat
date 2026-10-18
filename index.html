@@ -408,7 +408,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <div class="text-xs font-bold text-slate-800" id="st-ver-title">📱 現在のバージョン</div>
-                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.8.4</div>
+                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.8.5</div>
               </div>
               <div class="flex items-center gap-1.5">
                 <button type="button" onclick="openChangelogModal()" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition flex items-center gap-1">
@@ -997,7 +997,7 @@
           <div class="text-indigo-400 font-bold">➔</div>
           <div class="text-right">
             <div class="text-[10px] text-emerald-600 font-semibold">最新アップデート</div>
-            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.8.4</div>
+            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.8.5</div>
           </div>
         </div>
 
@@ -1537,6 +1537,10 @@
           </div>
         </div>
         <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
+          <!-- 🔊 音声読み上げ速度ボタン -->
+          <button id="tts-speed-btn" onclick="toggleTtsSpeed()" class="text-[11px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-200 font-medium flex items-center gap-1 transition" title="英語読み上げ速度の変更">
+            <span id="tts-speed-label">🔊 1.0x</span>
+          </button>
           <!-- ⭐ 神回トーク保存ボタン -->
           <button id="save-chat-btn" onclick="openSaveChatModal()" class="text-[11px] bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-xs transition" title="この会話を保存">
             <span>⭐</span> <span>保存</span>
@@ -1571,6 +1575,15 @@
 
       <!-- フッター（継続＆ユーザー乱入） -->
       <div class="bg-white border-t border-slate-200 p-2.5 space-y-2 z-10 shrink-0">
+        <!-- 💬 おすすめ返信（英会話クイックリプライ3択） -->
+        <div id="quick-replies-container" class="hidden pb-1 space-y-1">
+          <div class="flex items-center justify-between text-[10px] text-slate-500 font-bold px-0.5">
+            <span class="flex items-center gap-1">💬 <span id="ui-quick-replies-title">おすすめの返信（タップで送信）:</span></span>
+            <span class="text-[9px] text-indigo-600 font-normal">タップで即送信</span>
+          </div>
+          <div id="quick-replies-list" class="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5"></div>
+        </div>
+
         <div class="flex gap-2">
           <button id="continue-btn" onclick="handleContinueButtonClick()" class="flex-1 bg-indigo-50 hover:bg-indigo-100 active:bg-indigo-200 text-indigo-700 font-bold py-1.5 rounded-lg text-xs transition border border-indigo-200 flex justify-center items-center gap-1">
             🔄 <span id="ui-continue-btn">トークの続きを見る (+4発言)</span>
@@ -1587,8 +1600,8 @@
 
   </div>
 
-<script src="mode_topics.js?v=1.8.4"></script>
-<script src="character_details.js?v=1.8.4"></script>
+<script src="mode_topics.js?v=1.8.5"></script>
+<script src="character_details.js?v=1.8.5"></script>
 <script>
 // ============================================================================
 // 🛡️ API通信モード設定（各自のGroq / Gemini / OpenAIキーによる公式直接通信）
@@ -1653,12 +1666,22 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.8.4';
+const APP_CLIENT_VERSION = 'v1.8.5';
 let waitingServiceWorker = null;
 let swRegistration = null;
 
 // 📋 全バージョンの変更履歴（リリースノート）マスターデータ
 const APP_CHANGELOG = [
+  {
+    version: "v1.8.5",
+    date: "2026-10-18",
+    title: "🎙️ 英会話おすすめ返信3択 ＆ 速度変更対応TTS音声読み上げ",
+    highlights: [
+      "【おすすめ返信3択（クイックリプライ）】英会話レッスンで会話が弾む自然な英語フレーズを3つ提示。ワンタップで即送信し、英語タイピングの手間なく会話をポンポン継続",
+      "【自然な英語音声読み上げ（TTS）】各偉人のセリフに🔊ボタンを新設。日本語解説があっても英語セリフ部分のみを抽出し、ネイティブ発音でクリアに再生",
+      "【速度変更トグル（🐢 0.8x / 🔊 1.0x / 🐇 1.2x）】チャットヘッダーからワンタップで読み上げ速度を切り替え。リスニング初心者から上級者まで好みのテンポで練習可能"
+    ]
+  },
   {
     version: "v1.8.4",
     date: "2026-10-18",
@@ -6306,6 +6329,10 @@ function stopAllTimers() {
 }
 
 async function startChat() {
+  stopTts();
+  initTtsEngine();
+  const qrContainer = document.getElementById("quick-replies-container");
+  if (qrContainer) qrContainer.classList.add("hidden");
   const t = UI_TEXTS[currentLang] || UI_TEXTS.ja;
   if (selectedIds.length === 0) {
     return;
@@ -6386,6 +6413,7 @@ async function startChat() {
 }
 
 function backToSetup() {
+  stopTts();
   stopAllTimers();
   isPaused = false;
   currentPlaybackItem = null;
@@ -6575,6 +6603,9 @@ function playNextInDisplayQueue(sessionId, isFirst = false) {
     isPlayingQueue = false;
     if (!isFetchingBatch) {
       hideTyping();
+      if (currentMode === "english") {
+        renderQuickReplies();
+      }
       const conclusionMsg = currentLang === "en"
         ? "💡 Chapter concluded. Tap 'Continue Talk' or send a message below to join the discussion."
         : "💡 一区切りつきました。「トークの続きを見る」または下の入力欄からいつでも返信できます。";
@@ -6681,6 +6712,9 @@ function flushDisplayQueue() {
     if (item.afterCallback) pendingCallback = item.afterCallback;
   }
   updateQueueCounter();
+  if (currentMode === "english") {
+    renderQuickReplies();
+  }
   if (pendingCallback) pendingCallback();
 }
 
@@ -6866,6 +6900,14 @@ CRITICAL MANDATORY LANGUAGE REQUIREMENT (STRICTLY ENFORCED)
 1. 【会話セリフは100% 英語（2〜3文）】:
    各偉人のセリフ本文は、必ず自然で生き生きとしたネイティブ英語（2〜3文）で発言してください。
    キャラクターの性格（信長の威厳、龍馬の豪快さ等）を英語のセリフで表現してください。
+2. ★【ユーザーおすすめ返信3択（必須）】:
+   全発言の最後に、ユーザーが次に会話を続けるための実践的で自然な英語の返信候補を必ず3つ作成してください。
+   ===QUICK_REPLIES=== の区切りに続けて、1行に1つずつ出力してください。
+   例:
+   ===QUICK_REPLIES===
+   1. That's a great perspective! Could you explain that in more detail?
+   2. I completely agree with your idea on this topic.
+   3. To be honest, I see it differently. What about the potential challenges?
 `;
       if (languageSubMode !== "only") {
         lessonInstructions = `
@@ -7214,6 +7256,17 @@ function parseBatchResponse(rawText, speakerSequence) {
 
   const results = [];
 
+  // 0. 英会話用 ===QUICK_REPLIES=== の抽出
+  lastQuickReplies = [];
+  const qrMatch = rawText.match(/===QUICK_REPLIES===([\s\S]*)$/i);
+  if (qrMatch) {
+    const qrLines = qrMatch[1].split(/\n+/).map(l => l.replace(/^\d+[\.\)]\s*|^[・\-\*]\s*|^["'「『]|["'」』]$/g, "").trim()).filter(l => l.length >= 4 && !l.startsWith("==="));
+    if (qrLines.length > 0) {
+      lastQuickReplies = qrLines.slice(0, 3);
+    }
+    rawText = rawText.substring(0, qrMatch.index).trim();
+  }
+
   // 1. ===SPEAKER_ID=== または ===偉人名=== の柔軟なマッチ（前後空白や日本語名も許容）
   const blocks = rawText.split(/===\s*([^\n\r=]+?)\s*===/);
 
@@ -7292,6 +7345,9 @@ function sendUserMessage() {
   const text = input.value.trim();
   if (!text) return;
   input.value = "";
+  stopTts();
+  const qrContainer = document.getElementById("quick-replies-container");
+  if (qrContainer) qrContainer.classList.add("hidden");
   flushDisplayQueue();
   appendUserMessage(text);
   chatHistory.push({
@@ -7380,10 +7436,19 @@ function appendCharacterMessage(char, text, isInitialPhase = false) {
         <div class="chat-bubble-text relative bg-white text-slate-800 leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-tl-none shadow bubble-left">
           ${formatChatText(text)}
         </div>
-        <span class="text-[9px] text-white/80 shrink-0">${now}</span>
+        <div class="flex flex-col items-center gap-1 shrink-0">
+          <button type="button" class="tts-bubble-btn w-6 h-6 rounded-full bg-slate-700/80 hover:bg-indigo-600 active:scale-90 text-white text-[11px] flex items-center justify-center transition shadow-2xs select-none cursor-pointer" title="英語を読み上げ">
+            🔊
+          </button>
+          <span class="text-[9px] text-white/80">${now}</span>
+        </div>
       </div>
     </div>
   `;
+  const ttsBtn = row.querySelector(".tts-bubble-btn");
+  if (ttsBtn) {
+    ttsBtn.onclick = () => playTts(ttsBtn, text);
+  }
   area.appendChild(row);
   scrollToBottom();
 
@@ -7489,6 +7554,168 @@ function scrollToBottom() {
 
 function escapeHtml(str) {
   return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+}
+
+// ============================================================================
+// 🔊 自然な英語音声読み上げ（TTS: SpeechSynthesis）＆速度変更システム
+// ============================================================================
+let currentTtsSpeed = parseFloat(localStorage.getItem("history_chat_tts_speed") || "1.0");
+let currentTtsUtterance = null;
+let activeTtsButton = null;
+let lastQuickReplies = [];
+
+function initTtsEngine() {
+  updateTtsSpeedUI();
+  if (window.speechSynthesis) {
+    window.speechSynthesis.onvoiceschanged = () => {
+      // 音声リスト読み込みトリガー
+    };
+  }
+}
+
+function updateTtsSpeedUI() {
+  const label = document.getElementById("tts-speed-label");
+  if (label) {
+    if (currentTtsSpeed === 0.8) label.innerText = "🐢 0.8x";
+    else if (currentTtsSpeed === 1.2) label.innerText = "🐇 1.2x";
+    else label.innerText = "🔊 1.0x";
+  }
+}
+
+function toggleTtsSpeed() {
+  if (currentTtsSpeed === 1.0) currentTtsSpeed = 0.8;
+  else if (currentTtsSpeed === 0.8) currentTtsSpeed = 1.2;
+  else currentTtsSpeed = 1.0;
+
+  localStorage.setItem("history_chat_tts_speed", currentTtsSpeed);
+  updateTtsSpeedUI();
+  showToast(currentLang === "en" ? `🔊 Speech Speed: ${currentTtsSpeed}x` : `🔊 読み上げ速度: ${currentTtsSpeed}倍`);
+}
+
+function extractEnglishSpeechText(rawText) {
+  if (!rawText) return "";
+  let clean = rawText.split(/(?:💡|🎯|【重要|【返信|【使って|===)/)[0].trim();
+  clean = clean.replace(/<[^>]*>/g, "").replace(/^["'「『]|["'」』]$/g, "").trim();
+  return clean || rawText.replace(/<[^>]*>/g, "").trim();
+}
+
+function stopTts() {
+  if (window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+  }
+  if (activeTtsButton) {
+    activeTtsButton.innerText = "🔊";
+    activeTtsButton.classList.remove("bg-indigo-600", "animate-pulse");
+    activeTtsButton = null;
+  }
+  currentTtsUtterance = null;
+}
+
+function getBestEnglishVoice() {
+  if (!window.speechSynthesis) return null;
+  const voices = window.speechSynthesis.getVoices();
+  return voices.find(v => v.lang.startsWith("en") && (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Samantha") || v.name.includes("Zira") || v.name.includes("Jenny")))
+    || voices.find(v => v.lang === "en-US")
+    || voices.find(v => v.lang.startsWith("en"))
+    || null;
+}
+
+function playTts(btn, rawText) {
+  if (!window.speechSynthesis) {
+    alert("お使いのブラウザは音声読み上げに対応していません。");
+    return;
+  }
+
+  if (activeTtsButton === btn) {
+    stopTts();
+    return;
+  }
+
+  stopTts();
+
+  const textToSpeak = extractEnglishSpeechText(rawText);
+  if (!textToSpeak) return;
+
+  const utter = new SpeechSynthesisUtterance(textToSpeak);
+  utter.lang = "en-US";
+  utter.rate = currentTtsSpeed;
+  const voice = getBestEnglishVoice();
+  if (voice) utter.voice = voice;
+
+  activeTtsButton = btn;
+  btn.innerText = "⏹️";
+  btn.classList.add("bg-indigo-600", "animate-pulse");
+
+  utter.onend = () => stopTts();
+  utter.onerror = () => stopTts();
+
+  currentTtsUtterance = utter;
+  window.speechSynthesis.speak(utter);
+}
+
+// ============================================================================
+// 💬 英会話おすすめ返信（クイックリプライ3択）システム
+// ============================================================================
+function getFallbackQuickReplies(topic) {
+  return [
+    "That's a fascinating perspective! Can you tell me more?",
+    "I agree with that. How would you apply it in practice?",
+    "To be honest, I see it a bit differently. What about the risks?"
+  ];
+}
+
+function renderQuickReplies(replies = null) {
+  const container = document.getElementById("quick-replies-container");
+  const list = document.getElementById("quick-replies-list");
+  if (!container || !list) return;
+
+  if (currentMode !== "english") {
+    container.classList.add("hidden");
+    return;
+  }
+
+  const finalReplies = (replies && replies.length > 0) ? replies : (lastQuickReplies.length > 0 ? lastQuickReplies : getFallbackQuickReplies(currentTopic));
+  list.innerHTML = "";
+
+  finalReplies.forEach(r => {
+    const btn = document.createElement("div");
+    btn.className = "shrink-0 bg-indigo-50 hover:bg-indigo-100 active:scale-95 border border-indigo-200/90 rounded-full px-3 py-1.5 text-xs text-indigo-950 font-medium flex items-center gap-1.5 transition shadow-2xs cursor-pointer select-none group";
+    btn.innerHTML = `
+      <span class="text-xs group-hover:scale-110 transition">💬</span>
+      <span class="quick-reply-text truncate max-w-[210px] sm:max-w-[280px]">${escapeHtml(r)}</span>
+      <button type="button" class="quick-reply-tts-btn text-[11px] text-indigo-600 hover:text-indigo-800 p-0.5 rounded-full hover:bg-indigo-200/60 transition" title="発音を聴く">🔊</button>
+    `;
+    btn.onclick = () => selectQuickReply(r);
+    const ttsMiniBtn = btn.querySelector(".quick-reply-tts-btn");
+    if (ttsMiniBtn) {
+      ttsMiniBtn.onclick = (e) => {
+        e.stopPropagation();
+        playTts(ttsMiniBtn, r);
+      };
+    }
+    list.appendChild(btn);
+  });
+
+  container.classList.remove("hidden");
+  scrollToBottom();
+}
+
+function selectQuickReply(text) {
+  const input = document.getElementById("user-msg-input");
+  if (input) {
+    input.value = text;
+    sendUserMessage();
+  }
+  const container = document.getElementById("quick-replies-container");
+  if (container) container.classList.add("hidden");
+}
+
+
+// 🔊 TTSエンジンの初期化
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initTtsEngine);
+} else {
+  initTtsEngine();
 }
 </script>
 </body>
