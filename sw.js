@@ -1,29 +1,32 @@
 // ============================================================================
 // Service Worker for 偉人トークAI (PWA)
 // ============================================================================
-const APP_VERSION = 'v1.0.8';
+const APP_VERSION = 'v1.0.9';
 const CACHE_NAME = `history-ai-chat-${APP_VERSION}`;
 
 // 初回起動時にキャッシュするコア静的ファイル群
 const CORE_STATIC_ASSETS = [
   './',
   './index.html',
-  './character_details.js',
-  './manifest.json',
-  './icons/app-icon-192.png',
-  './icons/app-icon-maskable.png',
-  './icons/app-icon-512.png',
-  './icons/apple-touch-icon-v2.png',
+  './character_details.js?v=1.0.9',
+  './manifest.json?v=1.0.9',
+  './icons/app-icon-192.png?v=1.0.9',
+  './icons/app-icon-maskable.png?v=1.0.9',
+  './icons/app-icon-512.png?v=1.0.9',
+  './icons/apple-touch-icon-v2.png?v=1.0.9',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/apple-touch-icon.png'
 ];
 
-// 1. インストール時：コアアセットをキャッシュ
+// 1. インストール時：即座に待機をスキップし、最新SWを有効化
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(CORE_STATIC_ASSETS);
+      return cache.addAll(CORE_STATIC_ASSETS).catch((err) => {
+        console.warn('[SW] Pre-caching non-fatal warning:', err);
+      });
     })
   );
 });
@@ -35,7 +38,7 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// 3. アクティベーション時：古いバージョンのキャッシュを完全消去
+// 3. アクティベーション時：古いバージョンのキャッシュを完全消去 & 即座にクライアントを掌握
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -51,7 +54,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 4. フェッチ処理：通信の完全最適化
+// 4. フェッチ処理：HTMLは常に「Network-First（リロード即反映）」
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
@@ -67,32 +70,50 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // ② 静的ファイル（HTML, JS, 画像アイコン等）：完全なCache-First
-  // キャッシュに存在する場合はサーバーへのお問い合わせ通信を一切行わず、スマホ内から即座に返す（通信量ゼロ）
+  // ② HTMLナビゲーション（リロードやページアクセス）は【Network-First】
+  // サーバーの最新 index.html を最優先で取得し、キャッシュを即座に更新する。
+  // これにより、スマホでリロードした際に古い壊れたキャッシュが表示され続けるのを完全に防ぐ。
+  const isHtmlRequest = event.request.mode === 'navigate' ||
+                        url.pathname.endsWith('/') ||
+                        url.pathname.endsWith('index.html');
+
+  if (isHtmlRequest) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, copy);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          // ネットワークがオフラインの時だけキャッシュを返す
+          return caches.match(event.request).then((cached) => {
+            return cached || caches.match('./index.html');
+          });
+        })
+    );
+    return;
+  }
+
+  // ③ 静的アセット（画像・アイコン・スクリプトなど）：Stale-While-Revalidate
+  // キャッシュがあれば即座に応答しつつ、バックグラウンドで最新を取得して次回に備える
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-
-      // 初回表示時などキャッシュにない画像やアセットのみネットワークからダウンロードしてキャッシュ
-      return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-          return networkResponse;
+      const fetchPromise = fetch(event.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
         }
-
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-
         return networkResponse;
-      }).catch(() => {
-        // オフライン時のページ遷移フォールバック
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
-      });
+      }).catch(() => null);
+
+      return cachedResponse || fetchPromise;
     })
   );
 });
