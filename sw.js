@@ -1,19 +1,20 @@
 // ============================================================================
 // Service Worker for 偉人トークAI (PWA)
 // ============================================================================
-const APP_VERSION = 'v1.5.1';
+const APP_VERSION = 'v1.6.0';
 const CACHE_NAME = `history-ai-chat-${APP_VERSION}`;
 
 // 初回起動時にキャッシュするコア静的ファイル群
 const CORE_STATIC_ASSETS = [
   './',
   './index.html',
-  './character_details.js?v=1.5.1',
-  './manifest.json?v=1.5.1',
-  './icons/app-icon-192.png?v=1.5.1',
-  './icons/app-icon-maskable.png?v=1.5.1',
-  './icons/app-icon-512.png?v=1.5.1',
-  './icons/apple-touch-icon-v2.png?v=1.5.1',
+  './mode_topics.js?v=1.6.0',
+  './character_details.js?v=1.6.0',
+  './manifest.json?v=1.6.0',
+  './icons/app-icon-192.png?v=1.6.0',
+  './icons/app-icon-maskable.png?v=1.6.0',
+  './icons/app-icon-512.png?v=1.6.0',
+  './icons/apple-touch-icon-v2.png?v=1.6.0',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/apple-touch-icon.png'
@@ -58,62 +59,64 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // ① AI API通信 (Groq, Gemini, OpenAI) はキャッシュせず常にネットワーク直通
+  // APIリクエスト（Gemini / Groq / Wikipedia / Anilist / Jikan 等）はSWキャッシュ完全バイパス
   if (
-    url.hostname.includes('groq.com') ||
     url.hostname.includes('googleapis.com') ||
-    url.hostname.includes('google.com') ||
+    url.hostname.includes('groq.com') ||
     url.hostname.includes('openai.com') ||
-    event.request.method !== 'GET'
+    url.hostname.includes('wikipedia.org') ||
+    url.hostname.includes('wikimedia.org') ||
+    url.hostname.includes('anilist.co') ||
+    url.hostname.includes('jikan.moe') ||
+    url.hostname.includes('workers.dev') ||
+    url.pathname.includes('/v1/')
   ) {
-    event.respondWith(fetch(event.request));
-    return;
+    return; // SWは介入せず通常のネットワーク通信を行う
   }
 
-  // ② HTMLナビゲーション（リロードやページアクセス）は【Network-First】
-  // サーバーの最新 index.html を最優先で取得し、キャッシュを即座に更新する。
-  // これにより、スマホでリロードした際に古い壊れたキャッシュが表示され続けるのを完全に防ぐ。
-  const isHtmlRequest = event.request.mode === 'navigate' ||
-                        url.pathname.endsWith('/') ||
-                        url.pathname.endsWith('index.html');
-
-  if (isHtmlRequest) {
+  // index.html または ナビゲーションリクエスト（ルートへのアクセス）
+  // ★最重要：HTMLファイルは「Network-First（ネットワーク優先）」で取得！
+  // ネットワークがオンラインなら常に最新のHTMLを取得し、オフラインの時だけキャッシュを返す。
+  // これによりユーザーが「リロード」した瞬間に最新版が必ず表示される。
+  if (event.request.mode === 'navigate' || url.pathname.endsWith('index.html') || url.pathname.endsWith('/')) {
     event.respondWith(
       fetch(event.request)
         .then((networkResponse) => {
+          // ネットワーク取得が成功したらキャッシュも最新版に更新
           if (networkResponse && networkResponse.status === 200) {
-            const copy = networkResponse.clone();
+            const responseToCache = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, copy);
+              cache.put(event.request, responseToCache);
             });
           }
           return networkResponse;
         })
         .catch(() => {
-          // ネットワークがオフラインの時だけキャッシュを返す
-          return caches.match(event.request).then((cached) => {
-            return cached || caches.match('./index.html');
+          // オフラインまたはネットワーク接続不能時のみキャッシュをフォールバックとして返す
+          return caches.match(event.request).then((cachedResponse) => {
+            return cachedResponse || caches.match('./index.html');
           });
         })
     );
     return;
   }
 
-  // ③ 静的アセット（画像・アイコン・スクリプトなど）：Stale-While-Revalidate
-  // キャッシュがあれば即座に応答しつつ、バックグラウンドで最新を取得して次回に備える
+  // その他の静的アセット（JS / CSS / 画像 / アイコン等）は Cache-First (無ければNetwork取得＆キャッシュ)
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      const fetchPromise = fetch(event.request).then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+      return fetch(event.request).then((networkResponse) => {
+        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+          return networkResponse;
         }
+        const responseToCache = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
+        });
         return networkResponse;
-      }).catch(() => null);
-
-      return cachedResponse || fetchPromise;
+      });
     })
   );
 });

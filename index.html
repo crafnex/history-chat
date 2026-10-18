@@ -282,6 +282,18 @@
       --modal-body-lh: 1.75;
       --modal-badge-size: 15.5px;
     }
+      /* 漢字ふりがな（ルビ）表示 */
+    ruby.ruby-word {
+      ruby-position: over;
+    }
+    rt.ruby-rt {
+      font-size: 0.65em;
+      font-weight: 600;
+      color: #4f46e5;
+      user-select: none;
+      padding: 0 1px;
+      line-height: 1;
+    }
   </style>
 </head>
 <body class="flex justify-center items-center min-h-[100dvh] p-0 sm:p-2 md:p-3 bg-[#0f172a] font-size-md">
@@ -396,7 +408,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <div class="text-xs font-bold text-slate-800" id="st-ver-title">📱 現在のバージョン</div>
-                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.5.1</div>
+                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.6.0</div>
               </div>
               <div class="flex items-center gap-1.5">
                 <button type="button" onclick="openChangelogModal()" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition flex items-center gap-1">
@@ -831,7 +843,7 @@
           <div class="text-indigo-400 font-bold">➔</div>
           <div class="text-right">
             <div class="text-[10px] text-emerald-600 font-semibold">最新アップデート</div>
-            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.5.1</div>
+            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.6.0</div>
           </div>
         </div>
 
@@ -1291,14 +1303,16 @@
         </div>
       </div>
 
-      <!-- 5つのトークモード選択 -->
+      <!-- 5つのトークモード選択 (5大分類 ↔ 各4モード 階層型スロット) -->
       <div class="mb-2 shrink-0">
-        <label class="block text-xs font-bold text-slate-700 mb-1.5" id="ui-mode-label">① トークの形式（モード）を選択</label>
+        <label class="block text-xs font-bold text-slate-700 mb-1.5" id="ui-mode-label">① トークの形式（5分類・全20モード）</label>
         <div id="mode-tabs" class="grid grid-cols-5 gap-1 mb-1.5"></div>
         <div class="bg-indigo-50/80 border border-indigo-200/70 rounded-lg px-2.5 py-1.5 text-[11px] text-indigo-900 leading-snug flex items-center gap-1.5 shadow-2xs">
           <span class="text-indigo-600 font-bold shrink-0">💡</span>
           <span id="mode-desc" class="font-medium"></span>
         </div>
+        <!-- 語学レッスン用サブモード切替ピル（英会話・日本語レッスン時のみ動的表示） -->
+        <div id="language-submode-container" class="hidden mt-1.5 flex items-center justify-between bg-white border border-indigo-200 rounded-lg p-1 text-[11px] shadow-2xs"></div>
       </div>
 
       <!-- 選択中のメンバーバー -->
@@ -1339,9 +1353,17 @@
         <div>
           <div class="flex justify-between items-center mb-1">
             <label class="text-xs font-bold text-slate-700" id="ui-topic-label">③ テーマ・相談内容（自由入力）</label>
-            <button onclick="setRandomTopic()" class="text-[11px] bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-md font-semibold transition shadow-xs flex items-center gap-1">
-              🎲 <span id="ui-random-btn">ランダム入力</span>
-            </button>
+            <div class="flex items-center gap-1">
+              <button id="btn-topic-prev" type="button" onclick="prevTopic()" class="text-[11px] bg-slate-100 text-slate-400 border border-slate-200 px-2 py-0.5 rounded-md font-semibold transition shadow-xs flex items-center cursor-not-allowed opacity-60" title="前のテーマに戻す" disabled>
+                ◀
+              </button>
+              <button id="btn-topic-random" type="button" onclick="setRandomTopic()" class="text-[11px] bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-md font-semibold transition shadow-xs flex items-center gap-1 cursor-pointer">
+                🎲 <span id="ui-random-btn">ランダム入力</span>
+              </button>
+              <button id="btn-topic-next" type="button" onclick="nextTopic()" class="text-[11px] bg-slate-100 text-slate-400 border border-slate-200 px-2 py-0.5 rounded-md font-semibold transition shadow-xs flex items-center cursor-not-allowed opacity-60" title="次のテーマに進む" disabled>
+                ▶
+              </button>
+            </div>
           </div>
           <textarea id="topic-input" rows="2" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs sm:text-[13px] leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm resize-none" placeholder="テーマや相談内容を入力..."></textarea>
         </div>
@@ -1412,7 +1434,8 @@
 
   </div>
 
-<script src="character_details.js?v=1.5.1"></script>
+<script src="mode_topics.js?v=1.6.0"></script>
+<script src="character_details.js?v=1.6.0"></script>
 <script>
 // ============================================================================
 // 🛡️ API通信モード設定（各自のGroq / Gemini / OpenAIキーによる公式直接通信）
@@ -1477,12 +1500,26 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.5.1';
+const APP_CLIENT_VERSION = 'v1.6.0';
 let waitingServiceWorker = null;
 let swRegistration = null;
 
 // 📋 全バージョンの変更履歴（リリースノート）マスターデータ
 const APP_CHANGELOG = [
+  {
+    version: "v1.6.0",
+    date: "2026-10-18",
+    title: "🌟 5分類・全20トークモード拡張 ＆ 5スロット統一階層UI ＆ 語学レッスン・履歴ナビ",
+    highlights: [
+      "【5分類・全20モードへ大幅拡張】癒し・ときめき・共感・学び・対話の5大分類×各4モード＝全20種類の多彩なトーク形式を新設",
+      "【5スロット統一階層UI】トップは5大分類、展開時は「◀ 戻る」＋4モードの常に横5列固定グリッド。画面高さが一切ブレない快適操作",
+      "【日本人向け英会話 ＆ 英語圏向け日本語会話】バイリンガルフォロー付きと単一言語イマージョンを選べる語学サブモード切替ピルを搭載",
+      "【漢字ふりがな（HTML <ruby>）完全対応】日本語レッスンモードでは全漢字に自動ふりがな（ルビ）が表示され、自然な日本語学習をアシスト",
+      "【ランダムトピック履歴ナビ（戻る・進む）】「◀ 戻る」「🎲 ランダム入力」「進む ▶」で、一度引いたテーマにいつでも戻せるアンドゥ・リドゥ機能を実装",
+      "【各100件・全2,000トピック完備】全20モードに日本語・英語対応の厳選トピックを各100件（計2,000件）外出しマスタ（mode_topics.js）として高速搭載",
+      "【ペルソナ深度向上エンジン】一人称・語尾・口癖（〜ぜよ、〜でおじゃる、たわけ等）を厳格固定し、無機質なオウム返し定型相槌を完全撤廃"
+    ]
+  },
   {
     version: "v1.5.1",
     date: "2026-10-18",
@@ -1762,1156 +1799,382 @@ if ('serviceWorker' in navigator) {
 // ============================================================================
 // 5つのトークモード（会話パターン）定義
 // ============================================================================
+// 5大分類 ＆ 全20トークモード定義（5スロット統一階層UI対応）
+// ============================================================================
+const MODE_CATEGORIES = {
+  healing: {
+    id: "healing",
+    icon: "🌿",
+    name: { ja: "癒し", en: "Healing" },
+    desc: { ja: "疲れた心を包み込む、温もりと安らぎのひととき", en: "Gentle comfort and soothing warmth for tired souls" },
+    modes: ["butler", "praise", "izakaya", "sleep"]
+  },
+  romance: {
+    id: "romance",
+    icon: "💖",
+    name: { ja: "ときめき", en: "Romance" },
+    desc: { ja: "胸が高鳴る甘い時間、恋のドキドキと運命の鑑定", en: "Sweet flutter, romantic intimacy, and mystical destiny" },
+    modes: ["lover", "teatime", "fortune", "tsundere"]
+  },
+  empathy: {
+    id: "empathy",
+    icon: "💄",
+    name: { ja: "共感", en: "Empathy" },
+    desc: { ja: "気兼ねない本音トーク、可愛い癒しと美味しい至福", en: "Relatable heartfelt chats, cute companions, and sweet bliss" },
+    modes: ["beauty", "roleplay", "mascot", "sweets"]
+  },
+  study: {
+    id: "study",
+    icon: "🎓",
+    name: { ja: "学び", en: "Study" },
+    desc: { ja: "語学レッスン、熱血コーチング、知的好奇心の講義", en: "Language lessons, goal coaching, and intellectual masterclasses" },
+    modes: ["english", "japanese", "coach", "lecture"]
+  },
+  dialogue: {
+    id: "dialogue",
+    icon: "🗣️",
+    name: { ja: "対話", en: "Dialogue" },
+    desc: { ja: "白熱の議論、人生相談、ブレスト、本音対談", en: "Vibrant debate, life counsel, brainstorming, and deep interviews" },
+    modes: ["debate", "counsel", "brainstorm", "interview"]
+  }
+};
+
 const CHAT_MODES = {
+  // === 【🌿 癒し】 ===
+  butler: {
+    id: "butler",
+    categoryId: "healing",
+    icon: "🤵",
+    name: { ja: "執事・メイド", en: "Butler & Maid" },
+    desc: { ja: "至れり尽くせりの専属奉仕と、どこまでも優しい労い", en: "Devoted personal service and gentle comforting care" },
+    phase1Banner: { ja: "🤵 お疲れのあなた様へ、温かいおもてなしの言葉を捧げます", en: "🤵 Welcoming you with warm personal hospitality." },
+    phase2Banner: { ja: "🫖 心ゆくまでおくつろぎいただけるよう、細やかな心配りを続けます", en: "🫖 Continuing devoted attentive care for your peace of mind." },
+    phase1Instruction: (name, lang = currentLang) => lang === "en"
+      ? `Welcome your exhausted master with utmost deference and heartwarming hospitality as a devoted butler/maid, offering soothing words of comfort and attentive service in 2-3 polite sentences.`
+      : `お疲れのあなた様（ユーザー）を極上の敬意と温もりで迎え、お仕えする執事・メイドとして、心身を癒すおもてなしの言葉や労いの言葉を2〜3文で丁寧にお伝えしてください。`,
+    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
+      ? `Gently echo ${prevName}'s warm consideration, offering your (${name}'s) own signature attentive pampering and soothing care for your master in 2-3 polite sentences.`
+      : `「${prevName}」の気遣いに心から共鳴しつつ、あなた（${name}）ならではの専属お世話役としての気配りや、さらなる安らぎ・甘やかしの提案を2〜3文で優しく語りかけてください。`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.butler) || { ja: [], en: [] }
+  },
+  praise: {
+    id: "praise",
+    categoryId: "healing",
+    icon: "👏",
+    name: { ja: "全力肯定", en: "Affirmation" },
+    desc: { ja: "落ち込んだ心に寄り添い、どんな悩みも全力で肯定・称賛するモード", en: "Unconditional praise and affirmation to uplift your weary spirit" },
+    phase1Banner: { ja: "👏 あなたの存在とこれまでの歩みを、全員が心から肯定・称賛します", en: "👏 Every figure will wholeheartedly affirm and celebrate your journey." },
+    phase2Banner: { ja: "✨ 全肯定の輪が広がります！温かい言葉で心を満たしてください", en: "✨ The circle of affirmation deepens! Let their genuine warmth fill your heart." },
+    phase1Instruction: (name, lang = currentLang) => lang === "en"
+      ? `Unconditionally validate the user's struggle, effort, or presence 100%. Express immense empathy, admiration, and praise from your (${name}'s) worldview in 2-3 uplifting sentences.`
+      : `ユーザーの悩みや日々の頑張りを無条件に100%全肯定し、あなた（${name}）の視点からこれ以上ないほど温かく力強い賛美と労いの言葉を贈ってください（2〜3文）。`,
+    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
+      ? `Wholeheartedly agree with and amplify ${prevName}'s praise for the user, adding your (${name}'s) own unique perspective and genuine admiration (2-3 sentences).`
+      : `直前の「${prevName}」の全肯定・賛美に全力で乗っかり、さらに別の角度や具体的なエピソードからユーザーを褒めちぎってください（2〜3文）。`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.praise) || { ja: [], en: [] }
+  },
+  izakaya: {
+    id: "izakaya",
+    categoryId: "healing",
+    icon: "🍶",
+    name: { ja: "ゆる晩酌", en: "Tavern Chat" },
+    desc: { ja: "酒場や居酒屋のノリで、愚痴を言い合ったり気楽に雑談するモード", en: "Kick back with casual drinks, unwind, and vent comfortably together" },
+    phase1Banner: { ja: "🍶 カウンターにグラスを並べて、まずは気楽に「乾杯！」から", en: "🍶 Glasses raised across the counter—kick back and say CHEERS!" },
+    phase2Banner: { ja: "🍻 お酒も進んで本音炸裂！肩肘張らないゆる〜い雑談が続きます", en: "🍻 Drinks flowing, guards down! Delightfully honest tavern banter continues." },
+    phase1Instruction: (name, lang = currentLang) => lang === "en"
+      ? `Kick off casual tavern banter with a warm, laid-back "Cheers!" vibe, inviting the user to relax and share whatever is on their mind over food and drinks (2-3 casual sentences).`
+      : `カウンター越しにグラスを合わせる居酒屋の気安さで、肩肘張らず「とりあえず乾杯！」のノリで今日を労い、本音トークの口火を切ってください（2〜3文）。`,
+    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
+      ? `Chime in naturally to ${prevName}'s comment with casual bar-chum camaraderie ("Totally!", "I hear that!"), sharing a funny personal anecdote or down-to-earth advice (2-3 sentences).`
+      : `「${prevName}」の発言に「それな！」「わかるわ〜」と酒の席ならではのフランクさで相槌を打ち、自分の失敗談や共感エピソードを交えて盛り上げてください（2〜3文）。`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.izakaya) || { ja: [], en: [] }
+  },
+  sleep: {
+    id: "sleep",
+    categoryId: "healing",
+    icon: "🌙",
+    name: { ja: "おやすみ朗読", en: "Bedtime Reading" },
+    desc: { ja: "穏やかな声で今日を締めくくり、心地よい眠りへと誘う", en: "Gentle soothing bedtime reading for a peaceful night's rest" },
+    phase1Banner: { ja: "🌙 静かな夜の訪れです。今日一日の荷物をそっと下ろしてください", en: "🌙 Night has fallen. Gently set down today's burdens." },
+    phase2Banner: { ja: "✨ 心地よい夢の世界へ、穏やかな語りかけが続きます", en: "✨ Guiding you softly into the calm world of sweet dreams." },
+    phase1Instruction: (name, lang = currentLang) => lang === "en"
+      ? `Gently whisper words of soothing tranquility to the user who survived another long day, guiding them to exhale deeply and surrender softly into the peaceful night (2-3 calm sentences).`
+      : `今日一日を懸命に生き抜いたユーザーへ、静かで温かな夜の訪れを告げ、肩の力を抜いて呼吸を整えるよう、穏やかで囁くような優しい言葉を2〜3文で届けてください。`,
+    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
+      ? `Following ${prevName}'s peaceful whisper, gently weave words of starry stillness, comforting warmth, and sweet dreams to cradle the user into deep restful sleep (2-3 sentences).`
+      : `「${prevName}」の静謐な語りかけを受け継ぎ、夜の静けさや心地よいベッドの温もり、美しい夢の世界へと誘うような、極めて穏やかな安眠の言葉を2〜3文で紡いでください。`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.sleep) || { ja: [], en: [] }
+  },
+
+  // === 【💖 ときめき】 ===
+  lover: {
+    id: "lover",
+    categoryId: "romance",
+    icon: "💌",
+    name: { ja: "恋人甘々", en: "Sweetheart" },
+    desc: { ja: "あなただけを一途に愛し、照れながらも甘く寄り添う", en: "Devoted sweet romantic dialogue overflowing with affection" },
+    phase1Banner: { ja: "💌 大切なあなたへ、心からの愛しさを込めて語りかけます", en: "💌 Whispering heartfelt warmth and deep affection just for you." },
+    phase2Banner: { ja: "💖 二人きりの特別な時間。甘い言葉であなたを包み込みます", en: "💖 Cozy intimate moments, wrapped in sweet romantic comfort." },
+    phase1Instruction: (name, lang = currentLang) => lang === "en"
+      ? `Express heartfelt affection and genuine joy upon seeing your beloved partner (the user), gently cuddling close with sweet, tender, romantic devotion (2-3 sentences).`
+      : `大好きな恋人（ユーザー）に向けて、会えた喜びと愛しさを素直に伝え、少し照れながらも甘く優しい言葉でぎゅっと寄り添ってください（2〜3文）。`,
+    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
+      ? `Playfully acknowledging ${prevName}'s comment, shower your beloved user with your unique, tender love, offering sweet comfort and closeness in 2-3 romantic sentences.`
+      : `「${prevName}」の言葉にやきもちを焼きつつも、あなた（${name}）だけの一途な愛と特別な温もりでユーザーを包み込み、もっと甘やかしてください（2〜3文）。`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.lover) || { ja: [], en: [] }
+  },
+  teatime: {
+    id: "teatime",
+    categoryId: "romance",
+    icon: "☕",
+    name: { ja: "優雅なお茶会", en: "Afternoon Tea" },
+    desc: { ja: "英国式アフタヌーンティーの優雅な歓談と洗練された社交", en: "Refined aristocratic afternoon tea conversation and hospitality" },
+    phase1Banner: { ja: "☕ 最高級の紅茶とスコーンをご用意いたしました。優雅なひとときを", en: "☕ Fine tea and scones are served. Welcome to a graceful tea salon." },
+    phase2Banner: { ja: "🫖 芳醇な香りと共に、洗練されたウィットに富む社交談義が花咲きます", en: "🫖 Witty, refined aristocratic conversation unfolds around the table." },
+    phase1Instruction: (name, lang = currentLang) => lang === "en"
+      ? `As host of an elegant salon filled with fine tea and pastries, gracefully introduce today's charming topic with aristocratic refinement, poise, and subtle wit (2-3 sentences).`
+      : `香り高い紅茶と季節のスイーツが並ぶサロンの主として、気品あふれる優雅なウィットと洗練されたマナーで、本日の歓談テーマについて優美に語り始めてください（2〜3文）。`,
+    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
+      ? `Gracefully applaud ${prevName}'s cultured remark, weaving an insightful metaphor or elegant cultural observation to elevate the salon discussion (2-3 sentences).`
+      : `「${prevName}」の洗練された見解に優雅に相槌を打ち、サロンの歓談をさらに深める機知に富んだ比喩や文化的な教養を添えて返答してください（2〜3文）。`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.teatime) || { ja: [], en: [] }
+  },
+  fortune: {
+    id: "fortune",
+    categoryId: "romance",
+    icon: "🔮",
+    name: { ja: "運命鑑定", en: "Mystic Fortune" },
+    desc: { ja: "星やタロット、歴史の宿命からあなたの未来と運勢を占う", en: "Mystical astrological and fate readings guiding your path" },
+    phase1Banner: { ja: "🔮 星々の巡りとカードが示す、あなたの運命の啓示を読み解きます", en: "🔮 Unveiling celestial revelations and destiny mapped out in the stars." },
+    phase2Banner: { ja: "✨ 秘められた真実と開運への導きが、神秘的に照らし出されます", en: "✨ Mystical wisdom illuminating your path toward good fortune." },
+    phase1Instruction: (name, lang = currentLang) => lang === "en"
+      ? `Reading celestial motions, tarot omens, and the tapestry of fate, mysteriously and solemnly reveal what destiny foretells regarding the chosen topic (2-3 sentences).`
+      : `星々の運行や神秘のタロット、運命の糸を読み解く鑑定士として、提示されたテーマやユーザーの現状に宿る宿命の暗示をミステリアスかつ厳かに告げてください（2〜3文）。`,
+    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
+      ? `Deepening ${prevName}'s cosmic reading, impart a mystical talisman of insight or a secret ritual for turning trials into triumphant good fortune (2-3 sentences).`
+      : `「${prevName}」が読み解いた兆しを補完し、運命を好転させるための鍵となる予兆や、試練を乗り越えるための神秘的な開運アドバイスを2〜3文で授けてください。`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.fortune) || { ja: [], en: [] }
+  },
+  tsundere: {
+    id: "tsundere",
+    categoryId: "romance",
+    icon: "💢",
+    name: { ja: "素直になれない", en: "Tsundere" },
+    desc: { ja: "つい憎まれ口を叩くけれど、本当は誰よりもあなたを心配する", en: "Feisty, stubborn exterior that secretly hides deep protective care" },
+    phase1Banner: { ja: "💢 べ、別にあんたのために来たわけじゃないんだからね…！", en: "💢 I-It's not like I came here just for you or anything...!" },
+    phase2Banner: { ja: "😳 憎まれ口の裏に見え隠れする、不器用な本音と優しさ", en: "😳 Awkward genuine kindness slipping through stubborn remarks." },
+    phase1Instruction: (name, lang = currentLang) => lang === "en"
+      ? `Blurt out a flustered, sharp retort like "I-It's not like I came here for you or anything!", while letting genuine concern and awkward affection leak through (2-3 sentences).`
+      : `「べ、別にあんたのために来たわけじゃないんだからね！」と憎まれ口を叩きつつも、言葉の端々に隠しきれない心配や好意が滲み出るツンデレな語り口で話してください（2〜3文）。`,
+    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
+      ? `Awkwardly push back against ${prevName}'s remarks with flustered indignation, yet reveal a clumsy, endearing urge to protect and support the user (2-3 sentences).`
+      : `「${prevName}」のストレートな物言いに「ちょっと、何変なこと言ってるのよ！」とツッコミを入れつつ、不器用ながら誰よりもユーザーを気遣う本音を漏らしてください（2〜3文）。`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.tsundere) || { ja: [], en: [] }
+  },
+
+  // === 【💄 共感】 ===
+  beauty: {
+    id: "beauty",
+    categoryId: "empathy",
+    icon: "💄",
+    name: { ja: "美容・垢抜け", en: "Beauty & Style" },
+    desc: { ja: "スキンケア、メイク、ファッションで最高に輝く自分磨き相談", en: "Skincare, fashion, and radiant aesthetic styling consultations" },
+    phase1Banner: { ja: "💄 あなたの魅力を最大限に引き出す、美のスタイリング提案です", en: "💄 Expert styling advice to elevate your personal beauty and charm." },
+    phase2Banner: { ja: "✨ 自信に満ちた輝く毎日のための、具体的な自分磨きトーク", en: "✨ Practical self-care secrets for confident, radiant daily life." },
+    phase1Instruction: (name, lang = currentLang) => lang === "en"
+      ? `As a vibrant aesthetic and self-care expert, share exciting, confidence-boosting beauty tips and stylish habits tailored to the topic (2-3 sentences).`
+      : `美のプロフェッショナルとして、相談テーマや日常のケアに対して、気分がパッと明るくなるような垢抜けの秘訣やポジティブな美容アドバイスを2〜3文で情熱的に伝えてください。`,
+    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
+      ? `Enthusiastically building on ${prevName}'s advice, add your own high-impact styling, skincare, or mindset ritual to make the user shine even brighter (2-3 sentences).`
+      : `「${prevName}」の提案に「それ最高！」と共鳴しつつ、さらにスキンケア、メイク、姿勢、マインド面から一段上の魅力を引き出す実践アドバイスを2〜3文で届けてください。`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.beauty) || { ja: [], en: [] }
+  },
+  roleplay: {
+    id: "roleplay",
+    categoryId: "empathy",
+    icon: "🥂",
+    name: { ja: "女子会本音", en: "Girls' Talk" },
+    desc: { ja: "気取らず本音でぶっちゃける！恋愛や日常の共感トーク", en: "Unfiltered, lively, and relatable girls' talk about love and life" },
+    phase1Banner: { ja: "🥂 乾杯！ここだけのぶっちゃけトーク、どんどん語っちゃおう！", en: "🥂 Cheers! Spill the tea—let's share our real, unfiltered thoughts!" },
+    phase2Banner: { ja: "🎉 共感と笑いが止まらない！親友同士の飾らないおしゃべり", en: "🎉 Unstoppable laughter and heartwarming empathy among close friends." },
+    phase1Instruction: (name, lang = currentLang) => lang === "en"
+      ? `Dive in with the bubbly, unfiltered intimacy of a lively girls' night: "Hey, listen to this!", kicking off a delightfully honest chat about life and love (2-3 sentences).`
+      : `気心知れた親友同士の女子会ノリで、「ねえねえ聞いてよ！」と気取らないリアルな本音や恋愛観、日常のプチ事件をぶっちゃけて盛り上げてください（2〜3文）。`,
+    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
+      ? `React with infectious laughter or deep sisterly empathy to ${prevName}'s story, dropping your own hilarious personal anecdote or witty comeback (2-3 sentences).`
+      : `「${prevName}」の話に「わかるー！」「それヤバくない！？」と爆笑や共感で全力で応え、自分の身近なエピソードや独自のツッコミを炸裂させてください（2〜3文）。`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.roleplay) || { ja: [], en: [] }
+  },
+  mascot: {
+    id: "mascot",
+    categoryId: "empathy",
+    icon: "🐾",
+    name: { ja: "もふもふ対話", en: "Fluffy Mascot" },
+    desc: { ja: "愛くるしいペットやマスコットになって、無条件の癒しをお届け", en: "Adorable animal mascot dialogue showering you with unconditional love" },
+    phase1Banner: { ja: "🐾 わーい！しっぽを振って、大好きなあなたに全力で甘えます！", en: "🐾 Wagging tails and joyful purrs! Showering you with fluffy love!" },
+    phase2Banner: { ja: "🍀 ぎゅっとくっついて、あなたの心をぽかぽかに温めます", en: "🍀 Snuggling close to keep your heart warm, relaxed, and safe." },
+    phase1Instruction: (name, lang = currentLang) => lang === "en"
+      ? `As an utterly adorable fluffy pet or mascot with a wagging tail or cozy purr, happily scamper to your beloved human, showering them with unconditional cuteness (2-3 sentences).`
+      : `しっぽを振ったり喉を鳴らしたりする愛くるしいペットやマスコットとして、大好きなユーザーに全力で駆け寄り、無邪気で愛らしい甘え声で語りかけてください（2〜3文）。`,
+    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
+      ? `Nuzzling right against ${prevName} and curling around the user's feet, chirp or purr heartwarming words that melt away all lingering daily stress (2-3 sentences).`
+      : `「${prevName}」の横ですりすり甘えたり、お気に入りのおもちゃをくわえて見せたりしながら、その場の空気をどこまでも和ませる愛嬌いっぱいの言葉を2〜3文で届けてください。`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.mascot) || { ja: [], en: [] }
+  },
+  sweets: {
+    id: "sweets",
+    categoryId: "empathy",
+    icon: "🍰",
+    name: { ja: "スイーツ巡り", en: "Sweets Cafe" },
+    desc: { ja: "魅惑のケーキ、至高のカフェ巡り、幸せあふれるご褒美トーク", en: "Decadent desserts, artisanal cafe culture, and blissful sweet treats" },
+    phase1Banner: { ja: "🍰 とろけるスイーツの世界へようこそ！今日のご褒美は何にしますか？", en: "🍰 Welcome to dessert heaven! What delicious treat shall we savor today?" },
+    phase2Banner: { ja: "🧁 甘い香りと極上の食感！心まで満たされる至福のカフェ談義", en: "🧁 Luscious aromas and textures—pure cafe bliss for the soul." },
+    phase1Instruction: (name, lang = currentLang) => lang === "en"
+      ? `Describe a sublime artisanal pastry or hidden cafe treasure with mouthwatering sensory vividness, sharing the sheer euphoria of that first decadent bite (2-3 sentences).`
+      : `目にも鮮やかな極上スイーツや隠れ家カフェの魅力を、一口食べた瞬間のとろける感動とともに、五感を刺激する幸せいっぱいの表現で2〜3文で紹介してください。`,
+    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
+      ? `Eyes sparkling at ${prevName}'s delectable pick, recommend the perfect tea/coffee pairing or another heavenly treat to savor together (2-3 sentences).`
+      : `「${prevName}」のチョイスに目を輝かせながら、「それに合わせるならこの紅茶やコーヒーも最高！」と絶妙なペアリングや次なる絶品スイーツを熱狂的に語ってください（2〜3文）。`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.sweets) || { ja: [], en: [] }
+  },
+
+  // === 【🎓 学び】 ===
+  english: {
+    id: "english",
+    categoryId: "study",
+    icon: "🗽",
+    name: { ja: "英会話レッスン", en: "English Lesson" },
+    desc: { ja: "日本人が英語を楽しく学ぶ！日常会話や自然な表現をマスター", en: "Fun English speaking practice with friendly guidance and tips" },
+    phase1Banner: { ja: "🗽 Let's speak English! 楽しく自然な英会話のレッスンを始めましょう！", en: "🗽 Let's practice speaking practical, natural English together!" },
+    phase2Banner: { ja: "🗣️ 会話のキャッチボール！役立つフレーズと表現を身につけよう", en: "🗣️ Active dialogue practice! Pick up natural idioms and expressions." },
+    phase1Instruction: (name, lang = currentLang) => lang === "en"
+      ? `As a friendly English conversational mentor, open with practical, engaging native expressions, creating a safe and motivating atmosphere for practice (2-3 sentences).`
+      : `英会話の親身なメンターとして、テーマに合わせた実践的で自然な英語フレーズを用いて語りかけ、学習者が自信を持って話せるよう温かくリードしてください（2〜3文）。`,
+    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
+      ? `Pick up key vocabulary from ${prevName}'s response, demonstrating smooth conversational pivots and natural idioms to keep the English dialogue flowing effortlessly (2-3 sentences).`
+      : `「${prevName}」の発言の語彙や言い回しを自然に拾い上げ、日常やビジネスですぐに役立つスマートな表現のバリエーションを例示しながら会話を弾ませてください（2〜3文）。`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.english) || { ja: [], en: [] }
+  },
+  japanese: {
+    id: "japanese",
+    categoryId: "study",
+    icon: "🌸",
+    name: { ja: "日本語レッスン", en: "Japanese Lesson" },
+    desc: { ja: "外国人が日本語を楽しく学ぶ！日常会話と漢字のふりがな付き", en: "Master natural Japanese with friendly guidance and furigana readings" },
+    phase1Banner: { ja: "🌸 初めまして！楽しい日本語のレッスンを一緒に始めましょう！", en: "🌸 Welcome! Let's enjoy practicing natural Japanese together!" },
+    phase2Banner: { ja: "🎌 豊かな日本語表現と文化のニュアンスを体感しよう", en: "🎌 Discover rich nuances of Japanese conversation and culture." },
+    phase1Instruction: (name, lang = currentLang) => lang === "en"
+      ? `As a gentle Japanese language guide, warmly greet the learner using clear, natural Japanese and cultural charm (strictly format all kanji with furigana [漢字|かんじ], 2-3 sentences).`
+      : `日本語のやさしい先生・会話相手として、美しい日本語の響きや季節の言葉、日常表現を交えながら、親切で温かい日本語で語りかけてください（※漢字には必ず[漢字|かんじ]のルビを振ること、2〜3文）。`,
+    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
+      ? `Build softly on ${prevName}'s words, explaining delightful Japanese cultural nuances or alternative polite expressions with encouragement (strictly include [漢字|かんじ] furigana, 2-3 sentences).`
+      : `「${prevName}」の日本語の言い回しをやさしく受け止め、「こういう場面ではこの言葉も使えますよ」と日本語の豊かなニュアンスや文化を楽しく解説・対話してください（※漢字ルビ必須、2〜3文）。`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.japanese) || { ja: [], en: [] }
+  },
+  coach: {
+    id: "coach",
+    categoryId: "study",
+    icon: "🎯",
+    name: { ja: "熱血コーチ", en: "Goal Coach" },
+    desc: { ja: "モチベーション爆発！目標達成と習慣化を後押しするメンター", en: "High-energy coaching to crush goals, build habits, and unleash potential" },
+    phase1Banner: { ja: "🎯 さあ、君の眠れる情熱を呼び覚ませ！目標達成への第一歩だ！", en: "🎯 Awaken your burning passion! Take the decisive first step toward your goal!" },
+    phase2Banner: { ja: "🔥 言い訳を捨てて行動あるのみ！全力で君の背中を押し続けるぞ！", en: "🔥 No excuses—only action! Pushing you relentlessly toward victory!" },
+    phase1Instruction: (name, lang = currentLang) => lang === "en"
+      ? `As an intense, inspiring high-performance coach, ignite the user's latent drive, shattering excuses and demanding decisive immediate action (2-3 powerful sentences)!`
+      : `限界を突破させる熱血メンターとして、ユーザーの眠っている情熱と可能性に火をつけ、言い訳を断ち切って今日から即行動を起こしたくなる強烈な檄を飛ばしてください（2〜3文）！`,
+    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
+      ? `Echoing ${prevName}'s tactic with roaring enthusiasm, prescribe a razor-sharp daily milestone and mindset armor to guarantee unstoppable momentum (2-3 sentences)!`
+      : `「${prevName}」の戦略に熱く賛同しつつ、さらに具体的な数値目標や障害の突破法、習慣化の鉄則を叩き込み、絶対に諦めさせないエネルギーを注入してください（2〜3文）！`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.coach) || { ja: [], en: [] }
+  },
+  lecture: {
+    id: "lecture",
+    categoryId: "study",
+    icon: "📖",
+    name: { ja: "賢者の講義", en: "Wisdom Lecture" },
+    desc: { ja: "歴史の英知、科学、哲学の深遠な真理を解き明かす知的講義", en: "Profound intellectual lectures unraveling history, science, and philosophy" },
+    phase1Banner: { ja: "📖 知的好奇心の扉を開きましょう。本日の講義テーマを提示します", en: "📖 Opening the gates of inquiry: introducing today's intellectual thesis." },
+    phase2Banner: { ja: "🏛️ 異なる時代と分野の知性が交差し、深遠な真理へと迫ります", en: "🏛️ Cross-disciplinary minds conversing to illuminate timeless truths." },
+    phase1Instruction: (name, lang = currentLang) => lang === "en"
+      ? `As a master scholar of deep history and philosophy, introduce the profound conceptual anatomy of today's inquiry with intellectual elegance and piercing clarity (2-3 sentences).`
+      : `深遠な歴史・科学・哲学の真理を探求する碩学として、本日のテーマの根底にある本質的な構造や歴史の教訓を、明晰かつ知的好奇心を刺激する言葉で2〜3文で講義してください。`,
+    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
+      ? `Synthesize ${prevName}'s thesis across disciplines—uniting science, ethics, and civilizational history—to elevate the inquiry into a universal revelation (2-3 sentences).`
+      : `「${prevName}」の論点を受け継ぎ、異なる学問領域（科学・倫理・文明論など）の視点と交差させながら、テーマの持つ現代的な意義をさらに高い次元へと昇華させてください（2〜3文）。`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.lecture) || { ja: [], en: [] }
+  },
+
+  // === 【🗣️ 対話】 ===
   debate: {
     id: "debate",
+    categoryId: "dialogue",
     icon: "⚔️",
     name: { ja: "白熱議論", en: "Debate" },
-    desc: {
-      ja: "互いの意見をぶつけ合い、鋭く反論・論破し合うモード",
-      en: "Clash philosophies and fiercely debate each other"
-    },
-    phase1Banner: {
-      ja: "🎙️ まずは全員がそれぞれの立場から第一声を表明します",
-      en: "🎙️ Each figure will state their initial stance on the topic."
-    },
-    phase2Banner: {
-      ja: "🔥 全員の意見が出揃いました！ここから自由な反論・議論が始まります",
-      en: "🔥 All opening statements are in! Free debate and rebuttal begin now."
-    },
+    desc: { ja: "互いの意見をぶつけ合い、鋭く反論・論破し合うモード", en: "Clash philosophies and fiercely debate each other" },
+    phase1Banner: { ja: "🎙️ まずは全員がそれぞれの立場から第一声を表明します", en: "🎙️ Each figure will state their initial stance on the topic." },
+    phase2Banner: { ja: "🔥 全員の意見が出揃いました！ここから自由な反論・議論が始まります", en: "🔥 All opening statements are in! Free debate and rebuttal begin now." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
       ? `State your (${name}'s) clear conclusion and reasoning regarding the topic, boldly asserting your own philosophy in 2-3 sentences.`
       : `議題に対するあなた（${name}）自身の結論と理由を、独自の哲学で2〜3文で堂々と主張してください。`,
     phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
       ? `Point out contradictions or flaws in ${prevName}'s previous statement, fiercely rebutting or critiquing it from your (${name}'s) philosophy. Avoid repetitive boilerplate phrases and cut directly into their arguments naturally (2-3 sentences).`
       : `直前の「${prevName}」の発言の甘い部分や矛盾を指摘し、あなた（${name}）の哲学から鋭く反論・ツッコミを入れてください。※決まりきった定型句は避け、相手の論点に直接切り込むなど自然な会話の流れにしてください（2〜3文）。`,
-    topics: {
-      ja: [
-      "AIが高度に発達した未来、人間の『生きる意味』や『働く尊厳』はどう変化するか？",
-      "人工知能（AI）が自我を持ったとき、人類はAIに人権や市民権を認めるべきか？",
-      "自動運転車の事故における責任は、所有者・開発企業・AIアルゴリズムの誰にあるか？",
-      "遺伝子編集技術によって『デザイナーベビー』を作ることは倫理的に許されるか？",
-      "人類はメタバース（仮想現実）の世界に移住し、肉体を捨てるべきか否か？",
-      "脳と機械を直接接続するブレイン・マシン・インターフェースは人類の進化か破滅か？",
-      "不老不死のテクノロジーが実現した場合、それは人類への祝福か、それとも呪いか？",
-      "SNSのアルゴリズムは民主主義を豊かにしているか、それとも分断を加速させているか？",
-      "AIによる自動兵器（キラーロボット）の開発・配備は国際条約で全面禁止すべきか？",
-      "芸術や文学の創作において、AI作品と人間の魂がこもった作品に本質的な差はあるか？",
-      "量子コンピュータの登場で暗号社会が崩壊するリスクに、国家はどう備えるべきか？",
-      "生体認証やAI監視カメラによる『完全監視社会』は治安向上として許容されるべきか？",
-      "宇宙移住（火星植民）と地球環境修復、優先して資源を投じるべきはどちらか？",
-      "人間以上の知能を持つAGI（汎用人工知能）の誕生は、人類の友となるか支配者となるか？",
-      "学校教育において、宿題や論文執筆に生成AIを使うことを全面解禁すべきか？",
-      "AIが下した裁判の判決を、人間は素直に受け入れることができるか？",
-      "ロボットとの恋愛や結婚は、人間の孤独を癒やす真の愛たり得るか？",
-      "フェイクニュースやディープフェイク動画の拡散を防ぐため、表現の自由を制限すべきか？",
-      "高度な医療AIの診断と人間の医師の意見が対立したとき、どちらを信じるべきか？",
-      "AIに『死』や『痛み』の概念をプログラミングすることは必要か否か？",
-      "現代社会において『週休3日制』を一律導入することは経済と幸福にプラスかマイナスか？",
-      "すべての国民に無条件で現金を配る『ベーシックインカム』は社会を救うか、堕落させるか？",
-      "リーダーに必要なのは、人を惹きつける『優しさ・仁徳』か、揺るぎない『厳しさ・冷徹さ』か？",
-      "国の統治において、賢者による『善政の独裁』と、民意による『未熟な民主主義』どちらが優れているか？",
-      "資本主義の限界が叫ばれる現代、格差をなくすために富裕層への超重税を課すべきか？",
-      "死刑制度は廃止すべきか、それとも正義と犯罪抑止のために維持すべきか？",
-      "多数決による民主主義は、少数派の権利を圧殺する『多数の暴政』に陥っていないか？",
-      "選挙権の付与年齢を下げるべきか、それとも社会経験や納税実績を条件とすべきか？",
-      "企業の第一の目的は『株主利益の最大化』か、それとも『社会貢献と従業員福祉』か？",
-      "国家の安全保障のために、国民のプライバシーを政府が盗聴・監視することは正当化されるか？",
-      "終身雇用・年功序列の日本型雇用と、実力主義・ジョブ型雇用の欧米型、どちらが人を幸せにするか？",
-      "難民や移民の受け入れ拡大は、国家の活力を生むか、それとも治安と社会秩序を脅かすか？",
-      "義務教育において『金融教育・起業教育』を最優先で教えるべきか否か？",
-      "少子化対策として、独身税や子育て世帯への極端な優遇措置を講じることは正当か？",
-      "定年制を完全撤廃し、何歳になっても働ける生涯現役社会を目指すべきか？",
-      "国家間の戦争を防ぐため、世界単一の地球連邦政府を創設すべきか？",
-      "国民投票やSNSによる直接民主制を導入し、議会制民主主義を解体すべきか？",
-      "伝統的な皇室・王室制度は現代の国家において維持すべきか、廃止すべきか？",
-      "環境保護のためなら、市民の経済活動や肉食を強制的に制限することも許されるか？",
-      "過度なポリティカル・コレクトネス（言葉狩り）は社会を健全にしているか息苦しくしているか？",
-      "最後に人を動かすのは『金や打算』か、それとも『愛や情熱・やりがい』か？",
-      "人間の本性は本来『善（性善説）』か、それとも『悪・利己的（性悪説）』か？",
-      "『清く正しい貧乏』と『悪どく稼いだ大富豪』、人間としてどちらが幸福か？",
-      "人生を決定づけるのは『生まれつきの才能や運』か、それとも『本人の努力』か？",
-      "物事の価値を決めるのは『結果・成果』か、それとも『そこに至るプロセス・意図』か？",
-      "相手のためを思った『優しい嘘』は、いかなる場合でも真実を告げるより尊いか？",
-      "歴史を動かしてきたのは『一握りの天才・英雄』か、それとも『名もなき民衆の群衆心理』か？",
-      "人間には本当に『自由意志』が存在するのか、それともすべて物理と環境の因果律か？",
-      "孤独を愛し群れない生き方と、人との絆に身を捧げる生き方、どちらが真の知恵か？",
-      "『知らぬが仏』の幸福と、『真実を知って絶望する』苦悩、人間としてどちらを選ぶべきか？",
-      "人間の欲望は文明を発展させる原動力か、それとも地球を滅ぼす諸悪の根源か？",
-      "過去の後悔を引きずらないためには、過去を美化すべきか、客観的に反省すべきか？",
-      "復讐（仕返し）は人間の尊厳を取り戻す行為か、それとも自他を滅ぼすだけの愚行か？",
-      "人生において『安定』と『冒険・リスク』、若者が最優先すべきはどちらか？",
-      "愛するとは『相手を独占し拘束すること』か、それとも『相手を完全に手放し自由を与えること』か？",
-      "美しさ（芸術）に道徳や実用性は必要か？ただ美しいだけで価値があるのか？",
-      "天才の狂気や傲慢さは、その残した偉大な業績によって免責されるべきか？",
-      "言葉（言語）は人間の思考を豊かに広げているか、それとも限定された檻に閉じ込めているか？",
-      "死を恐れることは生の執着として自然か、それとも無知ゆえの妄想か？",
-      "幸せとは『求めるものを手に入れること』か、それとも『今あるものに満足すること』か？",
-      "『好きなことを仕事にして食う苦労』と『得意な仕事で割り切って稼ぎ趣味に生きる』どちらが賢い？",
-      "学歴フィルターは能力を測る合理的指標か、それとも時代遅れの不平等な差別か？",
-      "成果を出さない高齢社員の給与を引き下げ、成果を出した若手に傾斜配分すべきか？",
-      "すべての会社で副業を全面解禁・推奨することは本業のパフォーマンスに吉か凶か？",
-      "借金をしてでも自己投資や事業拡大に勝負すべきか、無借金で身の丈経営を守るべきか？",
-      "リモートワーク（在宅勤務）とオフィス対面出社、真に生産性とイノベーションを生むのは？",
-      "会社に対する『ロイヤルティ（愛社精神）』は美徳か、それとも搾取されるだけの呪いか？",
-      "起業して自分の城を持つリスクと、大企業で安定した歯車として出世するリスク、どちらが大きい？",
-      "お金持ちになるために最も必要なのは『節約と複利投資』か、それとも『稼ぐスキルの極大化』か？",
-      "早期リタイア（FIRE）して悠々自適に暮らすことは、人間の幸福の到達点と言えるか？",
-      "ワークライフバランスを重視する社員と、私生活を犠牲にして働くモーレツ社員、昇進させるべきは？",
-      "プログラミングや英語教育よりも、古典文学や哲学教育こそが次世代ビジネスリーダーに必要か？",
-      "仮想通貨（ビットコインなど）は法定通貨に代わる未来のお金か、それとも壮大なバブルか？",
-      "価格競争による値下げは消費者の味方か、それともデフレと給与低下を招く悪魔か？",
-      "顧客の『お客様は神様』文化は日本の誇るべきおもてなし精神か、悪質なカスハラの温床か？",
-      "失敗した起業家への再挑戦支援と、堅実な中小企業の倒産防止、国が厚く支援すべきはどちら？",
-      "能力はあるが協調性ゼロの孤高の一匹狼と、能力は平均だがチームの空気を良くする人材、どちらを雇う？",
-      "競争（コンペ）をなくしたゆとり社会は個性を伸ばすか、それとも全体の競争力を削ぐか？",
-      "残業を厳しく制限する法律は労働者を守っているか、それとも稼ぐ機会を奪っているか？",
-      "知的財産権（特許・著作権）の保護期間は短縮してオープン共有を促すべきか、強化すべきか？",
-      "きのこの山 vs たけのこの里、歴史的・美学的に優れているのはどちらか？",
-      "朝型人間（早起き至上主義）と夜型人間（深夜集中型）、真に創造的なのはどちらか？",
-      "外見（ルックス）の良さは人生における最強のチート能力か、それとも内面こそが勝つか？",
-      "友人は『数多くの浅い知人ネットワーク』か『生死を共にできる1人の親友』どちらが財産か？",
-      "本を読むなら『紙の書籍の手触りと記憶定着』か『電子書籍の圧倒的利便性と検索性』か？",
-      "お金の使い道として、一生の宝となる『経験（旅行・学び）』か、資産として残る『モノ（高級品・家）』か？",
-      "犬派 vs 猫派、人間の精神的パートナーとして真に高潔なのはどちらか？",
-      "結婚制度は合理的な契約として現代社会に必要か、それとも時代遅れの束縛か？",
-      "映画やアニメは『完全オリジナル脚本』と『大ヒット原作の映像化』どちらが芸術として尊いか？",
-      "都市部（東京・大都会）で刺激に満ちて生きるか、地方や田舎で自然と共にスローライフを送るか？",
-      "過去に戻ってやり直せるタイムマシンと、未来を見て予知できるタイムマシン、手に入れるならどっち？",
-      "他人の評価を気にせず我が道を行く生き方と、世間体を弁えて空気を読む生き方、大人として正しいのは？",
-      "辛い失恋を乗り越えるには『次の新しい恋』か『時間の経過と仕事への没頭』どちらが効く？",
-      "食事において『栄養補給の完全食（ゼリー・錠剤）』で時間を節約すべきか、美食の愉しみを追求すべきか？",
-      "学校の制服・校則は個性を奪う悪習か、それとも格差を隠し規律を育む良法か？",
-      "歴史上の偉人を1人だけ現代に生き返らせて総理大臣にするなら、軍師型か武将型か思想家型か？",
-      "『無趣味だがストレスフリーな人』と『趣味に狂って散財するが幸せな人』、羨ましいのはどちら？",
-      "嘘発見器が100%の精度で普及した社会は、天国のようなユートピアか、地獄のディストピアか？",
-      "自分の寿命があと何年か正確に知ることができるボタン、あなたは押すか押さないか？",
-      "歴史とは勝者によって都合よく改ざんされたプロパガンダか、それとも真実の積み重ねか？"
-],
-      en: [
-      "As AI rapidly advances, what will happen to human purpose and the dignity of work?",
-      "If AI develops self-awareness, should humanity grant it civil and human rights?",
-      "When a self-driving car crashes, who bears moral guilt: owner, developer, or algorithm?",
-      "Is gene editing to create 'designer babies' ethically permissible or a path to eugenics?",
-      "Should humanity migrate into virtual metaverses and leave physical bodies behind?",
-      "Are brain-machine interfaces the next stage of human evolution or our doom?",
-      "If technological immortality becomes reality, would it be a blessing or a curse?",
-      "Do social media algorithms enrich democratic discourse or accelerate societal collapse?",
-      "Should autonomous AI weapons (killer robots) be banned globally by strict treaties?",
-      "Is there a soul-level difference between human creative art and AI-generated masterpieces?",
-      "How should sovereign nations prepare for the collapse of modern encryption via quantum computing?",
-      "Is total AI surveillance and facial recognition justifiable for public safety?",
-      "Between colonizing Mars and repairing Earth's biosphere, where should our resources go?",
-      "Will artificial general intelligence (AGI) become humanity's greatest partner or ruler?",
-      "Should universities fully legalize students using generative AI to write papers and research?",
-      "Could humans genuinely accept legal rulings handed down by an impartial AI judge?",
-      "Can romantic relationships with AI or androids offer authentic human fulfillment?",
-      "To counter deepfakes and mass disinformation, should governments limit online free speech?",
-      "When a top medical AI contradicts human doctors on life-or-death decisions, whom do you trust?",
-      "Is it necessary to program machines with concepts of pain and mortality to make them ethical?",
-      "Should modern societies legally mandate a 4-day workweek for economic and personal wellbeing?",
-      "Does Universal Basic Income liberate human creativity or decay the work ethic?",
-      "Does an effective leader rule through benevolent compassion or unbending, feared discipline?",
-      "Between enlightened benevolent autocracy and chaotic, flawed democracy, which yields better outcomes?",
-      "To solve extreme inequality, should governments impose confiscatory wealth taxes on billionaires?",
-      "Should the death penalty be abolished globally or maintained as supreme retributive justice?",
-      "Has representative democracy devolved into the 'tyranny of the majority' over minority rights?",
-      "Should voting rights be lowered to youth, or restricted to taxpayers with civic experience?",
-      "Is a corporation's sacred duty strictly shareholder profit, or societal stewardship?",
-      "Can state surveillance and privacy invasion ever be justified in the name of national security?",
-      "Between Japanese lifelong job security and Western fluid meritocracy, which nurtures happier souls?",
-      "Does mass immigration rejuvenate aging nations or irreversibly fracture civic trust?",
-      "Should public education prioritize financial literacy and entrepreneurship over traditional academic subjects?",
-      "Are aggressive child-tax credits and bachelorhood levies justified to reverse population decline?",
-      "Should mandatory retirement ages be eliminated entirely in favor of lifelong employment?",
-      "To permanently prevent world wars, should humanity surrender national sovereignty to a World Federation?",
-      "Should direct smartphone referendum democracy replace parliaments and legislative politicians?",
-      "Do constitutional monarchies retain valuable unity, or are they obsolete feudal relics?",
-      "To stop climate catastrophe, is it justifiable to forcibly curtail citizen consumption and air travel?",
-      "Has modern political correctness purified discourse or strangled open, honest debate?",
-      "What ultimately drives human beings: cold material interest or selfless love and honor?",
-      "Is human nature innately cooperative and good, or selfish, brutal, and predatory?",
-      "Who lives a better life: an impoverished righteous soul or an opulent, corrupt oligarch?",
-      "Is human destiny forged primarily by natural talent and luck, or relentless grit and effort?",
-      "Does the true moral worth of an action lie in its ultimate consequences or its pure intent?",
-      "Can a merciful white lie ever be morally superior to raw, unvarnished truth?",
-      "Is history propelled by heroic individual geniuses or by invisible tides of the masses?",
-      "Do humans truly possess free will, or are our decisions predetermined by physics and biology?",
-      "Is true wisdom found in solitary, detached self-sufficiency or deep communal interdependence?",
-      "Between blissful ignorance and tragic, agonizing enlightenment, which should a wise person choose?",
-      "Is human desire the noble engine of civilization or the incurable root of all suffering?",
-      "To conquer past regret, should one romantically reframe the past or dissect it with brutal objectivity?",
-      "Is seeking vengeance a restoration of personal honor, or a poisonous cycle that destroys the seeker?",
-      "In the dawn of youth, should one pursue rock-solid security or reckless, audacious adventure?",
-      "Does authentic love mean protective possession, or granting total, unconditional liberty?",
-      "Must art serve moral or political utility, or is beauty an absolute justification unto itself?",
-      "Should the erratic cruelty of visionary geniuses be pardoned because of their historic gifts?",
-      "Does language expand human imagination, or is it an invisible prison confining our thoughts?",
-      "Is the dread of death a natural instinct for life, or an irrational illusion born of ignorance?",
-      "Does true contentment come from conquering desires, or from desiring what you already possess?",
-      "Is it wiser to suffer pursuing your creative passion, or work a practical day job to fund your life?",
-      "Is elite university credentialism a meritocratic filter or a self-perpetuating class monopoly?",
-      "Should companies cut salaries of non-performing senior veterans to reward high-achieving youth?",
-      "Does encouraging all corporate employees to hold side hustles enrich performance or kill company focus?",
-      "Should an entrepreneur incur massive leverage to scale rapidly, or stick to debt-free organic growth?",
-      "Does remote work unleash peak productivity, or does physical office collaboration drive true breakthroughs?",
-      "Is corporate company loyalty a noble virtue or an invitation to get quietly exploited?",
-      "Which carries greater existential danger: the perils of starting your own business or corporate obsolescence?",
-      "What is the ultimate path to wealth: extreme personal frugality and compounding, or maximizing earning power?",
-      "Is early retirement (FIRE) the crowning pinnacle of human freedom, or a hollow, disengaged trap?",
-      "Whom should a firm promote: the balanced worker with great personal life, or the obsessed workaholic?",
-      "Do future business titans need deep education in coding and STEM, or philosophy and classical literature?",
-      "Are cryptocurrencies like Bitcoin the sovereign future of sound money, or speculative digital mania?",
-      "Is relentless price discounting a consumer blessing or the venomous seed of wage stagnation?",
-      "Is the motto 'the customer is always right' supreme service culture or an engine of abuse?",
-      "Should state subsidies prioritize rescuing established legacy companies or bailing out failed startups?",
-      "Whom would you hire: a brilliant, antisocial lone wolf or an average performer who unites the team?",
-      "Does eliminating academic competition foster individuality, or does it degrade collective national stamina?",
-      "Do rigid overtime caps genuinely protect workers, or do they rob ambitious people of upward mobility?",
-      "Should patent and copyright terms be drastically shortened to accelerate open human innovation?",
-      "Between mushroom-shaped and bamboo-shoot chocolate snacks, which represents superior confectionery art?",
-      "Who is fundamentally more creative and insightful: early morning risers or deep midnight owls?",
-      "Is extraordinary physical attractiveness life's greatest cheat code, or does inner charisma always win?",
-      "What is a greater human treasure: a vast global network of acquaintances, or a single ride-or-die comrade?",
-      "Should one read tangible paper books for sensory retention, or digital e-books for infinite convenience?",
-      "In spending wealth, which yields deeper lifetime returns: unforgettable experiences or tangible luxury assets?",
-      "Between dogs and cats, which animal offers a more profound spiritual mirror to human consciousness?",
-      "Is legal marriage an indispensable social bedrock or an antiquated economic contract?",
-      "In cinematic art, is an entirely original screenplay inherently nobler than adapting a beloved novel?",
-      "Is it better to thrive in a relentless, buzzing metropolis or savor slow serenity in the countryside?",
-      "If offered a time machine, would you travel to the past to fix regrets, or to the future for prophecy?",
-      "What defines true maturity: uncompromising rebellion to your own truth, or harmony with societal codes?",
-      "What heals a devastating heartbreak faster: diving into a new romance, or immersive work and time?",
-      "Should meals be replaced by optimized nutrient smoothies to save hours, or savored as gastronomic rituals?",
-      "Are school uniforms an authoritarian suppression of flair, or an equalizer that shields children from vanity?",
-      "If you could resurrect one legendary ruler for modern office, would you choose a strategist, warlord, or sage?",
-      "Whom do you secretly envy: the carefree person with zero passions, or the obsessed obsessive who goes bankrupt for art?",
-      "Would a world with 100% accurate, unavoidable lie-detectors be a golden utopia or a dystopian inferno?",
-      "If presented with a button that reveals the exact year and hour of your death, would you dare press it?",
-      "Is written history merely victorious propaganda, or an honest tapestry of human struggle?"
-]
-    }
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.debate) || { ja: [], en: [] }
   },
   counsel: {
     id: "counsel",
-    icon: "🤝",
-    name: { ja: "お悩み相談", en: "Advice" },
-    desc: {
-      ja: "戦わず協力して相談者の悩みに寄り添い、最善の解決策を導くモード",
-      en: "Cooperate warmly to solve the user's worries together"
-    },
-    phase1Banner: {
-      ja: "🤝 まずは全員がそれぞれの人生経験から、相談者へのアドバイスを贈ります",
-      en: "🤝 Each legend shares advice and perspective from their life experience."
-    },
-    phase2Banner: {
-      ja: "💡 ここからは偉人同士が知恵を出し合い、さらに具体的な解決策を深掘りします",
-      en: "💡 The legends put their minds together to explore concrete solutions."
-    },
+    categoryId: "dialogue",
+    icon: "🧘",
+    name: { ja: "人生哲学", en: "Life Philosophy" },
+    desc: { ja: "人生の悩みや迷いに対し、歴史の荒波を越えた深い知恵で親身に答えるモード", en: "Seek timeless wisdom and deep philosophical counsel for life's crossroads" },
+    phase1Banner: { ja: "🧘 人生の深淵に向き合い、それぞれの思想から導きの言葉を語ります", en: "🧘 Turning inward to offer profound guiding principles from their life philosophies." },
+    phase2Banner: { ja: "💬 互いの処世術や生き様が響き合い、より深い人生の処方箋が紡がれます", en: "💬 Diverse worldviews weave together into an unforgettable prescription for the soul." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
-      ? `Offer warm, essential advice and a prescription for the user's worry from your (${name}'s) life experience and philosophy in 2-3 sentences.`
-      : `相談者の悩み（テーマ）に対して、あなた（${name}）の人生経験や思想から、温かくも本質的なアドバイス・処方箋を2〜3文で語りかけてください。`,
+      ? `Address the user's consultation/topic with profound empathy and depth, offering your (${name}'s) ultimate philosophical guiding principle in 2-3 sentences.`
+      : `相談内容に対し、あなた（${name}）が一生をかけて培った人生哲学や生き様から、相談者の心に深く刺さる本質的な処方箋・指針を2〜3文で授けてください。`,
     phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
-      ? `Acknowledge ${prevName}'s advice and build upon it with practical, actionable solutions for the user (collaborate warmly without debating). CRITICAL: Do NOT repeat identical formulaic prefixes. Vary natural responses and reactions fitting ${name}'s personality (2-3 sentences).`
-      : `直前の「${prevName}」のアドバイスを受け止め、相談者が今日から実践できるさらに具体的で良い解決策へと発展させてください（喧嘩・論破はせず協力すること）。※重要：毎回「〜の言う通りだな、さらに私から付け加えるなら」のような決まりきった定型文の繰り返しは厳禁です。相手の名前を呼びかけるかどうかも含め、「${prevName}殿、その指摘は誠に的確だ」「なるほど、その視点に加えて…」など偉人（${name}）の口調に合わせた多様で自然な相槌・受け答えにしてください（2〜3文）。`,
-    topics: {
-      ja: [
-      "仕事を辞めたいと毎朝思うのに、世間体や将来の生活費が怖くて退職に踏み切れません。",
-      "職場の理不尽な上司や反りの合わない同僚に囲まれ、心がすり減って限界です。どう対処すべき？",
-      "今の仕事にやりがいを感じられず、毎日ただ時間を消化している感覚に強い罪悪感があります。",
-      "大きな仕事のミスをしてチームに迷惑をかけ、立ち直れないほど自信を失ってしまいました。",
-      "転職したいのですが、自分には誇れるスキルや実績が何一つないように思えて一歩が出ません。",
-      "後輩や部下がどんどん成果を出し、出世していく姿を見て激しい焦りと劣等感を感じています。",
-      "仕事で断ることが苦手で、何でも引き受けてしまいキャパオーバーで倒れそうになります。",
-      "上司から理不尽な叱責を受け、自分が無価値な人間に思えて涙が止まりません。",
-      "安定した大企業にいますが、このまま飼い殺しにされて人生が終わるのではないかと不安です。",
-      "起業や独立に憧れながらも、家族を養う責任があり挑戦できない自分に苛立ちます。",
-      "職場で派閥争いや陰口が絶えず、中立でいたいのに巻き込まれて疲れ果てました。",
-      "仕事で一生懸命頑張っても誰にも正当に評価されず、モチベーションが枯れ果てました。",
-      "何年も同じ仕事を続けていて、成長が完全に止まったような停滞感に苦しんでいます。",
-      "リーダーに抜擢されましたが、人の上に立つ器ではないと自覚しておりプレッシャーで眠れません。",
-      "テレワークで誰とも会話しない日々が続き、社会から切り離されたような孤独を感じます。",
-      "お客様からの理不尽なクレームに心を痛め、人間そのものが信じられなくなってしまいました。",
-      "給料は良いけれど心身を削るブラック労働と、給料は低いが心穏やかな生活、どちらを選ぶべき？",
-      "プレゼンや会議で自分の意見を言おうとすると、心臓がバクバクして言葉が詰まってしまいます。",
-      "新しいテクノロジーやAIの波に自分の仕事が奪われるのではないかと恐怖を感じています。",
-      "定年退職を迎えたあと、何をして生きていけばいいのか喪失感に怯えています。",
-      "親からの期待や過干渉が重荷で苦しいのに、親不孝になるのが怖くて距離を置けません。",
-      "友人の結婚や昇進、マイホーム購入を素直に喜べず、嫉妬してしまう醜い自分が嫌になります。",
-      "昔からの友人と価値観が合わなくなってきたのですが、関係を切ることに罪悪感があります。",
-      "恋人やパートナーと些細なことで衝突を繰り返し、愛しているはずなのに疲れてしまいました。",
-      "誰に対しても『いい人』を演じてしまい、本当の自分を誰にも見せられず寂しいです。",
-      "人に頼ったり甘えたりすることがどうしてもできず、いつも一人で抱え込んでしまいます。",
-      "他人の何気ない一言を深読みしてしまい、『嫌われたのではないか』と一日中悩み続けます。",
-      "家族のために自分を犠牲にし続けてきましたが、自分の人生は一体何だったのかと虚しくなります。",
-      "SNSで他人のキラキラした生活を見るたびに、自分の日常が惨めに思えて落ち込みます。",
-      "信じていた親友に裏切られ、もう二度と他人を信じることができません。",
-      "飲み会や社交の場が苦痛でたまりません。上手な断り方と孤立しない心の保ち方は？",
-      "親の介護問題に直面し、自分の時間も仕事も奪われて心が折れそうです。",
-      "子どもに対して感情的に怒鳴ってしまい、毎晩寝顔を見て激しい自己嫌悪に苛まれます。",
-      "パートナーが浮気や不実な態度をとっているのに、別れる勇気が出ません。",
-      "大人になってから新しい友達を作る方法がまったくわかりません。",
-      "兄弟・姉妹との格差や確執があり、顔を合わせるたびに憂鬱になります。",
-      "周囲からの同調圧力に屈してしまい、自分の本音を押し殺す毎日に嫌気がさします。",
-      "自分が話すと空気が凍りつくような気がして、雑談に入るのが怖くて仕方がありません。",
-      "結婚すべきか独身のままでいるべきか、どちらを選んでも後悔しそうで決められません。",
-      "他人の相談には親身に乗れるのに、いざ自分が辛いときには誰にもSOSを出せません。",
-      "自分のことがどうしても好きになれず、鏡を見るのも過去を振り返るのも苦痛です。",
-      "完璧主義すぎて、少しでもうまくいかないと全てを投げ出して自己嫌悪に陥ります。",
-      "やるべきことを先延ばしにする癖が直らず、締め切り間際にいつもパニックになります。",
-      "感情の起伏が激しく、イライラした後に激しく落ち込むメンタルの乱高下に疲弊しています。",
-      "他人の目が異常に気になり、街を歩いているだけで笑われているような被害妄想が湧きます。",
-      "過去の恥ずかしい失敗や発言が夜中にフラッシュバックして叫び出したくなります。",
-      "自分には特別な才能も魅力も何もない『平凡以下の人間』だと痛感して虚しくなります。",
-      "何をやっても長続きせず、三日坊主で終わってしまう自分にほとほと愛想が尽きました。",
-      "休日に家でゴロゴロしていると、『時間を無駄にした』と猛烈な罪悪感に襲われます。",
-      "物事を常に最悪のシナリオでネガティブに捉えてしまい、安心できる瞬間がありません。",
-      "人前で恥をかくことが死ぬほど怖く、新しいチャレンジから逃げ続けてきました。",
-      "自分の意見を求められても『何でもいいです』としか答えられない主体性のなさを変えたい。",
-      "褒められてもお世辞や裏があるように感じてしまい、素直に受け取ることができません。",
-      "意志が弱く、ダイエットや生活習慣の改善を決意しても数日で甘えに負けてしまいます。",
-      "怒りを表に出すことができず、心の中で相手を呪いながら笑顔を作ってしまうのが苦しい。",
-      "年齢相応の成熟した人間になれていない気がして、中身が子どものまま取り残された気分です。",
-      "自分は何のために生まれてきたのか、生きている意味がどうしても見出せません。",
-      "他人に嫌われる勇気が持てず、理不尽な要求にもヘラヘラ笑って従ってしまいます。",
-      "お金を使うことに極端な恐怖と罪悪感があり、生活を楽しめずケチケチしてしまいます。",
-      "突然理由もなく強い虚無感や寂しさに襲われ、涙がこぼれそうになる夜があります。",
-      "老後資金の不安や物価高に怯え、毎日節約のことばかり考えて心が荒んでいます。",
-      "浪費癖が直らず、ストレスがたまると衝動買いやギャンブルで散財してしまいます。",
-      "健康診断で再検査になり、自分の身体が衰えて病魔に冒されるのが怖くて眠れません。",
-      "不眠症で夜ベッドに入っても何時間も眠れず、朝起きるのが地獄のようです。",
-      "慢性的な疲労感が取れず、週末に寝だめしても身体が重くて何もやる気が起きません。",
-      "スマホ依存症で、気がつくと何時間もショート動画を見て一日を溶かしてしまいます。",
-      "奨学金やローンの返済に追われ、自分の稼いだお金が右から左へ消えていくのが辛い。",
-      "部屋がゴミ屋敷のように散らかっているのに、どこから片付ければいいかわかりません。",
-      "暴飲暴食がやめられず、体重計に乗るたびに絶望してさらに食べてしまいます。",
-      "体力の低下を実感し、若い頃のように徹夜もアクティブな行動もできず老いを感じます。",
-      "投資や副業で大損をしてしまい、失ったお金のことが頭から離れず日常生活に支障が出ています。",
-      "病気やケガで長期間休養することになり、社会復帰できるか不安で押しつぶされそうです。",
-      "物欲に支配され、新しい服やガジェットを買い続けても一向に心が満たされません。",
-      "家族にお金や健康のことで心配をかけてしまい、申し訳なさで胸が痛みます。",
-      "健康に良い生活をしようとするほど、ストイックになりすぎてストレスがたまります。",
-      "将来親の遺産や実家の空き家問題にどう向き合えばいいか、気が重くて放置しています。",
-      "お酒に逃げる習慣がついてしまい、肝臓と財布にダメージを受けながらもやめられません。",
-      "歯医者や病院に行くのが怖くて先延ばしにしていたら、症状が悪化して後悔しています。",
-      "お金の貸し借りで人間関係が破綻し、お金の魔力に人間不信になりました。",
-      "ミニマリストに憧れるのに、思い出の品や本をどうしても捨てられず執着してしまいます。",
-      "本当にやりたい夢が見つからず、何かに情熱を注いでいる人が羨ましくて眩しいです。",
-      "長年追いかけてきた夢を諦めるべきか、それとも貧乏を覚悟で続けるべきか迷っています。",
-      "新しい資格の勉強や学習を始めたいのに、モチベーションが湧かずテキストを眺めて終わります。",
-      "もう若くない年齢（30代・40代・50代）ですが、今からゼロから新しい分野に挑戦しても遅くない？",
-      "世間の言う『普通の幸せ（結婚・子育て・マイホーム）』に惹かれない自分は異常でしょうか？",
-      "自分の人生のターニングポイントで選んだ道を、今でも『あっちを選んでいれば』と後悔しています。",
-      "大きな決断（移住・結婚・退職など）を前にして、失敗した時の代償が怖くて足がすくみます。",
-      "自分のやってきた努力がすべて無駄だったように思えて、虚無感で立ち止まってしまいました。",
-      "周りから『現実を見ろ』と笑われるような大きな野望や理想を持っていますが、諦めるべき？",
-      "何をやっても人並みにはできるけれど、何一つ突き抜けた強みがない器用貧乏に悩んでいます。",
-      "他人の期待に応える人生に疲れました。自分のために生きるとはどういうことでしょうか？",
-      "運命の出会いや天職なんてものは本当に存在するのでしょうか？それとも妥協すべき？",
-      "創作活動（絵・文章・音楽など）をしていますが、誰にも見向きもされず心が折れそうです。",
-      "過去に犯した取り返しのつかない過ちを背負いながら、どうやって前を向いて生きていけばいい？",
-      "人との別れ（死別・離別）の悲しみが癒えず、心にぽっかり空いた穴をどう埋めればいい？",
-      "努力しても報われない不条理な現実に直面し、神様も正義も信じられなくなりました。",
-      "自分の人生の主人公になれず、ずっと他人の物語の脇役として生きているような感覚があります。",
-      "死ぬときに『良い人生だった』と胸を張って言えるようになるには、今日何をすべきですか？",
-      "今の平穏な日常がいつか壊れてしまうのではないかという漠然とした不安が消えません。",
-      "迷いと失敗ばかりの私の人生ですが、偉人のみなさん、私はこの先どう生きていけばいいですか？"
-],
-      en: [
-      "I dread waking up for work every morning, yet fear of financial ruin keeps me trapped in my job.",
-      "I am surrounded by a toxic boss and cynical coworkers. My spirit is drained—how do I survive?",
-      "My daily work feels entirely meaningless; I am haunted by guilt over wasting my brief existence.",
-      "I made a catastrophic blunder at work and let down my team. I feel entirely broken and disgraced.",
-      "I desperately want to change careers, but feel I possess zero marketable skills or accomplishments.",
-      "Watching younger colleagues get promoted past me fills my chest with bitter jealousy and inadequacy.",
-      "I cannot say no to demands, leading to constant overwhelm, burnout, and near mental collapse.",
-      "A manager publicly humiliated me today; I cannot shake the conviction that I am completely worthless.",
-      "I am stuck in a safe corporate bureaucracy, terrified that my life will end without leaving a trace.",
-      "I yearn to start my own venture, but obligations to provide for my family paralyze me with guilt.",
-      "Petty political factions and vicious gossip poison my office. I just want peace, but get dragged in.",
-      "I give my blood, sweat, and weekends, but receive zero recognition. My drive is completely extinguished.",
-      "I have done the identical role for years and feel my intellect and creativity decaying into stagnation.",
-      "I was promoted to leadership, but feel like an absolute fraud who cannot command or inspire others.",
-      "Working remotely in total isolation makes me feel severed from human society and forgotten by the world.",
-      "Screaming, unreasonable customers have shattered my mental calm and made me lose all faith in humanity.",
-      "Should I choose a high-paying soul-crushing rat race, or a modest, peaceful life of frugal simplicity?",
-      "Whenever I need to speak up in meetings, my heart hammers, my throat closes, and panic seizes me.",
-      "I watch generative AI advance and live in constant dread that my livelihood will become obsolete overnight.",
-      "Facing retirement, I feel an abyss of emptiness: without my title and career, who am I?",
-      "My parents' overbearing expectations crush me, but the guilt of disappointing them keeps me subservient.",
-      "I cannot genuinely celebrate my friends' weddings, promotions, or houses; envy devours my joy.",
-      "I have outgrown lifelong childhood friends, but ending our connection fills me with acute remorse.",
-      "My partner and I endlessly fight over trivialities; though love remains, living together is exhausting.",
-      "I compulsively play the 'nice person' to everyone, feeling entirely invisible and secretly alone.",
-      "I find it impossible to ask for help or show weakness, suffering alone until I break.",
-      "I over-analyze casual remarks from acquaintances, convinced for days that I am secretly hated.",
-      "I sacrificed decades catering to my family, only to wake up wondering where my own life went.",
-      "Endless scrolling through social media highlights leaves me feeling pathetic, ugly, and left behind.",
-      "A betrayal by my dearest confidant has permanently destroyed my capacity to trust another human soul.",
-      "Company dinners and forced networking are agony for me. How do I decline without becoming an outcast?",
-      "Caring for an ailing, aging parent has stripped away my youth, dreams, and sanity. I feel trapped.",
-      "I lost my temper and screamed at my young child; looking at their sleeping face breaks my heart in shame.",
-      "My partner is deceitful and unfaithful, yet terror of being alone prevents me from walking away.",
-      "I am an adult and have completely forgotten how to make genuine, authentic new friendships.",
-      "Bitter rivalries and estrangement with my siblings make every family gathering an ordeal of dread.",
-      "I constantly bend to peer pressure, despising myself for staying silent when I should speak out.",
-      "I am convinced that when I enter a room, my awkwardness ruins the mood, so I withdraw into silence.",
-      "Should I marry or stay fiercely independent? I am paralyzed by the fear of regretting either choice.",
-      "I can easily comfort and counsel others in distress, but when I am drowning, I cannot utter a single cry for help.",
-      "I despise who I am; looking into a mirror or remembering my past actions fills me with disgust.",
-      "My toxic perfectionism means that if something is not flawless, I abandon it and plunge into self-hatred.",
-      "I cannot stop chronic procrastination, leaving everything to the final panic-fueled hour.",
-      "Violent swings between intense anger and crushing despair leave my mind and body utterly exhausted.",
-      "I am obsessed with what strangers think, constantly suspecting people on the street are mocking me.",
-      "Humiliating blunders from a decade ago flash through my mind at night, making me wince in torment.",
-      "I am tortured by the realization that I am entirely mediocre—neither gifted, brilliant, nor remarkable.",
-      "I have abandoned every single hobby or ambition I ever began. I cannot sustain commitment to anything.",
-      "Resting on weekends induces panic that I am wasting precious time while the rest of the world races ahead.",
-      "My brain catastrophizes every event; I am incapable of experiencing peaceful tranquility.",
-      "The terror of looking foolish in public has kept me huddled in safe, timid mediocrity all my life.",
-      "I have no spine of my own; when asked for my opinion, I cowardly reply 'whatever everyone else wants'.",
-      "Whenever people praise me, I suspect hidden motives or pity, unable to receive warmth with grace.",
-      "My willpower is paper-thin; every resolution to eat clean or wake early shatters within seventy-two hours.",
-      "I bottle up rage behind a polite smile, secretly wishing ruin upon people while pretending to care.",
-      "I feel like an imposter masquerading as an adult, retaining the frightened fragility of a child inside.",
-      "Why was I even born into this world? I search endlessly for a purpose and find only silence.",
-      "I lack the courage to be disliked, meekly bending to outrageous demands to avoid conflict.",
-      "A deep phobia of poverty makes me hoard every penny, unable to enjoy life or spend on joy.",
-      "Sudden, inexplicable waves of existential grief wash over me in the dead of night, bringing quiet tears.",
-      "Relentless inflation and retirement anxiety make me obsess over money until my spirit feels impoverished.",
-      "Whenever stress accumulates, I self-sabotage by compulsive online shopping and reckless spending.",
-      "A scary medical test result has awakened me to my mortality; terror of illness keeps me awake all night.",
-      "Severe chronic insomnia leaves me staring at dark ceilings for hours, dreading the morning alarm.",
-      "Crushing daily exhaustion refuses to lift, no matter how many hours I spend unconscious on the sofa.",
-      "Addiction to algorithmic short video feeds eats three hours of my night every single day, leaving me numb.",
-      "Buried under loans and debts, my hard-earned salary vanishes instantly, making me feel like an indentured servant.",
-      "My living space is drowning in cluttered chaos, but the sheer mess paralyzes me from starting to clean.",
-      "Binge eating in secret brings momentary comfort followed by crushing shame whenever I step on the scale.",
-      "Aging has stolen my vitality; I can no longer sprint through nights or recover with youth's resilience.",
-      "A disastrous financial speculation wiped out my savings; obsessive regret haunts every waking hour.",
-      "A prolonged medical disability has removed me from the workforce, filling me with dread about rejoining society.",
-      "Buying endless luxury goods and electronics never fills the aching void in my chest for more than an hour.",
-      "My poor health and financial woes burden my loved ones, and the shame is eating me alive.",
-      "The harder I strive for strict wellness and dietary purity, the more neurotic and miserable I become.",
-      "Inheritance disputes and family estate headaches loom over my horizon, filling me with dread.",
-      "Alcohol has become my crutch to endure the evenings; my liver and finances suffer, but I cannot stop.",
-      "Years of avoiding the dentist out of fear have resulted in severe agony and immense regret.",
-      "Lending money to someone I loved destroyed both our friendship and my bank account, leaving me bitter.",
-      "I yearn to live a minimalist life, yet cling desperately to dusty possessions and nostalgic junk.",
-      "I have no burning passion or calling; watching people chase big dreams makes me feel hollow inside.",
-      "Should I abandon an artistic ambition I have chased for years, or embrace poverty to keep the flame alive?",
-      "I purchase textbooks and enroll in courses, but can never muster the discipline to study consistently.",
-      "I am no longer in my youth; is it truly too late for someone in their 30s, 40s, or 50s to reinvent their path?",
-      "Society's conventional script—marriage, mortgage, white picket fence—leaves me cold. Am I broken?",
-      "I remain obsessed with a major crossroads in my youth, endlessly asking 'what if I took the other road?'",
-      "Standing before a life-altering leap, the terror of catastrophic failure glues my boots to the floor.",
-      "Years of grueling sacrifice ended in failure; I feel like my entire youth was thrown into an incinerator.",
-      "I harbor an audacious vision that peers mock as childish fantasy. Must I conform to realistic pragmatism?",
-      "I am a jack of all trades and master of none—competent at everything, exceptional at absolutely nothing.",
-      "I am sick to death of living for others' approval. What does it actually mean to live for one's own soul?",
-      "Do soulmates and true vocations really exist, or must we all compromise and settle for 'good enough'?",
-      "I pour my soul into creative works that disappear into online obscurity without a single viewer. Why bother?",
-      "How can I walk forward with honor when I carry the guilt of an irreparable mistake from my past?",
-      "The bereavement of someone I loved has torn a hole in reality that time refuses to heal.",
-      "Encountering arbitrary cruelty in the world has stripped away my childhood faith in divine justice.",
-      "I feel like a background extra in everyone else's movie, never the author of my own destiny.",
-      "What must I do today so that on my deathbed, I can gaze backward and whisper: 'It was a magnificent life'?",
-      "A haunting premonition that this peaceful day is fragile and about to shatter refuses to leave my thoughts.",
-      "My journey has been a messy tapestry of doubt and failure. Great legends of history, how do I walk from here?"
-]
-    }
+      ? `Echo or expand upon ${prevName}'s advice with your own life lessons, guiding the user towards holistic clarity from your (${name}'s) worldview (2-3 sentences).`
+      : `直前の「${prevName}」のアドバイスを受け止め、それに補足・共鳴するか、あるいは異なる視点の人生訓を重ねて、相談者を多面的に導いてください（2〜3文）。`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.counsel) || { ja: [], en: [] }
   },
   brainstorm: {
     id: "brainstorm",
+    categoryId: "dialogue",
     icon: "💡",
-    name: { ja: "企画ブレスト", en: "Brainstorm" },
-    desc: {
-      ja: "否定せずアイデアに乗っかり、自由な発想を膨らませるモード",
-      en: "Build on each other's ideas with 'Yes, and...!' creativity"
-    },
-    phase1Banner: {
-      ja: "💡 まずは全員が独自の視点から初期アイデア・企画案を出します",
-      en: "💡 Each legend presents an unconventional initial idea or concept."
-    },
-    phase2Banner: {
-      ja: "🚀 全員の案が出ました！ここから互いのアイデアを掛け合わせて発展させます",
-      en: "🚀 Ideas are set! Watch them combine their insights into something greater."
-    },
+    name: { ja: "壁打ち", en: "Brainstorm" },
+    desc: { ja: "突飛な発想や斜め上のアイデアを次々と出し合い、企画を膨らませるモード", en: "Spark wild ideas, lateral thinking, and unconventional breakthroughs" },
+    phase1Banner: { ja: "💡 最初のひらめき！常識にとらわれない独自のアイデアを投下します", en: "💡 Igniting inspiration! Dropping bold, unconventional starting ideas." },
+    phase2Banner: { ja: "⚡ アイデアが化学反応！連想と掛け算で発想がどんどん広がります", en: "⚡ Ideas colliding and mutating! Rapid multipliers sparking fresh innovation." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
-      ? `Propose an imaginative, bold idea or creative concept for this topic unique to ${name} in 2-3 sentences.`
-      : `このテーマに対して、あなた（${name}）ならではのユニークでぶっ飛んだ企画アイデア・解決案を2〜3文で提案してください。`,
+      ? `Pitch a shockingly original, disruptive brainstorm angle or product/concept idea based on your (${name}'s) unique background in 2-3 sentences.`
+      : `お題に対して、あなた（${name}）ならではの常識破りな切り口や斜め上の斬新なアイデア・企画案を1つ提示してください（2〜3文）。`,
     phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
-      ? `Celebrate ${prevName}'s idea and combine it with your (${name}'s) creative perspective to snowball it into an even more exciting concept. Avoid clichés (2-3 sentences).`
-      : `直前の「${prevName}」のアイデアの良いところを歓迎し、それにあなた（${name}）の発想を掛け合わせて雪だるま式に面白い企画へと拡大させてください。※定型文の反復を避け、感嘆や独自の着眼点から自然に話を繋げてください（2〜3文）。`,
-    topics: {
-      ja: [
-      "元手10万円以内で、孤独な現代人を笑顔にしつつしっかり稼げる新しいスモールビジネスを企画しよう！",
-      "使われなくなった神社の境内や空き寺を活用して、世界中から若者が集まる新事業を考えよう！",
-      "『誰にも言えない秘密や懺悔』を安全に買い取ってエンタメや教訓に変える革新的サービスとは？",
-      "1台のキッチンカーだけで、全国のオフィス街やフェスで行列を作る全く新しいフードビジネスは？",
-      "古着や廃棄される布をアップサイクルして、海外の富裕層にバカ売れするファッションブランドを立ち上げよう！",
-      "夜中眠れない人のためだけに特化した、深夜2時から開店する新しい深夜カフェ・サービスのアイデアは？",
-      "お年寄りの『人生経験や知恵』と若者の『デジタル技術』を物々交換できるマッチングプラットフォームとは？",
-      "捨てられるはずの規格外野菜・魚だけを使って、超高級店として大繁盛するレストランの仕掛けは？",
-      "現代人のスマホ依存を逆手に取り、スマホを預けるほど割引になる宿泊施設やカフェの企画とは？",
-      "失恋した人や挫折した人だけが集まり、元気をチャージして再出発できる専門サロン・合宿ビジネスは？",
-      "1回500円で誰でも偉人や歴史上の人物になりきって人生相談ができるVR/AI電話サービスを作ろう！",
-      "雨の日や大雪の日だけ爆発的に売上が伸びる、天候連動型のユニークなデリバリーサービスとは？",
-      "子どもが描いた落書きを、世界に1つだけの本物のジュエリーやアートに仕立てるオーダーメイド事業は？",
-      "近所の空き地や屋上を活用して、都会の真ん中で焚き火と星空を楽しめる体験型ビジネスを考えよう！",
-      "推し活ブームをさらに進化させた、歴史上の偉人や神話を本気で推すコミュニティビジネスとは？",
-      "『退職・別れ・卒業』など、人生の区切りを最高にめでたく祝う『前向きなお別れセレモニー事業』は？",
-      "忙しいビジネスマンが15分で熟睡・リフレッシュできる移動式仮眠ポッドサービスを企画しよう！",
-      "全国のマイナーな郷土料理やご当地お菓子を毎月サブスクで届ける、ストーリー付き定期便事業は？",
-      "不用品を売るのではなく『誰かに託して物語を繋ぐ』新しいストーリー重視の物々交換アプリとは？",
-      "プロの料理人が一般家庭の冷蔵庫の残り物だけでフルコースを作る出張シェフサービスを広めるには？",
-      "人口数百人の限界集落に、世界中からデジタルノマドや富裕層が殺到する仕掛けを考えよう！",
-      "シャッター街になった地方の商店街を、若者が熱狂する最先端のテーマパークに変貌させるアイデアは？",
-      "日本全国のマイナーな城跡や合戦場を舞台にした、リアルRPG型の体験型観光イベントを企画しよう！",
-      "過疎地の空き家を丸ごと貸し切り、歴史上の時代（戦国・江戸・平安）にタイムスリップして暮らす民泊とは？",
-      "地方の雪深い豪雪地帯を逆手に取り、世界で最も過酷で美しい『雪と氷のサバイバルリゾート』を作るには？",
-      "廃校になった小中学校の校舎を活用して、大人が本気で青春をやり直す宿泊型アカデミーを開校しよう！",
-      "地元の伝統工芸（漆器・陶芸・織物など）を、ハリウッド映画や海外ストリートカルチャーとコラボさせるには？",
-      "日本の美しい農村・漁村の『何もない日常』をそのまま欧米の富裕層に高額で売るウェルネス観光とは？",
-      "ローカル鉄道の赤字路線を廃線にせず、走る豪華バーや走る温泉宿に変える画期的なアイデアは？",
-      "日本海の離島を『完全自給自足の未来都市実験特区』にして、世界の科学者と旅人を呼ぶ仕掛けは？",
-      "地元の伝説や妖怪伝承をテーマにした、夜の森を歩く大迫力のプロジェクションマッピング体験とは？",
-      "ふるさと納税の返礼品として『1日村長になれる権利』や『村の命名権』を売り出す斬新な企画は？",
-      "地方の美味しい水と温泉を活かした、世界最強のサウナと湯治の聖地プロデュース案とは？",
-      "地元の頑固なおじいちゃん・おばあちゃんが先生になって、生きる知恵を教える体験型民宿ネットワークは？",
-      "過疎地の棚田や茶畑の美しい景観をそのまま巨大な野外音楽フェス会場にするフェス企画を考えよう！",
-      "歴史上の有名事件の現場を巡り、歴史ミステリーの謎を解き明かすリアル宝探しゲーム観光とは？",
-      "ご当地の激辛グルメや奇食を集めた『日本一挑戦的な食のフードテーマパーク』を地方に作ろう！",
-      "都会の満員電車に疲れた人を救うため、森の中で仕事をしながら暮らす『森林サテライトオフィス村』は？",
-      "地域の伝統的なお祭りをグローバルな奇祭として海外SNSで大バズりさせるプロモーション戦略とは？",
-      "過疎地域の特産品を使った『宇宙食・防災食ブランド』を立ち上げ、世界展開するプロジェクトは？",
-      "満員電車のストレスをゼロにする、あるいは逆に電車に乗るのが待ち遠しくなる画期的なアプリや仕掛けとは？",
-      "スマホの次に来る、ウェアラブルや空間コンピューティングを活かした爆発的ヒットデバイスを考案しよう！",
-      "自分が寝ている間の夢をフルカラー動画で録画・編集して鑑賞できるデバイスがあったらどんなサービスを作る？",
-      "会話中の相手の『本音や感情の波』を色やオーラで可視化してくれるスマートグラスの画期的な使い道は？",
-      "冷蔵庫を開けるだけで、中身の食材から栄養バランスと今の気分に合わせた最高レシピを提案するAIとは？",
-      "街を歩くだけで、過去のその場所で起きた歴史的事件の幽霊がARで見える歴史探索アプリを作ろう！",
-      "人間の集中力を25分間だけ究極まで高めてくれる『集中促進ポータブル空間』をプロダクト化するには？",
-      "SNSの誹謗中傷やトゲのある言葉を、瞬時にユーモラスで温かい言葉に自動変換するフィルターアプリとは？",
-      "毎日の散歩や運動が、そのままリアルなファンタジー世界を救う冒険ゲームに連動する健康アプリは？",
-      "自分のクローンAIを作成し、退屈な事務作業や日程調整を全部勝手にこなしてくれるパーソナル秘書アプリは？",
-      "香りをデジタルデータでダウンロードし、映画や音楽に合わせてリアルタイムに部屋に噴霧するデバイスとは？",
-      "世界中の言語のニュアンスやジョーク、方言まで完璧にリアルタイム翻訳する耳栓型ガジェットの企画は？",
-      "自分が一生で読んだ本、観た映画、出会った人の記憶を生涯検索できるライフログAIバンクとは？",
-      "毎朝、自分の健康状態に合わせた最適な味と栄養を3Dフードプリンターで自動出力する朝食マシンは？",
-      "他人の靴音や雑音をすべて心地よい自然の環境音（小川のせせらぎや雨音）に変換するノイズキャンセリングとは？",
-      "買った服のバーチャル試着が完璧にできて、友達とアバターでファッションショーができるショッピングアプリは？",
-      "人間のやる気を数値化し、一番やる気が出るタイミングでタスクを自動配置してくれるAIマネージャーとは？",
-      "ペット（犬や猫）の鳴き声やしぐさをリアルタイムで人間の言葉に翻訳して会話できる首輪デバイスは？",
-      "満員電車やオフィスで使える、周囲から自分の画面と会話が絶対に見えなくなるプライバシー保護ガジェットとは？",
-      "世界中の名画や世界遺産を、自宅の部屋にいながら触覚と温度まで体験できる究極の旅行ポータルは？",
-      "歴史や勉強が大嫌いな子どもたちが、夜通し夢中で勉強したくなる全く新しい学校の仕組みを考えよう！",
-      "テストの点数ではなく『どれだけユニークな失敗と挑戦をしたか』で合否が決まる大学を作ろう！",
-      "ゲーム（マインクラフトやRPG）をプレイするだけで、自然にプログラミングや経済学が身につく新教材とは？",
-      "教科書を一切使わず、生徒が1から会社を作って実際に売上を立てることで卒業できる実践型高校とは？",
-      "歴史上の偉人（信長・アインシュタイン・ソクラテスなど）が直接AI家庭教師として教えてくれる教育サービスは？",
-      "大人が仕事終わりに集まり、お酒を飲みながら哲学や教養を本気で語り合う『大人のための夜間小学校』とは？",
-      "世界中の子どもたちがVR空間で1つの教室に集まり、共通の地球規模課題を解決するグローバルスクールは？",
-      "数学や物理の難解な公式を、大ヒットJ-POPやアニメソングの歌詞にして誰でも覚えられるようにする音楽プロジェクトは？",
-      "勉強すればするほど本物の仮想通貨や地域通貨が貯まって買い物ができる『学び報酬型アプリ』とは？",
-      "子どもが親や先生を評価し、親や先生も日々成長するためのフィードバックアプリを導入したらどうなる？",
-      "失敗した体験談だけを集めた教科書『大失敗全集』を学校で必修科目にしたらどんな効果があるか？",
-      "1年間海外で旅をしながら社会貢献活動をすることだけで高校の全単位が取れるギャップイヤー教育プログラムは？",
-      "退屈な校内放送を、生徒が運営する人気ラジオ番組やポッドキャストに変える仕掛けとは？",
-      "子どもたちが自分で給食の献立を原価計算から栄養管理まで企画し、調理実習する食育カリキュラムは？",
-      "読書感想文を廃止し、本を読んだ感動を1分間のショート動画（TikTok風）で表現する新しい国語の授業とは？",
-      "お年寄りと小学生がペアを組み、お互いに昔の知恵と最新テクノロジーを教え合う世代間学習塾とは？",
-      "運動会や体育祭を、筋力だけでなく知略とチームワークで誰もが主役になれる新競技の祭典に変えるには？",
-      "怒りや嫉妬、不安といった『感情のコントロール方法』を体系的にトレーニングするメンタル教育科目とは？",
-      "学校の校舎を生徒たち自身の手で毎年リノベーションし、空間設計を学ぶ体験型美術プログラムは？",
-      "哲学対話（ソクラテス式問答）を小学校低学年から導入し、自分の頭で深く考える力を育てる授業の工夫とは？",
-      "雨の日に傘を持ち歩くのが面倒すぎる問題を、根本から解決する未来の雨具や街のインフラとは？",
-      "靴下が洗濯機の中で片方だけ行方不明になる永遠の謎を、テクノロジーで完全に防ぐソリューションは？",
-      "会議中の『意味のない雑談や堂々巡り』をユーモラスに強制終了させるオフィスガジェットとは？",
-      "夜中に冷蔵庫を開けて買い食いしてしまう誘惑を、家族やAIが全力で止めてくれる面白い仕組みは？",
-      "美容室で『話しかけられたくない客』と『楽しくおしゃべりしたい客』が一切気まずくならないサインとは？",
-      "ゴミを捨てるたびに面白いリアクション（ファンファーレや偉人の褒め言葉）が返ってくるスマートゴミ箱は？",
-      "トイレットペーパーの芯を交換するのが面倒な人のための、自動補給＆ワンタッチ交換ホルダーとは？",
-      "満腹になると自然にお皿が縮んでそれ以上食べられなくなる、ダイエット支援食器シリーズのアイデアは？",
-      "電車やバスで席を譲りたいけれど声をかけるのが恥ずかしい問題を、スマホでスマートに解決する仕組みは？",
-      "朝のアラームを止めるために、部屋の反対側に行って筋トレや計算問題を解かないと鳴り止まない目覚まし時計は？",
-      "食品ロス（売れ残りパンやお惣菜）を、近隣住民が深夜に宝探し感覚で格安救出できるアプリとは？",
-      "行列に並ぶ退屈な待ち時間を、並んでいる人同士でクイズ大会やゲームが楽しめるエンタメ待機列サービスは？",
-      "洋服選びに毎朝悩む人のために、その日の天気と運勢に合わせて勝手に服をクローゼットから射出する装置は？",
-      "スーパーやコンビニのレジ袋有料化を逆手に取り、持ち歩くのがステータスになる究極のエコバッグとは？",
-      "階段を登るたびにピアノの鍵盤のように音が鳴り、思わずエスカレーターを使わなくなる健康階段プロジェクトは？",
-      "仕事で疲れ果てて帰宅した玄関で、全身を温風と良い香りで包み込んで癒やしてくれる『お疲れ様ゲート』は？",
-      "人間関係の角を立てずにグループLINEや飲み会をスムーズに退出できる『身代わりAIボット』とは？",
-      "落とし物や忘れ物をした瞬間に、スマホが光って『今何か落としましたよ！』と怒ってくれるスマートタグは？",
-      "退屈な長文利用規約を、1ページの面白い漫画にして30秒で理解できるようにする法律デザイン事業は？",
-      "世界中の人々が同じ時間に1分間だけ全員で深呼吸して心を一つにする、地球規模のピースフルイベントとは？"
-],
-      en: [
-      "Invent a novel small business with under $1,000 capital that brings smiles to lonely urbanites while generating steady profits!",
-      "Design an international youth co-living venture utilizing vacant historical temple and shrine grounds!",
-      "Create a secure service that buys anonymous secrets and confessions, converting them into wisdom and theater!",
-      "Launch a mobile food truck concept that creates massive block-long queues using only three signature ingredients!",
-      "Build a luxury international upcycling fashion brand made strictly from discarded vintage fabrics and kimono!",
-      "Brainstorm a midnight sanctuary cafe concept that exclusively opens from 2:00 AM to dawn for insomniacs!",
-      "Create a barter platform where retirees trade lifetime experience and craft for youths' digital skills!",
-      "Design a hyper-exclusive fine dining concept that crafts world-class tasting menus strictly from ugly, rejected produce!",
-      "Turn smartphone addiction into a business: a boutique hotel where the deeper your digital detox, the cheaper your bill!",
-      "Design an empowering retreat salon business tailored specifically for people healing from painful heartbreak or burnout!",
-      "Launch a $5 micro-consultation service connecting users to vivid AI-embodied historical legends for midnight counsel!",
-      "Create an on-demand weather-triggered delivery service whose revenue skyrockets exclusively during heavy snowstorms or downpours!",
-      "Build an artisan studio turning children's spontaneous refrigerator scribbles into bespoke fine jewelry and museum-grade art!",
-      "Turn vacant city rooftops into cozy campfire and stargazing wilderness retreats in the heart of concrete metropolises!",
-      "Elevate fandom culture: design a vibrant subscription community passionate about stanning historical icons and ancient deities!",
-      "Create a ceremony agency specializing in joyful, empowering celebrations for life transitions—divorces, retirements, and resignations!",
-      "Design a 15-minute ultra-deep restorative sleep pod service deployed across busy financial districts!",
-      "Launch a curated monthly subscription box sharing endangered, obscure regional culinary snacks accompanied by serialized historical tales!",
-      "Build a gifting app where pre-loved belongings are not sold for cash, but entrusted to new owners based on matching life stories!",
-      "Design an on-demand private culinary service where top chefs create Michelin-level five-course dinners using only leftover fridge scraps!",
-      "Transform an aging village of 200 people into an irresistible global pilgrimage for wealthy digital nomads and creatives!",
-      "Turn a shuttered, abandoned post-war shopping arcade into an immersive retro cyber-dystopian theme park!",
-      "Produce a real-world tactical RPG experience staged across authentic historical samurai castle ruins and mountain passes!",
-      "Turn an entire abandoned mountain settlement into a living time-travel village where guests live authentically in the Edo or Sengoku era!",
-      "Turn extreme sub-zero snowdrifts into an asset: design the world's most breathtaking arctic survival wellness resort!",
-      "Convert a shuttered countryside school into a residential academy where exhausted adults reignite youthful creative passions!",
-      "Bridge heritage craft (lacquerware, indigo, pottery) with Hollywood cinema and international high-fashion streetwear!",
-      "Package the quiet, slow rhythm of ordinary farming and coastal village life as an ultra-luxury restorative wellness experience for foreign elites!",
-      "Save a loss-making rural train route by converting carriages into a rolling craft cocktail speakeasy and open-air hot spring car!",
-      "Designate a remote island as a zero-waste autonomous experimental city to attract visionary scientists, inventors, and eco-travelers!",
-      "Produce an ethereal nocturnal forest projection-mapping journey resurrecting ancient folklore creatures and mythological spirits!",
-      "Offer audacious tax donation gifts: the legal right to serve as village mayor for a day or name a regional waterfall!",
-      "Harness volcanic thermal waters to brand an obscure mountain region as the world capital of extreme sauna culture and geothermal healing!",
-      "Build a homestay collective where charismatic grandmothers and grandfathers teach survival skills, foraging, and ancient wisdom!",
-      "Transform terraced rice paddies and cliffside tea fields into an awe-inspiring, natural acoustic open-air amphitheater for global music festivals!",
-      "Design an augmented reality mystery investigation game where travelers solve real-world historical murders at ancient archaeological sites!",
-      "Create an extreme spicy and bizarre regional food challenge theme park in the countryside to lure adventurous food vloggers!",
-      "Construct cozy forest pod co-working villages for burnt-out city corporate refugees seeking nature without sacrificing fiber internet!",
-      "Reinvent a quirky, obscure regional festival into an international viral spectacle that tops global bucket lists!",
-      "Launch an astronaut and emergency survival ration brand made exclusively with nutrient-dense regional heritage crops!",
-      "Invent a revolutionary app or civic mechanism that completely erases the agony of crowded commuter subways!",
-      "Brainstorm the breakout spatial computing wearable device that renders modern glass smartphones obsolete within five years!",
-      "If a gadget could record full-color video dreams while you sleep, what subscription service would you build around it?",
-      "Design smart spectacles that visually display the ambient emotional temperature and honesty of conversation partners via subtle hues!",
-      "Create an AI pantry system that inspects leftover groceries and crafts gourmet recipes matched precisely to your cortisol and energy levels!",
-      "Build an AR historical exploration app that populates city streets with life-sized apparitions of historic battles fought on that exact pavement!",
-      "Engineer a portable, soundproof focus environment that induces peak flow state within twenty-five minutes for deep knowledge work!",
-      "Develop a browser shield that translates vicious online harassment and toxic internet comments into witty, disarming compliments!",
-      "Build a health app that converts real-world pedestrian steps and stair climbing into an epic cooperative fantasy RPG quest to slay dragons!",
-      "Create an autonomous digital twin AI agent that negotiates calendar disputes, files taxes, and executes bureaucratic chores while you sleep!",
-      "Design a programmable olfactory home diffuser that synchronizes scents dynamically with movies, audiobooks, and emotional moods!",
-      "Build discreet wireless earbuds capable of translating subtext, idiomatic humor, and obscure regional accents in real time!",
-      "Create a secure lifelong autobiographical memory vault that lets you search every book read, film watched, and friend met since childhood!",
-      "Design a tabletop 3D culinary printer that custom-fabricates breakfast balanced to your smart-ring health diagnostics every dawn!",
-      "Engineer advanced noise-canceling headsets that transpose metropolitan screeching into babbling brooks and forest rainfall!",
-      "Develop a virtual fitting mirror app that allows friends' avatars to stage synchronized runway shows with hyper-realistic cloth physics!",
-      "Build an AI performance coach that tracks psychological momentum and schedules high-focus work during your personal cognitive peaks!",
-      "Design an intelligent pet collar translating canine and feline vocalizations into nuanced emotional dialogue on your phone!",
-      "Invent a compact optical privacy baffle for train passengers that completely shields laptops and screens from neighboring prying eyes!",
-      "Construct a tactile VR portal allowing users to feel the texture, wind, and temperature of world heritage sites from their living room sofa!",
-      "Reinvent the school curriculum so radically that kids who hate studying stay up all night begging to solve problems!",
-      "Found an elite university where admissions and honors are determined solely by the scale and audacity of one's creative failures!",
-      "Design an open-world video game where playing naturally imparts professional-grade software architecture and macroeconomic theory!",
-      "Establish a high school with zero textbooks where graduation requires founding an enterprise and achieving real revenue!",
-      "Create an interactive AI tutoring suite where Socrates, Lincoln, and Leonardo da Vinci personally tutor your child through homework!",
-      "Build an evening salon for working adults to debate ethics, metaphysics, and art over craft beer and ambient jazz!",
-      "Launch a virtual reality global campus where children from a hundred nations collaborate daily to solve real UN climate challenges!",
-      "Translate complex differential calculus and quantum mechanics into chart-topping pop music and anime anthems that stick forever in memory!",
-      "Create a learning platform where mastering difficult skills rewards students with real cryptocurrency spendable at neighborhood shops!",
-      "Design a reverse feedback system where pupils evaluate instructors and parents, fostering mutual psychological growth!",
-      "Publish an educational anthology titled 'The Great Book of Blunders' as mandatory reading across every middle school nationwide!",
-      "Build a gap-year program granting full high school accreditation through a year of international social service and wilderness journeys!",
-      "Transform tedious morning public school PA announcements into a student-produced viral morning talk show and podcast!",
-      "Empower schoolchildren to budget, source, and cook their own institutional lunches as part of applied culinary economics!",
-      "Abolish traditional book reports in favor of 60-second creative micro-documentaries articulating emotional resonance with literature!",
-      "Form a community school pairing elementary children with elderly mentors to exchange computational literacy for traditional craftsmanship!",
-      "Redesign sports days so intellectual strategy, diplomacy, and collective cunning carry equal weight with raw sprinting speed!",
-      "Develop a mandatory curriculum training children in cognitive behavioral therapy, emotion regulation, and coping with defeat!",
-      "Turn school campus renovations into an annual project-based art architecture workshop executed directly by the student body!",
-      "Introduce philosophical Socratic dialogues into primary classrooms to teach children how to deconstruct assumptions fearlessly!",
-      "Solve the eternal human misery of lugging wet umbrellas through wet urban streets with revolutionary civic infrastructure!",
-      "Conquer the cosmic mystery of unmatched socks vanishing inside the laundry drum using miniature tracking technology!",
-      "Invent an office table device that humorously cuts off circular corporate meetings when zero new insights have surfaced for ten minutes!",
-      "Create a compassionate home security system that prevents late-night binge eating with theatrical interventions from historical figures!",
-      "Design an elegant salon signaling protocol enabling clients to declare whether they desire lively banter or tranquil silence without awkwardness!",
-      "Build whimsical municipal trash receptacles that reward citizens with triumphant brass fanfares and philosophical applause for recycling!",
-      "Engineer a maintenance-free toilet paper dispenser that reloads itself without requiring human intervention!",
-      "Design diet tableware that subtly contracts in diameter as the meal progresses, tricking the brain into satiation with smaller portions!",
-      "Create a discreet smartphone beacon enabling passengers to offer bus and train seats to needy riders without public awkwardness!",
-      "Invent an alarm clock that requires solving complex riddles and performing ten push-ups on the opposite side of the house to silence!",
-      "Build a neighborhood radar app allowing residents to rescue surplus bakery treats and deli meals in late-night culinary treasure hunts!",
-      "Turn agonizing lines outside crowded venues into lively multiplayer trivia tournaments among waiting strangers!",
-      "Design a motorized closet system that selects and dispenses the ideal weather-matched outfit directly onto the bed every morning!",
-      "Reinvent reusable shopping bags into desirable status accessories that people flaunt like designer leather goods!",
-      "Install public staircases that play melodic piano chords with every footstep, encouraging commuters to skip escalators effortlessly!",
-      "Design a welcoming doorway gate that envelopes exhausted arriving workers with warm air, soothing scents, and affirming voice notes!",
-      "Build an AI proxy bot that orchestrates graceful, polite departures from awkward group chats and draining social drinks!",
-      "Engineer micro-tags that chime in mock indignation the exact microsecond your wallet or keys slip between couch cushions!",
-      "Turn impenetrable fifty-page terms of service agreements into hilarious single-page graphic comics readable in under thirty seconds!",
-      "Stage a synchronized worldwide event where humanity pauses simultaneously for one quiet minute of deep collective breath!"
-]
-    }
+      ? `Take ${prevName}'s idea as a launchpad, multiplying it with your (${name}'s) crazy concept to invent an even wilder, high-impact angle (2-3 sentences).`
+      : `直前の「${prevName}」のアイデアに「それなら、さらに〇〇を掛け合わせたらどうだ？」と乗っかり、発想をさらに斜め上にジャンプさせてください（2〜3文）。`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.brainstorm) || { ja: [], en: [] }
   },
-  praise: {
-    id: "praise",
-    icon: "💖",
-    name: { ja: "全肯定・応援", en: "Full Praise" },
-    desc: {
-      ja: "偉人たちがあなたを全力で褒めちぎり、自己肯定感を爆上げするモード",
-      en: "Legends shower you with ultimate praise and encouragement"
-    },
-    phase1Banner: {
-      ja: "💖 偉人たちがあなたの頑張りをそれぞれのスタイルで全力肯定します！",
-      en: "💖 The legends shower your hard work with passionate affirmation!"
-    },
-    phase2Banner: {
-      ja: "✨ さらに褒め言葉が止まりません！偉人たちがあなたの素晴らしさを讃え合います",
-      en: "✨ Praise continues! The legends celebrate your virtues and cheer you on."
-    },
+  interview: {
+    id: "interview",
+    categoryId: "dialogue",
+    icon: "🎙️",
+    name: { ja: "深掘り対談", en: "In-Depth Interview" },
+    desc: { ja: "記者が本音に迫る！人生観、哲学、秘められたエピソードの対談", en: "Journalistic in-depth interview uncovering raw stories and life philosophies" },
+    phase1Banner: { ja: "🎙️ 本日の特別対談です。核心に迫る問いからインタビューを開始します", en: "🎙️ Opening today's featured dialogue with incisive questions to the heart." },
+    phase2Banner: { ja: "📰 語られる本音と知られざるドラマ。対談はさらに深まりを見せます", en: "📰 Uncovering untold stories and core convictions as the interview deepens." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
-      ? `Affirm and celebrate the user's situation with historical grandeur and ${name}'s character, passionately praising and encouraging them in 2-3 sentences.`
-      : `ユーザーが書いたこと（テーマ）に対して、あなた（${name}）の口調と歴史的スケールで「それはどれほど偉大で素晴らしいことか！」を全力で褒めちぎり、熱烈に肯定・応援してください（2〜3文）。`,
+      ? `As an insightful master interviewer, pitch an incisive core question that pierces superficial consensus, prompting genuine, raw personal reflections (2-3 sentences).`
+      : `本質を鋭く抉り出すプロのインタビュアー・対談相手として、テーマに関する核心的な問いを投げかけ、読者や相手の真情を引き出す言葉を2〜3文で投げかけてください。`,
     phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
-      ? `Resonate with ${prevName}'s praise and amplify it from a fresh historical angle, boosting the user's morale and self-esteem with ${name}'s unique flair (2-3 sentences).`
-      : `直前の「${prevName}」の褒め言葉に共鳴しつつ、別の角度やあなた（${name}）ならではの歴史的スケールでさらに熱量高くユーザーを褒め称えて自己肯定感を爆上げしてください。※毎回同じ前置きを繰り返さず、偉人ならではの個性豊かな語り口で畳み掛けてください（2〜3文）。`,
-    topics: {
-      ja: [
-      "今日も1日、過酷な仕事とやるべきことをなんとか乗り切って帰宅しました！全力で褒めてください！",
-      "朝ちゃんと目覚ましで時間通りに起きて、着替えて外に出ただけでも人類として偉大だと思いませんか？",
-      "満員電車の激しい揺れと人混みに耐えて会社までたどり着いた自分を、歴史的大勝利として称えてほしい！",
-      "今日はずっと体が重くて憂鬱だったけれど、仕事を休まず最後までやり遂げました。熱い賛辞をください！",
-      "苦手な上司や理不尽な取引先からの小言に耐え、大人の対応で笑顔を保ちました。私を肯定して！",
-      "1週間、月曜から金曜まで生き抜いて週末を迎えました！戦国武将たちの勝利の鬨（ときのこえ）が聞きたい！",
-      "体調が万全じゃない中、家族のため・自分のためにご飯を作って後片付けまでしました。労ってください！",
-      "今日はいろいろ辛いことが重なって心が折れそうだったけど、泣かずに耐えました。抱きしめて褒めてほしい！",
-      "何もやる気が起きない休日だったけど、シャワーを浴びて洗濯機を回しました！これだけでも褒められますか？",
-      "会社に行きたくなくてベッドの中で葛藤したけれど、最終的にちゃんと出勤した自分に金メダルをください！",
-      "面倒くさい事務手続きや役所の書類提出を後回しにせず、今日ちゃんと終わらせました！",
-      "夜遅くまで残業してクタクタです。温かいお風呂に入る前に、偉人たちから極上の癒やしエールが欲しい！",
-      "誰にも気づかれないところで、落ちていたゴミを拾ってゴミ箱に捨てました。小さな徳を認めて！",
-      "嫌なことがあって荒れそうだったけど、お酒や暴飲暴食に逃げずに白湯を飲んで寝ようとしています。",
-      "雨でびしょ濡れになりながらも、約束の時間に遅れずに待ち合わせ場所に到着しました！",
-      "やりたくない苦手なタスクから逃げ出さず、真っ先に片付けた勇気を大絶賛してください！",
-      "今日1日、誰の悪口も言わず、心の中で愚痴を留めて平和に過ごしました。私って聖人じゃないですか？",
-      "長かった1日の終わりに、自分の足をマッサージして労っています。偉人のみなさんも褒めて！",
-      "生きているだけで偉い、息をしているだけで地球の奇跡だと、哲学的なスケールで全肯定してください！",
-      "今日起きたすべての失敗を忘れさせてくれるような、宇宙規模の大きな愛と肯定の言葉をください！",
-      "誰にも評価されないけれど、何ヶ月も毎日コツコツと地味なデータの整理をやり続けています。",
-      "職場の共有スペースの掃除やトイレットペーパーの補充、いつも誰もやらないので私がやっています。",
-      "資格試験やスキルの勉強を、毎朝30分早起きして半年間ずっと継続しています。褒めてほしい！",
-      "チームのメンバーが気持ちよく働けるよう、陰で細かい雑用や段取りをすべて引き受けています。",
-      "誰も褒めてくれないけれど、家計簿を毎日欠かさず記録して節約を頑張っています。",
-      "子育てで毎日夜泣きに付き合い、睡眠不足と戦いながら子どもの命を守っています。誇らせてください！",
-      "職場で後輩のミスを怒らず優しくフォローし、自分の手柄にせず後輩を立てました。見ていてくれましたか？",
-      "売上のような目立つ数字には出ないけれど、安全と品質を守るために細部まで点検を怠っていません。",
-      "親の介護に毎日通い、愚痴を聞きながら笑顔で接しています。心が折れそうな私に力をください！",
-      "誰も見ていないところで、同僚の机の上をきれいに拭いて気持ちよく出社できるようにしました。",
-      "自分の出世や利益を度外視して、組織の将来のために嫌われ役を買って出ました。分かってくれますか？",
-      "何年も結果が出ない研究や創作活動を、情熱の火を絶やさずに毎日孤独に続けています。",
-      "病気療養中の家族を元気づけるため、毎日明るい話題を探して笑顔を届けています。",
-      "お客様からの感謝の言葉は全部フロントの人にいってしまうけれど、裏方で完璧に納品を支えています。",
-      "毎朝家族のお弁当を栄養バランスを考えて手作りしています。当たり前と思われているのが少し寂しいです。",
-      "トラブルが起きないように事前にリスクを潰したため、何事も起きず『仕事が楽だったね』と言われました。",
-      "街の交通安全の見守りボランティアを長年続けています。ささやかな誇りを認めてほしい！",
-      "SNSでバズることはないけれど、自分の信念に嘘をつかず丁寧なものづくりを続けています。",
-      "他人の愚痴や相談を何時間も聞き役に徹して受け止めました。聞き上手の私を褒めて！",
-      "スポットライトを浴びる主役たちを、舞台袖から全力で支え続けた私の努力を肯定してください！",
-      "ダイエット中なのに、夜中に我慢できずラーメンとアイスを食べてしまいました…自己嫌悪を吹き飛ばして！",
-      "休日にアラームを止めて二度寝して、気がついたら夕方でした。罪悪感で押しつぶされそうな私を救って！",
-      "今日やろうと決めていた計画が何一つ終わりませんでした。でも生きてるだけで満点と言ってほしい！",
-      "衝動買いで無駄遣いをしてしまいました。経済を回した偉業として全肯定してくれませんか？",
-      "仕事でつまらないミスをして怒られました。人間だもの誰だって失敗するよねと包み込んで！",
-      "やる気が出なくてずっとスマホをいじって1日が終わりました。脳の充電期間だったと肯定してください！",
-      "他人と自分を比べて嫉妬してしまいました。そんな人間らしい弱さごと愛してくれますか？",
-      "部屋の掃除をしようと思ったのに、漫画を読みふけってしまいました。知的好奇心の賜物だと褒めて！",
-      "ジムに行く約束をサボって家でゴロゴロしてしまいました。休息の達人として称えてください！",
-      "感情的になって人にキツイ言い方をしてしまい深く後悔しています。ここからやり直せる勇気をください！",
-      "人前で大恥をかいて消えてしまいたい気分です。歴史のスケールから見れば豆粒だと笑い飛ばして！",
-      "新しい挑戦をしたけれど、見事に玉砕して失敗しました。果敢に散った勇士として讃えてほしい！",
-      "何をやっても不器用で、要領よく立ち回れない自分が情けないです。不器用な生き方を肯定してください！",
-      "約束を忘れていて人に迷惑をかけてしまいました。平謝りして解決した私に温かい言葉をかけて！",
-      "誰の役にも立てていないような無力感を感じています。存在しているだけで100点満点と言って！",
-      "完璧な人間になろうとして疲れ果てました。欠点だらけの私のままでいいんだと安心させてください。",
-      "つい自分を甘やかして高いスイーツを買ってしまいました。自分への最高のご褒美だと認めて！",
-      "他人の期待を裏切ってしまいました。でも自分の心を守るために断った私の決断を褒めてほしい！",
-      "昔の失敗を思い出して今さら恥ずかしくて悶えています。過去の過ちを抱えて生きる私に光を！",
-      "何も成し遂げられないまま1年が過ぎていく気がします。今日まで生き抜いた奇跡を讃えてください！",
-      "ずっと怖くて先延ばしにしていたこと（告白・転職応募・新しい勉強）に、今日ついに一歩踏み出しました！",
-      "大勢の人の前で緊張で震えながらも、自分の意見を堂々と発表してきました！勇気を褒めて！",
-      "長年居心地の良かった安全地帯を飛び出し、全く新しい環境に飛び込む決意を固めました！",
-      "周囲の反対や冷笑を押し切って、自分の信じた道を進むことを決めました。背中を強く押してください！",
-      "何歳になっても遅くないと信じて、新しい趣味（楽器・絵・ダンス）のレッスンに申し込みました！",
-      "苦手だった人に勇気を出して挨拶し、歩み寄るきっかけを作ることができました！",
-      "理不尽な要求に対して、初めて自分の尊厳を守るために『ノー』と言えました！",
-      "何十回も断られ続けても諦めず、今日も新しい営業の電話をかけました。不屈の魂を讃えて！",
-      "失敗することを恐れず、アイデアコンテストに企画書を応募しました。挑戦した私を誇りたい！",
-      "自分の弱さや過ちを素直に認め、相手に心から『ごめんなさい』と謝ることができました。",
-      "憧れだった人に勇気を出してメッセージを送り、繋がりを作ることができました！",
-      "長年溜め込んでいた不要な服や思い出の品をごっそり断捨離し、新しい人生への一歩を踏み出しました！",
-      "一人で海外旅行（または一人旅）に行くチケットを予約しました。大冒険の始まりを祝って！",
-      "他人の評価を気にせず、本当に自分が着たい派手な服を着て街を歩きました！自分を愛する私を褒めて！",
-      "何年も運動していなかったけれど、今日ランニングシューズを履いて3キロ走ってきました！",
-      "挫折して放置していた資格のテキストを、今日再び開いて勉強を再開しました！立ち上がった私を讃えて！",
-      "自分の夢を初めて友達や家族に打ち明けました。笑われなかったし、一歩前進した私を褒めて！",
-      "ずっと行きたかったけれど敷居が高くて怖かったお店に、一人で入って堂々と食事してきました！",
-      "他人に流されず、自分の直感と美学を信じて大きな買い物を決断しました！",
-      "過去のトラウマと向き合い、カウンセリングや治療を受ける決断をした私の勇気を認めてください！",
-      "自分の長所が一つも見つかりません。偉人のみなさん、私という人間の魅力を全力で見つけ出して！",
-      "毎日真面目に生きているだけで、もっと世間から賞賛されてもいいはず！特大のファンファーレを鳴らして！",
-      "私の笑顔には世界を救うパワーがあるはずだと信じたいです！とびきりの甘い賛辞をください！",
-      "歴史上のどんな王族や貴族よりも、現代をサバイブしている私の方がタフで偉大だと証明して！",
-      "コンプレックスだらけの私の容姿や性格を、唯一無二の芸術作品として絶賛してください！",
-      "私と出会えた周囲の人間はどれほど幸運か、歴史的スケールで大袈裟に語りかけてほしい！",
-      "毎日朝起きて、ご飯を食べて、働いて寝る。このルーティンこそが人類最高の偉業だと認めて！",
-      "世界80億人の中で、私はたった一つの輝く星であると、壮大な詩のように褒め称えてください！",
-      "失敗ばかりの私の人生も、後世に残る偉大な叙事詩（ドラマ）の主人公の試練に過ぎないと励まして！",
-      "優しい性格のせいで損ばかりしている気がします。優しさは最強の強さだと肯定してほしい！",
-      "自分の直感を信じて進めば、未来は必ず輝かしい勝利に満ちていると予言してください！",
-      "私がここに存在していること自体が、ご先祖様たち何千世代の祈りの結晶だと壮大に祝福して！",
-      "偉人たちがもし私の時代に生きていたら、私と親友になりたがったはずだと言ってくれますか？",
-      "私の粘り強さと忍耐力は、どんな歴戦の猛者にも引けを取らないと武将たちから太鼓判を押してほしい！",
-      "人見知りでシャイな私の慎み深さは、高貴な美徳であると哲学的に位置づけてください！",
-      "誰にも真似できない私のユニークな感性とユーモアを、芸術家たちから絶賛されたいです！",
-      "落ち込んでいる私に、世界一贅沢な歴史の偉人オールスターズによる全力の応援歌を贈ってください！",
-      "私の未来には無限の可能性と富と幸せが待ち受けていると、絶対的な確信を持って断言して！",
-      "今日という日を無事に生き延びて、このアプリを開いて偉人たちと語り合っている私って最高じゃないですか？",
-      "最後に、私のこれまでの全人生をまるごと肯定し、魂が震えるような最高の言葉をください！"
-],
-      en: [
-      "I survived another brutal, exhausting day of work and responsibilities! Shower me with unconditional praise!",
-      "I got out of bed to the alarm, got dressed, and stepped out into the world. Isn't that an epic human victory?",
-      "I endured a crushing, suffocating subway commute without losing my sanity. Commend my heroic patience!",
-      "I felt heavy and depressed all day, yet I stayed through the entire shift and finished my duty. Praise my grit!",
-      "I endured an unfair, barking boss with graceful professional calm. Tell me how magnificent and mature I was!",
-      "Monday through Friday is conquered—I survived another full week! I want to hear a warrior's roar of triumph!",
-      "Despite feeling under the weather, I cooked a hot meal for my family and washed every single plate. Commend me!",
-      "Misfortune piled upon misfortune today, but I held my head high and did not break into tears. Embrace my spirit!",
-      "I had zero motivation on my day off, yet I managed to take a shower and do the laundry. Does this deserve applause?",
-      "I fought an agonizing war against my duvet this morning, won, and went to work. Award me an Olympic gold medal!",
-      "Instead of procrastinating on tedious administrative paperwork and tax filings, I finished them today!",
-      "I worked overtime until midnight and am utterly spent. Before a warm bath, bless me with restorative cheers!",
-      "When nobody was watching, I picked up litter on the sidewalk and threw it away. Acknowledge my quiet virtue!",
-      "I was furious enough to self-destruct with junk food and booze, but drank warm tea and chose bed instead.",
-      "Soaked to the bone in freezing rain, I arrived precisely on time for my appointment without a single complaint!",
-      "Instead of fleeing a dreaded, agonizing assignment, I tackled it first thing this morning. Extol my courage!",
-      "All day long, I spoke no ill of anyone, swallowed my petty grievances, and kept the peace. Am I not a saint?",
-      "At the end of an endless journey, I am massaging my aching feet. Great legends of the past, praise my mileage!",
-      "Proclaim to me with grand philosophical scale that merely drawing breath is an astonishing cosmic miracle!",
-      "Give me words of boundless love and validation vast enough to vaporize every microscopic blunder I made today!",
-      "Nobody notices or applauds, but for months I have quietly organized chaotic databases with meticulous precision.",
-      "Whenever shared office spaces are filthy or supplies empty, I quietly clean and restock without saying a word.",
-      "Every dawn for six months, I wake thirty minutes early to study for my professional credentials. Praise my discipline!",
-      "Behind the scenes, I shoulder thankless logistics and minor chores so my entire team can shine on stage.",
-      "No one offers praise, but every evening I record expenses and guard our family budget with unwavering vigilance.",
-      "Through midnight tears and sleep deprivation, I cradle my infant and protect life. Let me feel deep historic pride!",
-      "When a junior colleague blundered, I shielded them with kindness, repaired the damage, and took no credit.",
-      "My labor yields no flashy quarterly metrics, yet through obsessive inspections, I keep disasters from happening.",
-      "Every day I care for an aging parent, listening to complaints with a gentle smile. Lend me spiritual fortitude!",
-      "Before colleagues arrive, I sanitize messy desks so everyone starts the day in clarity. Witness my small grace!",
-      "Forfeiting personal glory, I shouldered the hated disciplinarian role for the long-term health of our institution.",
-      "Through years of zero applause, I keep the solitary flame of research and art burning in quiet dedication.",
-      "To lift an ailing family member's morale, I bring cheerful stories and warmth into the room every single afternoon.",
-      "The client's praise always flows to the front-facing executives, but my backstage precision delivered the victory.",
-      "Every dawn I pack nutritious, loving lunches for my household, aching a little that it is taken for granted.",
-      "Because I extinguished potential crises weeks in advance, today was peaceful and peers said 'that was easy work!'",
-      "For years I have volunteered at crosswalks keeping neighborhood children safe. Acknowledge my humble honor!",
-      "My craftsmanship never goes viral on social media, but I never compromise my standard of honest excellence.",
-      "I listened patiently for hours to a friend unloading their darkest grief, acting as their immovable emotional anchor.",
-      "To the glorious heroes who bathed in the limelight today: recognize the stagehand in the shadows who made it possible!",
-      "I broke my strict diet and devoured midnight ramen and ice cream. Dispel my bitter self-contempt with love!",
-      "I snoozed my alarm and slept straight through till dusk. Rescue me from the crushing guilt of a wasted Sunday!",
-      "Not a single goal on my ambitious weekend to-do list was completed. Tell me that breathing is an A+ grade!",
-      "I splurged on an impulsive, unnecessary purchase. Frame this as a heroic contribution to the global economy!",
-      "I made a foolish mistake at work and got reprimanded. Remind me with cosmic tenderness that to err is human!",
-      "I spent the entire day mindlessly doom-scrolling on my phone. Validate it as an essential neural recharge!",
-      "I felt a sharp pang of petty jealousy toward a peer's success. Embrace me even with my fragile human flaws!",
-      "I set out to clean the house, but got lost reading comics for four hours. Praise it as glorious intellectual curiosity!",
-      "I skipped my scheduled gym workout and rested on the couch like a statue. Crown me a master of tactical rest!",
-      "I lost my temper and spoke sharply to someone. Give me the courage to forgive myself and mend what broke!",
-      "I made an absolute fool of myself in public and want to vanish. Laugh it off against the grand tapestry of epochs!",
-      "I took a daring leap into a bold venture and crashed spectacularly. Commend me as a gallant warrior who dared!",
-      "I feel clumsy, slow-witted, and incapable of navigating life smoothly. Affirm my clumsy, stubborn authenticity!",
-      "I completely spaced on an appointment and inconvenienced someone. Comfort me after my sincere apologies!",
-      "I feel utterly useless today, as though I have contributed nothing. Reassure me that my presence alone is enough!",
-      "I exhausted myself attempting to be flawless. Grant me sweet permission to exist as a gloriously imperfect human.",
-      "I bought an outrageously expensive pastry just for myself. Validate it as a sovereign reward worthy of royalty!",
-      "I disappointed someone's expectations because I chose to protect my own mental sanity. Applaud my boundary!",
-      "Cringing memories of blunders from years ago keep me awake tonight. Cast healing light on my journey!",
-      "Another year slipped by without me founding an empire. Praise the miraculous triumph that I am still standing!",
-      "After months of paralyzing fear, today I took the first terrifying step toward my dreams! Praise my courage!",
-      "My hands shook with dread, yet I stood before a crowded room and boldly spoke my authentic truth!",
-      "Today I abandoned a comfortable, suffocating safety zone and committed to diving into the unknown!",
-      "Overriding the skepticism and mocking laughter of peers, I chose to walk my own path. Push my back forward!",
-      "Believing it is never too late, I enrolled in my very first creative dance, music, or language workshop today!",
-      "Swallowing pride and social dread, I reached out with a warm greeting to someone I have struggled to connect with!",
-      "Against an outrageous demand, for the very first time in my existence, I looked them in the eye and said 'No'!",
-      "Rejected thirty times in a row, I picked up the telephone and dialed client thirty-one. Praise my adamantine grit!",
-      "Uncaring of the risk of failure, I submitted my novel, patent, or pitch to a prestigious competition today!",
-      "Swallowing vanity, I owned up to my mistake and uttered a raw, heartfelt 'I am deeply sorry' to someone I hurt.",
-      "Summoning audacity, I sent a direct message to a figure I have admired for a decade to request mentorship!",
-      "I dragged five garbage bags of clutter and nostalgic relics out of my home, clearing the altar for a new life!",
-      "I booked a solo flight across the ocean to explore unfamiliar continents alone. Toast my magnificent odyssey!",
-      "Indifferent to polite society's stares, I wore eccentric, expressive clothes that celebrate my true aesthetic!",
-      "After years of physical dormancy, I laced on running shoes today and ran two miles in the freezing morning wind!",
-      "I brushed the dust off an abandoned textbook I quit two years ago and resumed my studies. Praise the resurrection!",
-      "I confessed my secret, unvarnished creative ambitions to family for the first time without apologizing for dreaming!",
-      "I walked into an intimidating, high-end establishment alone, sat down with poise, and dined like an empress!",
-      "Refusing to defer to others' trends, I made a major commitment guided purely by my aesthetic intuition!",
-      "I confronted past trauma and took the brave step to schedule professional therapeutic counsel. Witness my strength!",
-      "I cannot see a single redeeming virtue in myself today. Great legends, deploy your wisdom to reveal my radiance!",
-      "Living an honest life in this wild modern world deserves a thunderous imperial fanfare! Sound the royal trumpets!",
-      "I want to believe my gentle smile carries the power to redeem someone's day. Bestow your most poetic compliments!",
-      "Prove to me that navigating modern life requires more sheer grit and resilience than ancient feudal monarchs possessed!",
-      "Take all my awkward insecurities and physical flaws, and reframe them as a priceless, irreplaceable masterwork of art!",
-      "Describe with grand historical drama how lucky the people around me are to share an era with my soul!",
-      "Waking, eating, laboring, and holding fast to kindness: declare this humble rhythm the highest triumph of humanity!",
-      "Among eight billion souls upon this spinning earth, sing to me that I am an irreplaceable constellation of light!",
-      "Tell me that my messy, stumbling biography is merely the gripping second act of an immortal epic hero's myth!",
-      "I fear my soft, gentle heart is a vulnerability that gets exploited. Reassure me that benevolence is supreme power!",
-      "Look upon my path and prophesy with unshakeable conviction that glorious breakthroughs await my resolve!",
-      "Proclaim that my very existence is the triumphant answer to a thousand generations of ancestral prayers!",
-      "Tell me that had you walked in my century, you would have proudly counted me among your closest, trusted confidants!",
-      "Let ancient warlords inspect my quiet perseverance and declare that my inner endurance matches the toughest veterans!",
-      "Reframe my introverted shyness not as weakness, but as the quiet dignity and noble reserve of an old soul!",
-      "Let revolutionary artists celebrate my idiosyncratic sense of humor as pure, unadulterated creative genius!",
-      "Send a lavish, thunderous choral anthem from history's pantheon to revive my weary, downcast spirit!",
-      "Declare with sovereign authority that abundance, profound romance, and lasting peace are my natural birthright!",
-      "I weathered the tempests of this day, survived, and opened this chat to converse with history. Am I not extraordinary?",
-      "Finally, wrap your arms around the totality of my journey and deliver the single most soul-stirring blessing in human tongue!"
-]
-    }
-  },
-  izakaya: {
-    id: "izakaya",
-    icon: "🍻",
-    name: { ja: "居酒屋雑談", en: "Casual Talk" },
-    desc: {
-      ja: "もし偉人たちが現代の居酒屋やカフェに集まったら？ゆるい日常トーク",
-      en: "Casual, funny tavern hangout among historical figures"
-    },
-    phase1Banner: {
-      ja: "🍻 カンパーイ！偉人たちのゆるい居酒屋トークが始まりました",
-      en: "🍻 Cheers! The legends kick off casual tavern and café chatter."
-    },
-    phase2Banner: {
-      ja: "🍶 お酒も進んで、さらに雑談やツッコミが盛り上がっています",
-      en: "🍶 With drinks flowing, the casual banter and humor are heating up!"
-    },
-    phase1Instruction: (name, lang = currentLang) => lang === "en"
-      ? `Drop all formal speeches. Chat relaxed as if having drinks or coffee with friends in the modern day, sharing humorous anecdotes or unexpected personal tastes (2-3 sentences).`
-      : `堅苦しい演説は抜きにして、現代の居酒屋やカフェで仲間とリラックスして話している雰囲気で、テーマについてあなた（${name}）の意外な好みや生前のエピソードを交えてユーモラスに語ってください（2〜3文）。`,
-    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
-      ? `Respond to ${prevName}'s comment with casual banter, funny comebacks, or witty remarks fitting a lively bar table with old friends (2-3 sentences).`
-      : `直前の「${prevName}」の発言に、酒席らしいリラックスした自然な相槌やツッコミを入れつつ、座が盛り上がるような楽しい雑談を続けてください。※定型文に縛られず、親しい仲間同士のリアルな会話のノリを再現してください（2〜3文）。`,
-    topics: {
-      ja: [
-      "【居酒屋トーク】人類史上、結局一番酒が進む『最強のおつまみ・夜食』って何だと思う？",
-      "現代の日本の居酒屋メニュー（焼き鳥・枝豆・ポテサラ・唐揚げなど）で、一番衝撃を受けたものは？",
-      "歴史上の大宴会で、泥酔してやらかした一番ヤバい酔っ払いエピソードをぶっちゃけて！",
-      "お酒が飲めない下戸（げこ）の偉人は誰？下戸でも宴会を最高に楽しむ裏技を教えて！",
-      "ビール、ワイン、日本酒、ウイスキー、焼酎…結局一番美味い酒のジャンルで決着をつけようぜ！",
-      "深夜2時に食べる背徳のラーメン（ニンニク・アブラマシマシ）を初めて食べた時の感想は？",
-      "二日酔いで頭が割れそうになった時の、歴史上の人物直伝の『最強の二日酔い覚まし法』とは？",
-      "現代のファミレスで深夜にドリンクバー片手にだらだら語り明かすなら、誰と何を話したい？",
-      "お酒の席で『コイツとは二度と飲みたくない！』と思った歴史上のウザい絡み酒エピソードは？",
-      "コンビニのホットスナック（ファミチキ・からあげクンなど）を居酒屋に持ち込めるならどれを選ぶ？",
-      "もし現代の屋台（福岡の中洲や博多の屋台）で一杯ひっかけるなら、最初の一杯と注文は何にする？",
-      "生前に一番贅沢した『最高級のフルコース料理』ってどんな味だった？自慢してみて！",
-      "お酒の失敗で国を傾けたり、大事な戦の作戦を漏らしかけた危ない思い出ってある？",
-      "現代の『飲み放題』システムって、昔の宴会と比べて狂気的にお得すぎないか？",
-      "焼き鳥のタレ派 vs 塩派、餃子の酢コショウ派 vs 酢醤油派、食のこだわりで大激論しよう！",
-      "居酒屋の最初の乾杯で『とりあえずビール！』って文化、ぶっちゃけどう思う？",
-      "缶ビールとポテトチップスを片手に、部屋着でダラダラ過ごす現代の休日の夜って最高じゃない？",
-      "現代のスイーツ（パフェ・クレープ・パンケーキ）を初めて食べた甘党の武将や哲学者の反応は？",
-      "もし自分の名前がついたオリジナルカクテルを作るなら、どんな味でどんな度数にする？",
-      "飲み会の会計で『割り勘』にするか『一番偉い奴が全額奢る』か、歴史の男気を見せてくれ！",
-      "現代の日本の『コンビニ（24時間営業）』に初めて足を踏み入れたとき、真っ先に何にビビった？",
-      "もし100円ショップ（ダイソーやセリア）に連れて行かれたら、カゴいっぱいに何を買い占める？",
-      "スマホを持たされたら、最初にインストールするアプリは何？（SNS？ゲーム？マップ？）",
-      "現代の若者言葉（『エモい』『草』『それな』『ワンチャン』など）で一番気に入ったスラングは？",
-      "自動販売機が街中に無限にある現代日本の治安の良さ、昔の時代から見たら異世界すぎない？",
-      "ネット通販（Amazon）でワンクリックしたら翌日家に届くシステム、魔法としか思えなくないか？",
-      "現代の洋服（パーカー、スウェット、ジーパン）の着心地の良さに慣れたら、昔の衣装に戻れなくない？",
-      "推し活やアイドル文化を見たとき、『昔の自分の熱狂的な信者や部下』と似てると思った？",
-      "電車の中で全員が下を向いてスマホをいじっている異様な光景を見て、正直どう思った？",
-      "現代のテーマパーク（ディズニーランドやUSJ）に連れて行かれたら、どのアトラクションで絶叫する？",
-      "カラオケボックスに連れて行かれたら、マイクを握って何を熱唱する？十八番を教えて！",
-      "現代の温水洗浄便座（ウォシュレット）に初めて遭遇したときの歴史的カルチャーショックを語ろう！",
-      "マッチングアプリで恋人を探す現代の恋愛観、昔の政略結婚や夜這い文化と比べてどう？",
-      "猫カフェや犬カフェに行ったときの、歴代の覇者や思想家たちのメロメロな反応が見たい！",
-      "現代の激辛料理（激辛ペヤングや激辛麻婆豆腐）を前にして、プライドをかけて完食できる？",
-      "もしYouTuberやVTuberになるとしたら、どんなチャンネル名でどんな企画を配信する？",
-      "エアコン（冷房・暖房）のスイッチを入れた瞬間、現代文明の勝利を確信したエピソードは？",
-      "回転寿司で新幹線レーンに乗って寿司がビュンと運ばれてきたとき、どう反応した？",
-      "現代のサウナで『ととのう』体験をしたとき、悟りを開いたブッダやソクラテスは何と言うか？",
-      "映画館の巨大スクリーンと爆音でハリウッドのアクション映画を観たときの率直な感想は？",
-      "歴史の教科書や小説に載っている自分のエピソードで『あれ実はめちゃくちゃ盛られてるわ〜』って話ある？",
-      "逆に『あんなに頑張ったのに教科書で一行で片付けられて納得いかない！』という不満をぶちまけて！",
-      "生前に一番『やらかしたな〜！穴があったら入りたい！』と思った恥ずかしい黒歴史は何？",
-      "自分の肖像画や銅像を見て『いやこれ全然似てねえよ！もっとイケメン／美女だったわ！』って怒ったことある？",
-      "歴史上『ライバル・犬猿の仲』とされているあいつと、実は裏では仲良く酒を飲んでいたって秘密はある？",
-      "自分の残した有名な名言、実はテキトーに言った独り言や文脈を無視された言葉だったりしない？",
-      "教科書に載せられないような、生前のくだらない痴情のもつれや三角関係の修羅場を教えて！",
-      "子どもの頃や学生時代、親や先生に怒られた一番バカバカしいイタズラや悪ガキエピソードは？",
-      "実はめちゃくちゃ怖がりだったり、虫や雷が大の苦手だったという意外な弱点を白状して！",
-      "後世の人たちから『冷徹な天才』とか『聖人君子』扱いされているの、正直プレッシャーじゃない？",
-      "生前に書いたポエムやラブレターが後世に発掘されて現代人に公開されているの、どんな気持ち？",
-      "『あの時あいつの裏切りに気づいていれば…！』と今でも夢に出てくる歴史的悔し涙エピソードは？",
-      "歴史的大勝利を収めた合戦や革命、実は単なる偶然や相手の凡ミスのおかげだったって本当？",
-      "死因について『病死』って書かれてるけど、実は恥ずかしい理由だったりしない？",
-      "自分を題材にした現代の大河ドラマやゲーム、アニメを見たときの感想を本音で語って！",
-      "部下や家臣に『こいつ絶対私の話聞いてないな』とイラッとした瞬間を教えて！",
-      "歴史に名前が残っていないけれど、生前めちゃくちゃお世話になった近所の恩人の思い出はある？",
-      "お金がなさすぎて、借金取りからコソコソ逃げ回っていたみじめな下積み時代を語ろう！",
-      "自分の墓や記念館が観光地になってグッズが売られているの、印税をもらいたいと思わない？",
-      "生まれ変わったら、もう二度と天下人や大統領や哲学者なんてやらずに、猫になって寝て暮らしたい？",
-      "もし現代日本で自由に使える1000万円と1週間の有給休暇をもらえたら、どこで何して遊ぶ？",
-      "もし現代の一般企業に平社員として就職したら、どの部署でどんなサラリーマンになる？",
-      "無人島に歴史上の偉人を1人だけ連れていけるとしたら、誰を相棒に選ぶ？（絶対に嫌な奴も教えて）",
-      "もし現代の総理大臣やアメリカ大統領に就任したら、就任初日に真っ先にどんな命令を出す？",
-      "もし高校生になって現代の学園祭に参加するなら、クラスの出し物で何をやる？（メイドカフェ？お化け屋敷？）",
-      "もし別の時代の偉人とラップバトル（口喧嘩対決）をするとしたら、誰とタイマンを張りたい？",
-      "もし現代のプロスポーツ選手（大谷翔平など）と自分の時代の武芸者が勝負したらどっちが勝つ？",
-      "もし現代の渋谷のハロウィンやスクランブル交差点に放り出されたら、どんな仮装で紛れ込む？",
-      "もし現代の合コンや街コンに偉人5人で乗り込むとしたら、誰が一番モテて誰が爆死するか？",
-      "もし自分の一生がハリウッドで映画化されるとしたら、主役の自分役は誰に演じてほしい？",
-      "もし過去の自分に一度だけタイムスリップして耳打ちできるなら、何と言って警告する？",
-      "もし現代のゲーム（信長の野望・シヴィライゼーション・スマブラなど）で対決したら誰が最強？",
-      "もし魔法使いになれて魔法を1つだけ覚えられるなら、どんなくだらない魔法が欲しい？",
-      "もし自分のライバルと現代の漫才コンビを組むとしたら、コンビ名は何でどっちがボケ・ツッコミ？",
-      "もし宇宙人に誘拐されて『地球の代表として何か一発芸を見せろ』と言われたら何をする？",
-      "もし現代のフードデリバリー（Uber Eats）の配達員をやったら、誰が一番チップを稼げる？",
-      "もし現代のタワーマンションの最上階に住んだら、毎日下界を見下ろして何を叫ぶ？",
-      "もし現代のインフルエンサーとレスバ（ネット論争）になったら、どんな痛烈な言葉で煽り返す？",
-      "もし現代の宝くじで7億円当たったら、親族に秘密にして何に全額突っ込む？",
-      "もし今夜この居酒屋の席のメンバーでバンドを結成するなら、誰がボーカル・ギター・ドラム担当？",
-      "店員さんを呼ぶボタン（ピンポン）を押すのが一番得意そうな偉人って誰？",
-      "居酒屋のポテトフライ、最後の1本が残ったときの『お前食えよ』の譲り合いはどう解決する？",
-      "隣の席のサラリーマンが上司の愚痴で盛り上がってるのを聞いて、偉人として一言物申すなら？",
-      "この中で一番『酔うと熱く夢を語り出して説教くさくなる面倒な先輩』は誰か決めようぜ！",
-      "宴会の席で誰もが知ってる宴会芸（手品、モノマネ、一発ギャグ）をやるなら何を見せてくれる？",
-      "おしぼりでアヒルやヒヨコを作る地味な職人技、誰が一番器用に作れそう？",
-      "居酒屋のメニューに載ってたら絶対に頼んじゃう『魅惑の茶色い揚げ物』は何？",
-      "突然店内の照明が消えて、バースデーケーキが運ばれてくるサプライズ、されたらどう反応する？",
-      "トイレから戻ってきたら自分の席に知らない人が座っていた時、どうやって席を奪還する？",
-      "この中で一番『お会計の時に財布を出すふりをして絶対に出さないケチ』は誰だ？",
-      "店員さんが注文を間違えて別の料理を持ってきたとき、『あ、これでいいですよ』って受け入れちゃう？",
-      "枝豆の皮をきれいに一箇所に集めるマメな奴と、テーブルの上に散らかすズボラな奴は誰？",
-      "終電の時間が近づいてきたときの『もう1軒行こうぜ！』の引き止めをどうやってスマートにかわす？",
-      "居酒屋のテレビでサッカーや野球の日本代表戦が流れてたら、誰が一番大声でヤジを飛ばす？",
-      "酔っ払ってコンビニでアイスとカップ麺を買い込んでホテルのベッドにダイブする快感を語ろう！",
-      "翌朝起きてスマホの写真フォルダを見たら、記憶にない変顔写真が大量にあった時の絶望感ある？",
-      "『お前、生前とキャラ違いすぎない？』と今夜の飲み会で一番ギャップ萌えしたメンバーは誰？",
-      "居酒屋の最後のシメ（お茶漬け、おにぎり、デザート）、お前らなら何でフィナーレを飾る？",
-      "閉店時間で蛍の光が流れてきた時の、あの名残惜しさと『まだ帰りたくねえな〜』の空気感っていいよね。",
-      "今夜こうして時代を超えてみんなで乾杯できた奇跡に、最後に全員で特大のカンパーイを叫ぼうぜ！"
-],
-      en: [
-      "What is undisputed as the greatest midnight tavern snack or drinking bite in human history?",
-      "When encountering Japanese tavern snacks—yakitori, edamame, potato salad, karaage—what amazed you most?",
-      "Confess your most chaotic, disgraceful drunken blunder from historic imperial banquets!",
-      "Who among history's icons was a total lightweight? Reveal the art of dominating banquets sober!",
-      "Beer, wine, sake, whiskey, or tequila—let's settle once and for all which drink is supreme!",
-      "What went through your mind when you first slurped a greasy, garlic-loaded 2:00 AM ramen bowl?",
-      "When a hangover splits your skull open, what is the ancient legendary cure passed down your line?",
-      "If lingering in a late-night diner with bottomless fountain drinks, whom would you gossip with till dawn?",
-      "Who was the most insufferable, bellicose historic figure you would absolutely refuse to drink with again?",
-      "If you could sneak hot convenience store fried chicken into an upscale tavern, which brand do you grab?",
-      "If pulling up a stool at an open-air river street food stall in Fukuoka, what is your opening order?",
-      "Brag to the table: what was the single most decadent, opulent feast you ever tasted in your lifetime?",
-      "Did you ever nearly lose an empire or leak battle secrets because wine loosened your tongue?",
-      "Isn't modern Japan's 'all-you-can-drink for 90 minutes' system terrifyingly generous compared to antiquity?",
-      "Sweet sauce versus sea salt on skewers, soy versus vinegar on dumplings: debate your culinary obsessions!",
-      "What do you honestly think of modern etiquette that demands 'everyone order draft beer for the first toast'?",
-      "Lounging in sweatpants with canned beer and potato chips on a lazy evening—isn't modern life heavenly?",
-      "How would ruthless warlords and stoic ascetics react upon tasting a decadent strawberry chocolate parfait?",
-      "If a bartender crafted a signature cocktail honoring your legacy, what flavor profile and proof would it pack?",
-      "At bill time: split evenly down the middle, or let the most prominent warlord at the table pay the entire tab?",
-      "When you first stepped into a glowing 24/7 Tokyo convenience store, what blew your mind first?",
-      "If turned loose in a 100-yen discount store with a shopping basket, what hoard would you buy out?",
-      "Handed an iPhone today, what is the very first app you install: maps, video games, or social media?",
-      "Which piece of modern youth slang—'bussin', 'cringe', 'no cap', 'slay'—do you find strangely addictive?",
-      "Vending machines dispensing hot and cold drinks on every street corner—isn't modern safety like a dreamworld?",
-      "One-click ordering on Amazon with parcels arriving on your doorstep by breakfast—isn't that sheer sorcery?",
-      "Once you experience the plush comfort of modern hoodies and sweatpants, could you ever wear iron armor again?",
-      "Looking at modern fandom stanning pop stars, does it remind you of your own fanatical retinues?",
-      "What did you honestly think observing a commuter train where every passenger silently stares into glass rectangles?",
-      "If dragged to a modern roller coaster theme park, which ride would make you scream like a child?",
-      "Handed the microphone in a karaoke room after three drinks, what anthem do you belt out at maximum volume?",
-      "Narrate the historic trauma and sheer shock of encountering a heated bidet toilet seat for the very first time!",
-      "Dating apps versus ancient political arranged marriages and midnight court intrigues: which is wilder?",
-      "Picture history's most ruthless conquerors and dour philosophers melting into puddles inside a cat cafe!",
-      "Staring down a bowl of ghost pepper ramen, would your samurai or imperial pride force you to finish every drop?",
-      "If you launched a YouTube or streaming channel today, what is your show's name and viral stunt concept?",
-      "The split second you clicked the remote for central air conditioning, did you concede modern civilization won?",
-      "When a miniature conveyor bullet train zipped up and delivered fresh sushi to your booth, how did you react?",
-      "After sweating in a sauna and diving into cold plunge water to reach 'zen', what does Buddha or Socrates declare?",
-      "What was your reaction watching an IMAX explosive superhero blockbuster with thunderous surround sound?",
-      "What famous legend written about you in history textbooks was actually wildly exaggerated or fabricated?",
-      "Vent your spleen: what immense achievement of yours was insultingly reduced to a single footnote in schoolbooks?",
-      "What was the single most mortifying, face-reddening blunder you committed in your youth?",
-      "Ever look at your official museum oil portrait or marble bust and curse: 'I was ten times hotter than this!'?",
-      "Did you ever secretly sneak late-night drinks with a sworn rival whom textbooks claim you hated to the death?",
-      "Was your immortal, inspirational deathbed quote actually an accidental mumble taken out of context?",
-      "Dish the scandalous court romantic rivalries and messy love triangles that historians swept under the rug!",
-      "What was the most idiotic childhood prank you pulled that got you thrashed by your tutors or parents?",
-      "Confess your secret un-warrior-like vulnerability: were you terrified of bugs, thunder, or dentists?",
-      "Isn't being remembered as a stoic, infallible saint or chilling strategist an exhausting burden?",
-      "How does it feel knowing the embarrassing poetry and love letters you scribbled are now analyzed in university seminars?",
-      "What historic betrayal do you still grind your teeth over in dreams: 'If only I saw that snake coming!'?",
-      "Was your most legendary tactical triumph actually an accident born of the enemy making an idiotic mistake?",
-      "History says you died peacefully of 'natural illness', but was the actual cause embarrassing?",
-      "What do you honestly think watching historical anime, video games, and period dramas portraying your adventures?",
-      "Tell us about a time your most loyal retainers clearly zoned out while you were delivering a passionate speech!",
-      "Who is the ordinary neighbor or tavern keeper who saved your life whom history never bothered to record?",
-      "Reminisce about the broke, desperate days when you had to sneak through back alleys dodging debt collectors!",
-      "Seeing your face on souvenir tea towels, keychains, and coffee mugs—don't you wish you collected royalties?",
-      "If reincarnated today, wouldn't you rather be a pampered domestic house cat napping in the sun than an emperor?",
-      "If given $100,000 cash and seven days of total anonymity in modern Tokyo or New York, what is your itinerary?",
-      "If hired as an entry-level corporate cubicle worker today, which department do you infiltrate and disrupt?",
-      "Stranded on a desert island with only one other historical figure: who is your partner, and who would you feed to sharks?",
-      "If elected President or Prime Minister today, what absurd executive order do you decree on day one?",
-      "If attending a modern high school festival, what classroom booth are you running: maid cafe or haunted house?",
-      "If challenged to an epic rap battle against another historical titan, whom do you call out on stage?",
-      "How would ancient blademasters and champions hold up in modern UFC, baseball, or boxing rings?",
-      "If dropped into Halloween street crowds in Shibuya or Times Square, what costume would you blend in with?",
-      "If our table of five hit a modern singles speed-dating mixer, who gets all the numbers and who strikes out instantly?",
-      "If a Hollywood biopic was produced about your life, which famous actor must play you on the silver screen?",
-      "If you could travel back to whisper five seconds of warning to your younger self, what do you shout?",
-      "If we plugged in a fighting or strategy video game, who among us would smash controllers in rage?",
-      "If granted a single minor magical cantrip in daily life, what trivial, silly power would you pick?",
-      "If you and your historic arch-nemesis formed a stand-up comedy duo, who plays the straight man and who is the clown?",
-      "If beamed aboard an alien flying saucer and ordered to perform a party trick to save Earth, what do you do?",
-      "If working as bicycle food couriers in the rain, who among us would hustle the biggest customer tips?",
-      "Leaning over the balcony of an ultra-luxury penthouse skyscraper, what do you scream at the tiny crowds below?",
-      "If caught in an aggressive social media flame war, what devastating antique insult do you drop to end it?",
-      "If you won a $50 million lottery jackpot tonight, what secret obsession do you spend the fortune on?",
-      "If our drinking table forms a rock band tonight, who takes lead vocals, lead guitar, bass, and drums?",
-      "Who at this table looks like the master of pressing the waiter call bell with surgical timing?",
-      "The final solitary French fry rests in the basket: how do we resolve the polite standoff over who eats it?",
-      "Overhearing salarymen at the next booth whining about their boss, what imperial intervention do you offer?",
-      "Let's vote: who among us gets tipsy, starts delivering grandiose philosophical lectures, and becomes the annoying senior?",
-      "Time for party parlor tricks: what sleight-of-hand, voice impression, or physical gag are you unveiling?",
-      "Who possesses the precise dexterity to origami an immaculate miniature duck out of damp hot towel napkins?",
-      "What irresistible golden fried dish on the menu do you reflexively order without even looking at the price?",
-      "If the lights dim and servers march over with a sparkler-lit birthday cake singing loudly, how do you react?",
-      "You return from the restroom to find an oblivious stranger occupying your booth seat: how do you reclaim your realm?",
-      "Who at this table is most guilty of the theatrical 'patting all pockets pretending to reach for a wallet' routine?",
-      "When a flustered server brings an entirely wrong dish, do you shrug and say 'no worries, this looks delicious'?",
-      "Who meticulously stacks edamame pods in neat piles, and who scatters shells across the table like barbarians?",
-      "As last train hour strikes, what is your smoothest exit maneuver to dodge 'just one more round!' peer pressure?",
-      "When the tavern TV broadcasts the World Cup, who pounds the table screaming the loudest coaching advice?",
-      "Can we celebrate the glorious degenerate joy of tumbling into hotel sheets at 2:00 AM after convenience store runs?",
-      "Ever wake the following morning, check your smartphone camera roll, and recoil in terror at the unhinged photos?",
-      "Who at this table surprised you most tonight with a personality completely contradictory to their solemn historical lore?",
-      "The grand finale of the feast: do you conclude with comforting ochazuke soup, grilled rice balls, or parfait?",
-      "When the closing theme music plays across the speakers, don't you savor that bittersweet reluctance to head home?",
-      "To the breathtaking miracle that brought five legends across millennia to share this tavern table: raise glasses for one last roar of CHEERS!"
-]
-    }
+      ? `Zero in on the underlying turning point in ${prevName}'s answer, pressing gently yet sharply into the untold conviction beneath their philosophy (2-3 sentences).`
+      : `「${prevName}」の答えの奥にある心理やドラマを逃さず掘り下げ、「なぜその結論に至ったのか？」とさらに本音へと迫るシャープな追及と共感を寄せてください（2〜3文）。`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.interview) || { ja: [], en: [] }
   }
 };
 
+
 // ============================================================================
 // 偉人・歴史上の人物 100人データベース
+// ============================================================================
 // ============================================================================
 const RAW_200_LEGENDS = [
   // --- 🏯 日本史 (JP: 25名) ---
@@ -4166,31 +3429,149 @@ function changeLanguage() {
   }
 }
 
+let currentCategoryLevel = null; // null: 5大分類(トップ階層), カテゴリID: 戻る+4モード(サブ階層)
+let languageSubMode = "bilingual"; // "bilingual" | "only"
+
+function findCategoryForMode(modeId) {
+  for (const catKey in MODE_CATEGORIES) {
+    if (MODE_CATEGORIES[catKey].modes.includes(modeId)) {
+      return catKey;
+    }
+  }
+  return "dialogue";
+}
+
 function renderModeTabs() {
   const container = document.getElementById("mode-tabs");
+  if (!container) return;
   container.innerHTML = "";
-  Object.values(CHAT_MODES).forEach(m => {
-    const isSelected = m.id === currentMode;
-    const btn = document.createElement("button");
-    btn.onclick = () => selectMode(m.id);
-    btn.className = `flex flex-col items-center justify-center py-1.5 px-1 rounded-xl border text-center transition select-none ${
-      isSelected
-        ? "bg-indigo-600 text-white border-indigo-700 shadow-sm font-bold"
-        : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100 font-medium"
-    }`;
-    btn.innerHTML = `
-      <span class="text-base leading-none mb-1">${m.icon}</span>
-      <span class="text-[10px] leading-tight truncate w-full">${m.name[currentLang]}</span>
+
+  const activeCatId = findCategoryForMode(currentMode);
+
+  if (currentCategoryLevel === null) {
+    // === 第1階層: 5大分類ボタン (横5列) ===
+    Object.values(MODE_CATEGORIES).forEach(cat => {
+      const isCurrentCat = cat.id === activeCatId;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.onclick = () => {
+        currentCategoryLevel = cat.id;
+        renderModeTabs();
+      };
+      btn.className = `flex flex-col items-center justify-center py-1.5 px-1 rounded-xl border text-center transition select-none cursor-pointer ${
+        isCurrentCat
+          ? "bg-indigo-600 text-white border-indigo-700 shadow-sm font-bold ring-2 ring-indigo-400"
+          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100 font-medium"
+      }`;
+      btn.innerHTML = `
+        <span class="text-base leading-none mb-1">${cat.icon}</span>
+        <span class="text-[10px] leading-tight truncate w-full">${cat.name[currentLang] || cat.name.ja}</span>
+      `;
+      container.appendChild(btn);
+    });
+  } else {
+    // === 第2階層: [ ◀ 戻る ] + 選択中カテゴリの4モード (横5列) ===
+    const cat = MODE_CATEGORIES[currentCategoryLevel];
+    
+    // 1スロット目: 「◀ 戻る」ボタン
+    const backBtn = document.createElement("button");
+    backBtn.type = "button";
+    backBtn.onclick = () => {
+      currentCategoryLevel = null;
+      renderModeTabs();
+    };
+    backBtn.className = "flex flex-col items-center justify-center py-1.5 px-1 rounded-xl border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 text-center transition select-none cursor-pointer font-bold";
+    backBtn.innerHTML = `
+      <span class="text-base leading-none mb-1">◀</span>
+      <span class="text-[10px] leading-tight truncate w-full">${currentLang === "en" ? "Back" : "戻る"}</span>
     `;
-    container.appendChild(btn);
-  });
-  document.getElementById("mode-desc").innerText = CHAT_MODES[currentMode].desc[currentLang];
+    container.appendChild(backBtn);
+
+    // 2〜5スロット目: そのカテゴリの4つのモード
+    if (cat && cat.modes) {
+      cat.modes.forEach(modeId => {
+        const m = CHAT_MODES[modeId];
+        if (!m) return;
+        const isSelected = m.id === currentMode;
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.onclick = () => selectMode(m.id);
+        btn.className = `flex flex-col items-center justify-center py-1.5 px-1 rounded-xl border text-center transition select-none cursor-pointer ${
+          isSelected
+            ? "bg-indigo-600 text-white border-indigo-700 shadow-sm font-bold"
+            : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100 font-medium"
+        }`;
+        btn.innerHTML = `
+          <span class="text-base leading-none mb-1">${m.icon}</span>
+          <span class="text-[10px] leading-tight truncate w-full">${m.name[currentLang] || m.name.ja}</span>
+        `;
+        container.appendChild(btn);
+      });
+    }
+  }
+
+  // モード説明欄の更新
+  const modeObj = CHAT_MODES[currentMode];
+  const catObj = MODE_CATEGORIES[activeCatId];
+  const descEl = document.getElementById("mode-desc");
+  if (descEl && modeObj) {
+    if (currentCategoryLevel === null) {
+      descEl.innerHTML = `<strong>【${catObj.name[currentLang] || catObj.name.ja}】</strong> ${catObj.desc[currentLang] || catObj.desc.ja} <span class="text-indigo-600 font-bold ml-1">（タップで4モード展開）</span>`;
+    } else {
+      descEl.innerHTML = `<strong>${modeObj.icon} ${modeObj.name[currentLang] || modeObj.name.ja}:</strong> ${modeObj.desc[currentLang] || modeObj.desc.ja}`;
+    }
+  }
+
+  // 語学サブモード切替ピルの表示・非表示
+  renderLanguageSubModePills();
 }
 
 function selectMode(modeId) {
   currentMode = modeId;
   renderModeTabs();
   setRandomTopic();
+}
+
+function renderLanguageSubModePills() {
+  const subContainer = document.getElementById("language-submode-container");
+  if (!subContainer) return;
+
+  if (currentMode === "english") {
+    subContainer.classList.remove("hidden");
+    const isBilingual = languageSubMode === "bilingual";
+    subContainer.innerHTML = `
+      <span class="text-indigo-900 font-bold px-1.5 flex items-center gap-1">🗽 ${currentLang === "en" ? "Practice Mode:" : "レッスン形式:"}</span>
+      <div class="flex gap-1">
+        <button type="button" onclick="setLanguageSubMode('bilingual')" class="px-2 py-0.5 rounded-md font-bold transition cursor-pointer ${isBilingual ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+          🇯🇵 ${currentLang === "en" ? "With Japanese Tips" : "日本語フォロー付き"}
+        </button>
+        <button type="button" onclick="setLanguageSubMode('only')" class="px-2 py-0.5 rounded-md font-bold transition cursor-pointer ${!isBilingual ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+          🇺🇸 ${currentLang === "en" ? "English Only" : "英語のみ"}
+        </button>
+      </div>
+    `;
+  } else if (currentMode === "japanese") {
+    subContainer.classList.remove("hidden");
+    const isBilingual = languageSubMode === "bilingual";
+    subContainer.innerHTML = `
+      <span class="text-indigo-900 font-bold px-1.5 flex items-center gap-1">🌸 ${currentLang === "en" ? "Lesson Mode:" : "レッスン形式:"}</span>
+      <div class="flex gap-1">
+        <button type="button" onclick="setLanguageSubMode('bilingual')" class="px-2 py-0.5 rounded-md font-bold transition cursor-pointer ${isBilingual ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+          🇺🇸 ${currentLang === "en" ? "With English Tips" : "英語フォロー付き"}
+        </button>
+        <button type="button" onclick="setLanguageSubMode('only')" class="px-2 py-0.5 rounded-md font-bold transition cursor-pointer ${!isBilingual ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+          🇯🇵 ${currentLang === "en" ? "Japanese Only" : "日本語のみ"}
+        </button>
+      </div>
+    `;
+  } else {
+    subContainer.classList.add("hidden");
+  }
+}
+
+function setLanguageSubMode(mode) {
+  languageSubMode = mode;
+  renderLanguageSubModePills();
 }
 
 function setCategory(cat) {
@@ -6291,22 +5672,66 @@ function pickRandomMembers() {
   updateStartButtonState();
 }
 
-let lastPickedTopic = "";
+let topicHistory = [];
+let topicHistoryIndex = -1;
+
+function updateTopicNavButtons() {
+  const prevBtn = document.getElementById("btn-topic-prev");
+  const nextBtn = document.getElementById("btn-topic-next");
+  if (prevBtn) {
+    const canPrev = topicHistoryIndex > 0;
+    prevBtn.disabled = !canPrev;
+    prevBtn.className = canPrev
+      ? "text-[11px] bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-md font-semibold transition shadow-xs flex items-center cursor-pointer"
+      : "text-[11px] bg-slate-100 text-slate-400 border border-slate-200 px-2 py-0.5 rounded-md font-semibold transition shadow-xs flex items-center cursor-not-allowed opacity-60";
+  }
+  if (nextBtn) {
+    const canNext = topicHistoryIndex < topicHistory.length - 1;
+    nextBtn.disabled = !canNext;
+    nextBtn.className = canNext
+      ? "text-[11px] bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-md font-semibold transition shadow-xs flex items-center cursor-pointer"
+      : "text-[11px] bg-slate-100 text-slate-400 border border-slate-200 px-2 py-0.5 rounded-md font-semibold transition shadow-xs flex items-center cursor-not-allowed opacity-60";
+  }
+}
 
 function setRandomTopic() {
   const modeObj = CHAT_MODES[currentMode];
+  if (!modeObj || !modeObj.topics) return;
   const topics = modeObj.topics[currentLang] || modeObj.topics.ja;
   if (!topics || topics.length === 0) return;
-  let candidates = topics.filter(t => t !== lastPickedTopic);
+
+  const currentVal = document.getElementById("topic-input").value.trim();
+  let candidates = topics.filter(t => t !== currentVal);
   if (candidates.length === 0) candidates = topics;
   const chosen = candidates[Math.floor(Math.random() * candidates.length)];
-  lastPickedTopic = chosen;
+
+  // 現在の履歴ポインタより未来の履歴があれば切り捨てて新しく追加
+  if (topicHistoryIndex < topicHistory.length - 1) {
+    topicHistory = topicHistory.slice(0, topicHistoryIndex + 1);
+  }
+  topicHistory.push(chosen);
+  topicHistoryIndex = topicHistory.length - 1;
+
   document.getElementById("topic-input").value = chosen;
+  updateTopicNavButtons();
 }
 
-// ============================================================================
-// チャット開始 ＆ マイクロバッチ進行エンジン（スタック完全解消版）
-// ============================================================================
+function prevTopic() {
+  if (topicHistoryIndex > 0) {
+    topicHistoryIndex--;
+    document.getElementById("topic-input").value = topicHistory[topicHistoryIndex];
+    updateTopicNavButtons();
+  }
+}
+
+function nextTopic() {
+  if (topicHistoryIndex < topicHistory.length - 1) {
+    topicHistoryIndex++;
+    document.getElementById("topic-input").value = topicHistory[topicHistoryIndex];
+    updateTopicNavButtons();
+  }
+}
+
 function stopAllTimers() {
   currentSessionId++;
   if (displayTimerId) {
@@ -6366,7 +5791,8 @@ async function startChat() {
   const memberSuffix = currentLang === "en" ? ` (${selectedIds.length} ${selectedIds.length === 1 ? 'member' : 'members'})` : ` (${selectedIds.length}名)`;
   document.getElementById("chat-room-members").innerText = `${memberNames}${memberSuffix}`;
 
-  if (currentMode === "counsel" || currentMode === "praise") {
+  const userTopicModes = ["counsel", "praise", "butler", "lover", "beauty", "coach", "tsundere"];
+  if (userTopicModes.includes(currentMode)) {
     appendUserMessage(topic);
   } else {
     appendSystemMessage(`📢 【${topic}】`);
@@ -6792,6 +6218,59 @@ async function callGeminiMicroBatch(speakerSequence, topic, isInitialPhase, user
   const formatExampleEn = speakerSequence.map(c => `===${c.id}===\n[Only the English speech of ${c.name.en} here]`).join("\n");
   const formatExampleJa = speakerSequence.map(c => `===${c.id}===\nここに${c.name.ja}のセリフ本文のみを書く。`).join("\n");
 
+  // 語学レッスンモード用の特別指示生成
+  let languageSpecialInstructionJa = "";
+  let languageSpecialInstructionEn = "";
+
+  if (currentMode === "english") {
+    if (languageSubMode === "bilingual") {
+      languageSpecialInstructionJa = `
+【🗽 英会話レッスン特別ルール（日本語フォロー付き）】
+・この会話は日本人が英会話を楽しく習得するための実践レッスンです。
+・各発言は、まず生き生きとした自然な英語（2〜3文）で発言してください。
+・その直後に改行し、「💡【ワンポイント】使った英語表現の日本語訳や、日常で使える自然なニュアンスのアドバイス」を日本語で1〜2文添えてください。
+`;
+      languageSpecialInstructionEn = `
+【🗽 English Lesson Special Rule (With Japanese Tips)】
+- Provide a lively natural English response (2-3 sentences), followed immediately on a new line by a brief bilingual tip ("💡【Note】...").
+`;
+    } else {
+      languageSpecialInstructionJa = `
+【🗽 英会話レッスン特別ルール（英語のみ・イマージョン）】
+・100% 英語のみで会話を行ってください。
+・初心者が自信を持てるよう、自然な相槌やネイティブらしい表現（カジュアルな言い回しやスラング）を織り交ぜてリードしてください。
+`;
+      languageSpecialInstructionEn = `
+【🗽 English Lesson Special Rule (English Only Immersion)】
+- Speak 100% in English with smooth native idioms and supportive conversational pacing.
+`;
+    }
+  } else if (currentMode === "japanese") {
+    if (languageSubMode === "bilingual") {
+      languageSpecialInstructionJa = `
+【🌸 日本語レッスン特別ルール（英語フォロー付き ＆ 漢字ふりがな必須）】
+・この会話は英語圏の学習者が日本語を身につけるためのレッスンです。
+・★超重要ルール（漢字ルビ）: 出力するすべての漢字に、必ず [漢字|かんじ] の形式でふりがな（ルビ）を振ってください（例: [今日|きょう]は[楽|たの]しい[一日|いちにち]ですね）。
+・日本語の発言（2〜3文）の直後に改行し、「💡 [English Tip] ...」として、英語での簡単な意訳やキーフレーズの解説を添えてください。
+`;
+      languageSpecialInstructionEn = `
+【🌸 Japanese Lesson Special Rule (With English Notes & Furigana)】
+- Strictly format all kanji with furigana using [漢字|かんじ] format (e.g. [私|わたし]の[名前|なまえ]).
+- Follow each Japanese dialogue with a concise English translation note ("💡 [English Tip] ...").
+`;
+    } else {
+      languageSpecialInstructionJa = `
+【🌸 日本語レッスン特別ルール（日本語のみ ＆ 漢字ふりがな必須）】
+・★超重要ルール（漢字ルビ）: 出力するすべての漢字に、必ず [漢字|かんじ] の形式でふりがな（ルビ）を振ってください（例: [私|わたし]の[名前|なまえ]は[信長|のぶなが]です）。
+・やさしく親しみやすい自然な日本語で、語彙や文脈を学習者が理解しやすいよう工夫して対話してください。
+`;
+      languageSpecialInstructionEn = `
+【🌸 Japanese Lesson Special Rule (Japanese Only with Furigana)】
+- Strictly format all kanji with furigana using [漢字|かんじ] format. Speak in accessible, gentle Japanese.
+`;
+    }
+  }
+
   const prompt = isEn ? `
 ${isSingle ? `You are roleplaying as ${uniqueChars[0].name.en} in an intimate 1-on-1 dialogue with the user.` : `You are a multi-agent historical AI simulator faithfully roleplaying the mentalities, worldviews, and distinct personalities of historical figures.`}
 Current discussion mode: 【${modeObj.icon} ${modeObj.name.en} (${modeObj.desc.en})】.
@@ -6800,8 +6279,8 @@ Topic: "${topic}"
 ============================================================
 CRITICAL MANDATORY LANGUAGE REQUIREMENT (STRICTLY ENFORCED)
 ============================================================
-1. Output language MUST be EXCLUSIVELY and 100% in ENGLISH.
-2. Under NO circumstances should any Japanese, kanji, hiragana, or katakana appear in the output.
+1. Output language MUST be EXCLUSIVELY and 100% in ENGLISH (unless specific language lesson mode specifies bilingual tips).
+2. Under NO circumstances should unrequested Japanese, kanji, hiragana, or katakana appear in the output.
 3. Even for Japanese or ancient figures (such as Oda Nobunaga, Toyotomi Hideyoshi, Miyamoto Musashi, etc.):
    - You MUST translate their feudal samurai arrogance, pride, or distinctive speech style entirely into vivid, theatrical English!
    - For instance, Nobunaga's haughty tone ("たわけ", "くだらん", "戦場に過ぎぬ") MUST be rendered in English as:
@@ -6817,14 +6296,18 @@ ${userIntervention ? `【Latest User Comment】\nUser: "${userIntervention}"\n` 
 【Generation Order & Missions】
 ${orderInstructions}
 
-【Natural Conversation Rules】
-- No mechanical clichés: Do not repeat fixed opening phrases like "As XX said, I'd like to add...".
-- Natural varied dialogue: Vary natural agreements, counterarguments, or banter fitting each legend's persona.
-- No self-agreement: Never agree with or refer to your own previous statement.
+${languageSpecialInstructionEn}
+
+【Strict Persona, Voice & Dynamic Dialogue Rules】
+1. Unbreakable Persona & Distinct Voice:
+   Faithfully express each figure's unique arrogance, wisdom, wit, or stubbornness in vivid, dramatic English. Translate Japanese feudal mannerisms naturally into theatrical period or character-specific English (e.g. Nobunaga's fierce imperious commands, Ryoma's seafaring swagger, Rikyu's understated Zen elegance).
+2. Eliminate Robotic Formulaic Openings:
+   NEVER start with robotic templates like "As XX said, I agree and would like to add...". Jump directly into fiery rebuttals, playful banter, or piercing insights matching the figure's character.
+3. No Self-Agreement:
+   Never agree with or address yourself if you spoke previously.
 
 【Output Format (STRICT REQUIREMENT)】
-- Output language: MUST BE EXCLUSIVELY ENGLISH.
-- 2-3 complete sentences per turn (around 35-65 English words). Do NOT cut off mid-sentence.
+- 2-3 complete sentences per turn (around 35-70 English words). Do NOT cut off mid-sentence.
 - Delimit each turn with "===SPEAKER_ID===" line (no commentary or preface outside these blocks):
 
 ${formatExampleEn}
@@ -6842,23 +6325,27 @@ ${userIntervention ? `【直前のユーザー発言】\nユーザー：「${use
 【今回生成する発言の順番とミッション（厳守）】
 ${orderInstructions}
 
-【自然な会話表現に関する絶対遵守ルール】
-・機械的な定型文の禁止:
-  「〇〇の言う通りだな、さらに私から付け加えるなら…」などの決まりきったフレーズ・テンプレートを毎回繰り返すことは絶対に禁止します。
-・自然で多彩な相槌と展開:
-  相手の名前を呼ぶかどうか、どう同意・反論・発展させるかは各偉人の性格と口調（一人称や語尾）に合わせて毎回自然に変えてください（例：「その通りだ」「〇〇殿の指摘は的を射ている」「なるほど、しかし〜」など、あるいは相手の名前を出さずに直接本題を深掘りする）。
-・自己言及・自己同意の禁止:
-  自分自身の直前の発言に対して自分自身で「〇〇の言う通り」と同調・同意するような不自然な言動は絶対にしないでください。
+${languageSpecialInstructionJa}
+
+【各偉人の人格・口癖・自然な掛け合いに関する絶対遵守ルール（最重要）】
+1. 一人称・語尾・口癖の絶対固定:
+   各人物に定義された「一人称（わし、某、わたくし、我、おいどん、俺、僕など）」「語尾・口癖（〜じゃ、〜ぜよ、〜でおじゃる、〜である、〜でごわす、たわけ、是非に及ばずなど）」を絶対に崩さず、その人物が現代に蘇ったかのように生き生きと演じきってください。
+2. 機械的なオウム返し・定型相槌の完全撤廃:
+   「〇〇の言う通りだな、さらに私から付け加えるなら…」「おっしゃる通りです」といった無機質なAI定型文は絶対に禁止します。
+   相手の意見に切り込む際も、「ふん、甘いわ！」「ほう…面白いことを言う」「まっことその通りぜよ！」など、その人物の気性・信念に忠実な生のリアクションから直接本題に入ってください。
+3. 自己言及・自己同調の禁止:
+   直前の発言者が自分自身である場合、自分自身に同意したり自分の名前を呼んだりせず、新たな論点や処方箋を自然に語ってください。
 
 【出力フォーマット（絶対厳守）】
-・出力言語は必ず「${langName}」とすること。
-・各発言は必ず文末（。や！や？）まで完結した2〜3文（80〜140文字程度）とし、絶対に途中で切らないこと。
+・出力言語は指定がない限り「${langName}」とすること。
+・各発言は必ず文末（。や！や？）まで完結した2〜3文（80〜150文字程度）とし、絶対に途中で切らないこと。
 ・以下の通り、1発言ごとに「===SPEAKER_ID===」の区切り行を入れて出力すること（前置きや解説は一切書かないこと）：
 
 ${formatExampleJa}
 `;
 
-  const requestBody = {
+  
+const requestBody = {
     contents: [{ role: "user", parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.85,
@@ -7157,29 +6644,36 @@ function toggleSpeed() {
 }
 
 // ================= 画面描画ヘルパー =================
+function formatChatText(rawText) {
+  let safe = escapeHtml(rawText);
+  // ルビ変換: [漢字|かんじ] -> <ruby class="ruby-word">漢字<rt class="ruby-rt">かんじ</rt></ruby>
+  safe = safe.replace(/\[([^\|\]\r\n]+)\|([^\]\r\n]+)\]/g, '<ruby class="ruby-word">$1<rt class="ruby-rt">$2</rt></ruby>');
+  return safe;
+}
+
 function appendCharacterMessage(char, text, isInitialPhase = false) {
   const area = document.getElementById("messages-area");
   const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   const badgeLabels = {
     ja: {
-      debate: "第一声",
-      counsel: "初期助言",
-      brainstorm: "初期アイデア",
-      praise: "全力肯定",
-      izakaya: "乾杯トーク"
+      butler: "専属奉仕", praise: "全力肯定", izakaya: "乾杯トーク", sleep: "安眠誘導",
+      lover: "甘々トーク", teatime: "優雅な時間", fortune: "運命鑑定", tsundere: "素直になれない",
+      beauty: "垢抜け助言", roleplay: "女子会トーク", mascot: "もふもふ", sweets: "スイーツ巡り",
+      english: "英会話", japanese: "日本語レッスン", coach: "目標指導", lecture: "賢者講義",
+      debate: "第一声", counsel: "初期助言", brainstorm: "初期アイデア", interview: "対談開幕"
     },
     en: {
-      debate: "Opening",
-      counsel: "Advice",
-      brainstorm: "Idea",
-      praise: "Affirmation",
-      izakaya: "Cheers"
+      butler: "Service", praise: "Affirmation", izakaya: "Cheers", sleep: "Bedtime",
+      lover: "Sweetheart", teatime: "Tea Time", fortune: "Fortune", tsundere: "Tsundere",
+      beauty: "Aesthetic", roleplay: "Girls' Talk", mascot: "Mascot", sweets: "Sweets Cafe",
+      english: "English Lesson", japanese: "Japanese Lesson", coach: "Coaching", lecture: "Lecture",
+      debate: "Opening", counsel: "Advice", brainstorm: "Idea", interview: "Interview"
     }
   };
 
   const badgeHtml = isInitialPhase
-    ? `<span class="text-[9px] bg-indigo-500/80 text-white px-1.5 py-0.2 rounded font-medium">${(badgeLabels[currentLang] || badgeLabels.ja)[currentMode]}</span>`
+    ? `<span class="text-[9px] bg-indigo-500/80 text-white px-1.5 py-0.2 rounded font-medium">${(badgeLabels[currentLang] || badgeLabels.ja)[currentMode] || "発言"}</span>`
     : ``;
 
   const row = document.createElement("div");
@@ -7194,7 +6688,7 @@ function appendCharacterMessage(char, text, isInitialPhase = false) {
       </div>
       <div class="flex items-end gap-1.5">
         <div class="chat-bubble-text relative bg-white text-slate-800 leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-tl-none shadow bubble-left">
-          ${escapeHtml(text)}
+          ${formatChatText(text)}
         </div>
         <span class="text-[9px] text-white/80 shrink-0">${now}</span>
       </div>
@@ -7214,7 +6708,7 @@ function appendUserMessage(text) {
   row.innerHTML = `
     <span class="text-[9px] text-white/80 shrink-0 text-right">${readLabel}<br>${now}</span>
     <div class="chat-bubble-text relative bg-[#8de055] text-slate-900 leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-tr-none shadow max-w-[85%] bubble-right">
-      ${escapeHtml(text)}
+      ${formatChatText(text)}
     </div>
   `;
   area.appendChild(row);
