@@ -1,16 +1,16 @@
 // ============================================================================
 // Service Worker for 偉人トークAI (PWA)
 // ============================================================================
-const APP_VERSION = 'v1.8.3';
+const APP_VERSION = 'v1.8.4';
 const CACHE_NAME = `history-ai-chat-${APP_VERSION}`;
 
 // 初回起動時にキャッシュするコア静的ファイル群
 const CORE_STATIC_ASSETS = [
   './',
   './index.html',
-  './mode_topics.js?v=1.8.3',
-  './character_details.js?v=1.8.3',
-  './manifest.json?v=1.8.3',
+  './mode_topics.js?v=1.8.4',
+  './character_details.js?v=1.8.4',
+  './manifest.json?v=1.8.4',
   './icons/app-icon-192.png?v=1.7.0',
   './icons/app-icon-maskable.png?v=1.7.0',
   './icons/app-icon-512.png?v=1.7.0',

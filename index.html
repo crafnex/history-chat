@@ -408,7 +408,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <div class="text-xs font-bold text-slate-800" id="st-ver-title">📱 現在のバージョン</div>
-                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.8.3</div>
+                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.8.4</div>
               </div>
               <div class="flex items-center gap-1.5">
                 <button type="button" onclick="openChangelogModal()" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition flex items-center gap-1">
@@ -997,7 +997,7 @@
           <div class="text-indigo-400 font-bold">➔</div>
           <div class="text-right">
             <div class="text-[10px] text-emerald-600 font-semibold">最新アップデート</div>
-            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.8.3</div>
+            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.8.4</div>
           </div>
         </div>
 
@@ -1587,8 +1587,8 @@
 
   </div>
 
-<script src="mode_topics.js?v=1.8.3"></script>
-<script src="character_details.js?v=1.8.3"></script>
+<script src="mode_topics.js?v=1.8.4"></script>
+<script src="character_details.js?v=1.8.4"></script>
 <script>
 // ============================================================================
 // 🛡️ API通信モード設定（各自のGroq / Gemini / OpenAIキーによる公式直接通信）
@@ -1653,12 +1653,22 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.8.3';
+const APP_CLIENT_VERSION = 'v1.8.4';
 let waitingServiceWorker = null;
 let swRegistration = null;
 
 // 📋 全バージョンの変更履歴（リリースノート）マスターデータ
 const APP_CHANGELOG = [
+  {
+    version: "v1.8.4",
+    date: "2026-10-18",
+    title: "🎯 キャラクター画像検索の作品名連動＆別人AI画像上書き防止",
+    highlights: [
+      "【作品名との照合マッチング】AniList公式DBで同名キャラ（例: 異なる作品のアリスやサクラ）の所属作品を自動照合し、意図しない別作品キャラの誤爆を根絶",
+      "【Wikidata複合検索】名前＋作品名での複合検索に対応し、ピンポイントで該当作品の公式画像を取得",
+      "【勝手な別人AI画像の押し付け廃止】公式画像がない場合に似ても似つかないAI画像を勝手にセットするのをやめ、美麗なシンボルアイコン＋Google画像検索へのワンタップ案内を徹底"
+    ]
+  },
   {
     version: "v1.8.3",
     date: "2026-10-18",
@@ -4448,7 +4458,7 @@ function processImageSourceToAvatar(src, successMsg = null) {
   img.src = src;
 }
 
-// 🌐 WEB画像自動検索＆顔スマートアイコン自動作成エンジン（AniList ＋ Wikipedia ＋ Wikidata ＋ 最適化AI生成）
+// 🌐 WEB画像自動検索＆顔スマートアイコン自動作成エンジン（作品名連動AniList ＋ Wikipedia ＋ Wikidata ＋ 安全フォールバック）
 async function autoFetchWebAvatar(name = null, title = null, notify = false, customVisualPrompt = null) {
   const charName = name || (document.getElementById("cc-name-ja") ? document.getElementById("cc-name-ja").value.trim() : "");
   const charTitle = title || (document.getElementById("cc-title-ja") ? document.getElementById("cc-title-ja").value.trim() : "");
@@ -4460,7 +4470,8 @@ async function autoFetchWebAvatar(name = null, title = null, notify = false, cus
 
   const avatarBadge = document.getElementById("cc-avatar-status-badge");
   if (avatarBadge) {
-    avatarBadge.innerText = "🔍 WEB画像検索中...";
+    avatarBadge.innerText = "🔍 公式WEB画像検索中...";
+    avatarBadge.className = "text-[9px] px-2 py-0.5 rounded font-bold bg-indigo-100 text-indigo-700 animate-pulse";
     avatarBadge.classList.remove("hidden");
   }
 
@@ -4470,35 +4481,40 @@ async function autoFetchWebAvatar(name = null, title = null, notify = false, cus
     let englishName = "";
     let englishDesc = "";
 
-    // ★ 0. Wikidata APIで英語名・説明・公式画像を0.1秒取得（CORS全開放・海外キャラやマスコット解決の切り札）
+    // ★ 0. Wikidata API: まず「名前＋作品名」で複合検索、なければ「名前」単体
     try {
-      const wdUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(charName)}&language=ja&format=json&origin=*`;
-      const wdRes = await fetch(wdUrl);
-      if (wdRes.ok) {
-        const wdData = await wdRes.json();
-        const topEntity = wdData.search && wdData.search[0];
-        if (topEntity) {
-          englishName = topEntity.label || "";
-          englishDesc = topEntity.description || "";
-          // WikidataエンティティからP18（公式代表画像）を取得試行
-          if (topEntity.id) {
-            const entUrl = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${topEntity.id}&props=claims&format=json&origin=*`;
-            const entRes = await fetch(entUrl);
-            if (entRes.ok) {
-              const entData = await entRes.json();
-              const claims = entData.entities && entData.entities[topEntity.id] && entData.entities[topEntity.id].claims;
-              const p18 = claims && claims.P18 && claims.P18[0] && claims.P18[0].mainsnak && claims.P18[0].mainsnak.datavalue && claims.P18[0].mainsnak.datavalue.value;
-              if (p18) {
-                const commonsUrl = `https://commons.wikimedia.org/w/api.php?action=query&titles=File:${encodeURIComponent(p18)}&prop=imageinfo&iiprop=url&iiurlwidth=500&format=json&origin=*`;
-                const cRes = await fetch(commonsUrl);
-                if (cRes.ok) {
-                  const cData = await cRes.json();
-                  const pages = (cData.query && cData.query.pages) || {};
-                  for (let pk in pages) {
-                    if (pages[pk].imageinfo && pages[pk].imageinfo[0] && pages[pk].imageinfo[0].thumburl) {
-                      foundImg = pages[pk].imageinfo[0].thumburl;
-                      foundLabel = "Wikimedia公式画像";
-                      break;
+      const searchQueries = [];
+      if (charTitle) searchQueries.push(`${charName} ${charTitle}`);
+      searchQueries.push(charName);
+
+      for (const sq of searchQueries) {
+        const wdUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(sq)}&language=ja&format=json&origin=*`;
+        const wdRes = await fetch(wdUrl);
+        if (wdRes.ok) {
+          const wdData = await wdRes.json();
+          const topEntity = wdData.search && wdData.search[0];
+          if (topEntity) {
+            englishName = topEntity.label || englishName;
+            englishDesc = topEntity.description || englishDesc;
+            if (topEntity.id) {
+              const entUrl = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${topEntity.id}&props=claims&format=json&origin=*`;
+              const entRes = await fetch(entUrl);
+              if (entRes.ok) {
+                const entData = await entRes.json();
+                const claims = entData.entities && entData.entities[topEntity.id] && entData.entities[topEntity.id].claims;
+                const p18 = claims && claims.P18 && claims.P18[0] && claims.P18[0].mainsnak && claims.P18[0].mainsnak.datavalue && claims.P18[0].mainsnak.datavalue.value;
+                if (p18) {
+                  const commonsUrl = `https://commons.wikimedia.org/w/api.php?action=query&titles=File:${encodeURIComponent(p18)}&prop=imageinfo&iiprop=url&iiurlwidth=500&format=json&origin=*`;
+                  const cRes = await fetch(commonsUrl);
+                  if (cRes.ok) {
+                    const cData = await cRes.json();
+                    const pages = (cData.query && cData.query.pages) || {};
+                    for (let pk in pages) {
+                      if (pages[pk].imageinfo && pages[pk].imageinfo[0] && pages[pk].imageinfo[0].thumburl) {
+                        foundImg = pages[pk].imageinfo[0].thumburl;
+                        foundLabel = "Wikidata公式画像";
+                        break;
+                      }
                     }
                   }
                 }
@@ -4506,18 +4522,26 @@ async function autoFetchWebAvatar(name = null, title = null, notify = false, cus
             }
           }
         }
+        if (foundImg) break;
       }
     } catch (e) {
       console.warn("Wikidata search warning:", e);
     }
 
-    // ★ 1. AniList GraphQL API（日本のアニメ・マンガ・ゲーム公式代表ビジュアル検索）
+    // ★ 1. AniList GraphQL API（作品名マッチング付き複数候補照合）
     if (!foundImg) {
       const anilistQuery = `
         query ($search: String) {
-          Character (search: $search) {
-            name { full native }
-            image { large medium }
+          Page (perPage: 6) {
+            characters (search: $search) {
+              name { full native alternative }
+              image { large medium }
+              media (perPage: 4) {
+                nodes {
+                  title { romaji english native }
+                }
+              }
+            }
           }
         }
       `;
@@ -4534,11 +4558,37 @@ async function autoFetchWebAvatar(name = null, title = null, notify = false, cus
           });
           if (aniRes.ok) {
             const aniData = await aniRes.json();
-            const char = aniData.data && aniData.data.Character;
-            if (char && char.image && (char.image.large || char.image.medium)) {
-              foundImg = char.image.large || char.image.medium;
-              foundLabel = "AniList公式代表画像";
-              break;
+            const charList = aniData.data && aniData.data.Page && aniData.data.Page.characters;
+            if (charList && charList.length > 0) {
+              // 作品名（charTitle）が指定されている場合、所属作品に作品名が含まれるキャラを優先マッチング
+              let matchedChar = null;
+              if (charTitle) {
+                const normTitle = charTitle.toLowerCase().replace(/[\s\-_・『』「」]/g, "");
+                for (const c of charList) {
+                  const mediaNodes = (c.media && c.media.nodes) || [];
+                  const isTitleMatch = mediaNodes.some(m => {
+                    const titles = [m.title.native, m.title.romaji, m.title.english].filter(Boolean);
+                    return titles.some(t => {
+                      const nt = t.toLowerCase().replace(/[\s\-_・『』「」]/g, "");
+                      return nt.includes(normTitle) || normTitle.includes(nt);
+                    });
+                  });
+                  if (isTitleMatch && c.image && (c.image.large || c.image.medium)) {
+                    matchedChar = c;
+                    break;
+                  }
+                }
+              }
+              // 作品名一致が見つからない場合は、トップ候補を採用
+              if (!matchedChar && charList[0] && charList[0].image) {
+                matchedChar = charList[0];
+              }
+
+              if (matchedChar && matchedChar.image && (matchedChar.image.large || matchedChar.image.medium)) {
+                foundImg = matchedChar.image.large || matchedChar.image.medium;
+                foundLabel = "AniList公式代表画像";
+                break;
+              }
             }
           }
         } catch (e) {
@@ -4547,12 +4597,19 @@ async function autoFetchWebAvatar(name = null, title = null, notify = false, cus
       }
     }
 
-    // ★ 2. Wikipedia公式API（日本語版 ＆ 英語版）
+    // ★ 2. Wikipedia公式API（曖昧さ回避対応・日本語版 ＆ 英語版）
     if (!foundImg) {
-      const wikiQueries = [
-        { lang: "ja", title: charName },
-        ...(englishName ? [{ lang: "en", title: englishName }] : [])
-      ];
+      const wikiQueries = [];
+      if (charTitle) {
+        wikiQueries.push({ lang: "ja", title: `${charName} (${charTitle})` });
+        wikiQueries.push({ lang: "ja", title: `${charName}_(${charTitle})` });
+      }
+      wikiQueries.push({ lang: "ja", title: charName });
+      if (englishName) {
+        if (charTitle) wikiQueries.push({ lang: "en", title: `${englishName} (${charTitle})` });
+        wikiQueries.push({ lang: "en", title: englishName });
+      }
+
       for (const wq of wikiQueries) {
         try {
           const wikiUrl = `https://${wq.lang}.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(wq.title)}&prop=pageimages&format=json&pithumbsize=500&origin=*`;
@@ -4563,7 +4620,7 @@ async function autoFetchWebAvatar(name = null, title = null, notify = false, cus
             for (let k in pages) {
               if (pages[k].thumbnail && pages[k].thumbnail.source) {
                 foundImg = pages[k].thumbnail.source;
-                foundLabel = `Wikipedia(${wq.lang})公式肖像画`;
+                foundLabel = `Wikipedia(${wq.lang})公式画像`;
                 break;
               }
             }
@@ -4580,49 +4637,20 @@ async function autoFetchWebAvatar(name = null, title = null, notify = false, cus
       processImageSourceToAvatar(foundImg, notify ? `「${charName}」の${foundLabel}から顔・上半身アイコンを作成しました！` : null);
       if (avatarBadge) {
         avatarBadge.innerText = `✅ ${foundLabel}を取得`;
-        setTimeout(() => avatarBadge.classList.add("hidden"), 3000);
+        avatarBadge.className = "text-[9px] px-2 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-200";
+        setTimeout(() => avatarBadge.classList.add("hidden"), 4000);
       }
       return;
     }
 
-    // ★ 4. 画像URLがどのDBにもない場合:
-    // 固定「anime character」を完全撤廃！キャラクター本来の種族（動物・マスコット・メカ等）に合わせた最適な姿でAI生成！
-    if (avatarBadge) avatarBadge.innerText = "🎨 最適顔アイコン生成中...";
-
-    let stylePrompt = customVisualPrompt;
-    if (!stylePrompt) {
-      const isAnimalOrCartoon = englishDesc && (
-        englishDesc.includes("dog") || englishDesc.includes("cat") || englishDesc.includes("animal") ||
-        englishDesc.includes("comic") || englishDesc.includes("cartoon") || englishDesc.includes("character")
-      );
-      if (isAnimalOrCartoon) {
-        stylePrompt = `${englishName || charName}, ${englishDesc || charTitle}, official character design, close-up face avatar icon, vibrant, highly detailed`;
-      } else {
-        stylePrompt = `${englishName || charName}, ${charTitle || englishDesc}, official character face portrait avatar icon, solo, vibrant, highly detailed`;
-      }
+    // ★ 4. 画像URLがどの公式DBにもない場合:
+    // 勝手な似ていない別人AI画像の押し付けを完全廃止！
+    // 美麗な名前入りシンボルアイコンを維持し、Google画像検索でのワンタップ選択を優しく案内
+    generateInstantSymbolAvatar(charName, charTitle, null, false);
+    if (avatarBadge) {
+      avatarBadge.innerHTML = `💡 公式DB未検出 → <span class="underline cursor-pointer font-bold hover:text-amber-950" onclick="searchCharacterImageOnGoogle()">🔍 Google画像検索で探す</span>`;
+      avatarBadge.className = "text-[9.5px] px-2 py-0.5 rounded font-bold bg-amber-100 text-amber-900 border border-amber-300 transition shadow-2xs";
     }
-
-    const seed = Math.floor(Math.random() * 1000000);
-    const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(stylePrompt)}?width=256&height=256&seed=${seed}&nologo=true`;
-
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      processImageSourceToAvatar(pollinationsUrl, notify ? `「${charName}」の顔アイコンを自動作成しました！` : null);
-      if (avatarBadge) {
-        avatarBadge.innerText = "✅ アイコン完成";
-        setTimeout(() => avatarBadge.classList.add("hidden"), 3000);
-      }
-    };
-    img.onerror = () => {
-      // 最後の安全網: 即時シンボルアイコン
-      generateInstantSymbolAvatar(charName, charTitle, null, false);
-      if (avatarBadge) {
-        avatarBadge.innerText = "⚡ シンボルアバター";
-        setTimeout(() => avatarBadge.classList.add("hidden"), 3000);
-      }
-    };
-    img.src = pollinationsUrl;
 
   } catch (err) {
     console.warn("autoFetchWebAvatar failed:", err);
@@ -4673,8 +4701,8 @@ async function pasteAvatarUrlFromClipboard() {
 function searchCharacterImageOnGoogle() {
   const name = document.getElementById("cc-name-ja").value.trim();
   const title = document.getElementById("cc-title-ja").value.trim();
-  const query = `${name} ${title} アイコン イラスト`.trim();
-  const searchUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(query || "アニメ アイコン")}`;
+  const query = `${name} ${title} 公式 アイコン`.trim();
+  const searchUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(query || "キャラクター 公式 アイコン")}`;
   window.open(searchUrl, "_blank");
 }
 
