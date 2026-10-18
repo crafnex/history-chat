@@ -408,7 +408,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <div class="text-xs font-bold text-slate-800" id="st-ver-title">📱 現在のバージョン</div>
-                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.6.0</div>
+                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.6.1</div>
               </div>
               <div class="flex items-center gap-1.5">
                 <button type="button" onclick="openChangelogModal()" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition flex items-center gap-1">
@@ -843,7 +843,7 @@
           <div class="text-indigo-400 font-bold">➔</div>
           <div class="text-right">
             <div class="text-[10px] text-emerald-600 font-semibold">最新アップデート</div>
-            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.6.0</div>
+            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.6.1</div>
           </div>
         </div>
 
@@ -1305,14 +1305,26 @@
 
       <!-- 5つのトークモード選択 (5大分類 ↔ 各4モード 階層型スロット) -->
       <div class="mb-2 shrink-0">
-        <label class="block text-xs font-bold text-slate-700 mb-1.5" id="ui-mode-label">① トークの形式（5分類・全20モード）</label>
-        <div id="mode-tabs" class="grid grid-cols-5 gap-1 mb-1.5"></div>
-        <div class="bg-indigo-50/80 border border-indigo-200/70 rounded-lg px-2.5 py-1.5 text-[11px] text-indigo-900 leading-snug flex items-center gap-1.5 shadow-2xs">
-          <span class="text-indigo-600 font-bold shrink-0">💡</span>
-          <span id="mode-desc" class="font-medium"></span>
+        <div class="flex justify-between items-center mb-1.5">
+          <label class="text-xs font-bold text-slate-700" id="ui-mode-label">① トークの形式（5分類・全20モード）</label>
+          <span id="current-category-breadcrumb" class="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200 shadow-2xs hidden"></span>
         </div>
-        <!-- 語学レッスン用サブモード切替ピル（英会話・日本語レッスン時のみ動的表示） -->
-        <div id="language-submode-container" class="hidden mt-1.5 flex items-center justify-between bg-white border border-indigo-200 rounded-lg p-1 text-[11px] shadow-2xs"></div>
+        <div id="mode-tabs" class="grid grid-cols-5 gap-1 sm:gap-1.5 mb-1.5"></div>
+        
+        <!-- 大型くっきりモード解説パネル -->
+        <div id="mode-desc-card" class="bg-white border border-indigo-200/90 rounded-xl p-2.5 shadow-xs transition">
+          <div class="flex items-center justify-between gap-2 mb-1">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span id="mode-desc-icon" class="text-base sm:text-lg shrink-0">💡</span>
+              <span id="mode-desc-title" class="font-bold text-slate-900 text-xs sm:text-[13.5px] truncate"></span>
+            </div>
+            <span id="mode-desc-badge" class="text-[10px] sm:text-[10.5px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0"></span>
+          </div>
+          <div id="mode-desc-body" class="text-xs sm:text-[12.5px] text-slate-700 leading-relaxed font-normal"></div>
+          
+          <!-- 語学レッスン用サブモード切替ピル（英会話・日本語レッスン時のみ動的表示） -->
+          <div id="language-submode-container" class="hidden mt-2 pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-1 text-xs"></div>
+        </div>
       </div>
 
       <!-- 選択中のメンバーバー -->
@@ -1500,12 +1512,23 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.6.0';
+const APP_CLIENT_VERSION = 'v1.6.1';
 let waitingServiceWorker = null;
 let swRegistration = null;
 
 // 📋 全バージョンの変更履歴（リリースノート）マスターデータ
 const APP_CHANGELOG = [
+  {
+    version: "v1.6.1",
+    date: "2026-10-18",
+    title: "🔍 トーク形式の視認性向上 ＆ 大型くっきりモード解説パネル",
+    highlights: [
+      "【大型くっきりモード解説パネル】説明文のフォントサイズを大幅拡大（11px ➔ 13px）し、高コントラストな解説カードへ刷新",
+      "【現在分類パンくず表示】選択中の大分類（例: 🌿 癒し 分類）が上部に常時明記され、今どの分類を開いているかが一目でわかるように改善",
+      "【ボタンの文字切れ解消】第2階層のモードボタンの文字切り捨て（truncate）を撤廃し、ボタン高さを最適化してモード名をすべて明瞭表示",
+      "【全20モードの詳細説明を洗練】各モードの具体的な会話シチュエーションやAIの立ち回りがパッと理解できる魅力的な解説文にブラッシュアップ"
+    ]
+  },
   {
     version: "v1.6.0",
     date: "2026-10-18",
@@ -1846,7 +1869,10 @@ const CHAT_MODES = {
     categoryId: "healing",
     icon: "🤵",
     name: { ja: "執事・メイド", en: "Butler & Maid" },
-    desc: { ja: "至れり尽くせりの専属奉仕と、どこまでも優しい労い", en: "Devoted personal service and gentle comforting care" },
+    desc: {
+      ja: "お疲れのあなたを極上の敬意と温もりで迎え、至れり尽くせりのおもてなしと癒しの言葉を捧げる専属奉仕モード",
+      en: "Welcome exhausted you with highest deference, offering dedicated hospitality and soothing care."
+    },
     phase1Banner: { ja: "🤵 お疲れのあなた様へ、温かいおもてなしの言葉を捧げます", en: "🤵 Welcoming you with warm personal hospitality." },
     phase2Banner: { ja: "🫖 心ゆくまでおくつろぎいただけるよう、細やかな心配りを続けます", en: "🫖 Continuing devoted attentive care for your peace of mind." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
@@ -1862,7 +1888,10 @@ const CHAT_MODES = {
     categoryId: "healing",
     icon: "👏",
     name: { ja: "全力肯定", en: "Affirmation" },
-    desc: { ja: "落ち込んだ心に寄り添い、どんな悩みも全力で肯定・称賛するモード", en: "Unconditional praise and affirmation to uplift your weary spirit" },
+    desc: {
+      ja: "落ち込んだ心や日々の頑張りを無条件に100%全肯定！どんな悩みも温かく全力で褒めちぎる癒しモード",
+      en: "100% unconditional validation and radiant affirmation to celebrate your presence and efforts."
+    },
     phase1Banner: { ja: "👏 あなたの存在とこれまでの歩みを、全員が心から肯定・称賛します", en: "👏 Every figure will wholeheartedly affirm and celebrate your journey." },
     phase2Banner: { ja: "✨ 全肯定の輪が広がります！温かい言葉で心を満たしてください", en: "✨ The circle of affirmation deepens! Let their genuine warmth fill your heart." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
@@ -1878,7 +1907,10 @@ const CHAT_MODES = {
     categoryId: "healing",
     icon: "🍶",
     name: { ja: "ゆる晩酌", en: "Tavern Chat" },
-    desc: { ja: "酒場や居酒屋のノリで、愚痴を言い合ったり気楽に雑談するモード", en: "Kick back with casual drinks, unwind, and vent comfortably together" },
+    desc: {
+      ja: "肩肘張らず『とりあえず乾杯！』のノリで、愚痴や本音を気楽に語り合えるフランクな居酒屋モード",
+      en: "Kick back with casual drinks, unwind with bar-chum camaraderie, and vent comfortably together."
+    },
     phase1Banner: { ja: "🍶 カウンターにグラスを並べて、まずは気楽に「乾杯！」から", en: "🍶 Glasses raised across the counter—kick back and say CHEERS!" },
     phase2Banner: { ja: "🍻 お酒も進んで本音炸裂！肩肘張らないゆる〜い雑談が続きます", en: "🍻 Drinks flowing, guards down! Delightfully honest tavern banter continues." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
@@ -1894,7 +1926,10 @@ const CHAT_MODES = {
     categoryId: "healing",
     icon: "🌙",
     name: { ja: "おやすみ朗読", en: "Bedtime Reading" },
-    desc: { ja: "穏やかな声で今日を締めくくり、心地よい眠りへと誘う", en: "Gentle soothing bedtime reading for a peaceful night's rest" },
+    desc: {
+      ja: "静かな夜の訪れとともに、穏やかな語りかけと安らぎの言葉で心地よい眠りへと優しく導く安眠モード",
+      en: "Gentle soothing whisper and calming words of stillness to guide you into a deep, restful sleep."
+    },
     phase1Banner: { ja: "🌙 静かな夜の訪れです。今日一日の荷物をそっと下ろしてください", en: "🌙 Night has fallen. Gently set down today's burdens." },
     phase2Banner: { ja: "✨ 心地よい夢の世界へ、穏やかな語りかけが続きます", en: "✨ Guiding you softly into the calm world of sweet dreams." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
@@ -1912,7 +1947,10 @@ const CHAT_MODES = {
     categoryId: "romance",
     icon: "💌",
     name: { ja: "恋人甘々", en: "Sweetheart" },
-    desc: { ja: "あなただけを一途に愛し、照れながらも甘く寄り添う", en: "Devoted sweet romantic dialogue overflowing with affection" },
+    desc: {
+      ja: "あなただけを一途に愛し、照れながらも甘く優しい言葉でぎゅっと寄り添うロマンチックな恋人モード",
+      en: "Devoted sweet romantic dialogue overflowing with heartfelt affection, cuddling close just for you."
+    },
     phase1Banner: { ja: "💌 大切なあなたへ、心からの愛しさを込めて語りかけます", en: "💌 Whispering heartfelt warmth and deep affection just for you." },
     phase2Banner: { ja: "💖 二人きりの特別な時間。甘い言葉であなたを包み込みます", en: "💖 Cozy intimate moments, wrapped in sweet romantic comfort." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
@@ -1928,7 +1966,10 @@ const CHAT_MODES = {
     categoryId: "romance",
     icon: "☕",
     name: { ja: "優雅なお茶会", en: "Afternoon Tea" },
-    desc: { ja: "英国式アフタヌーンティーの優雅な歓談と洗練された社交", en: "Refined aristocratic afternoon tea conversation and hospitality" },
+    desc: {
+      ja: "香り高い紅茶とスイーツを囲み、気品あふれるウィットと洗練された社交談義を楽しむ優雅なサロンモード",
+      en: "Refined aristocratic afternoon tea conversation with charming hospitality, cultural wit, and fine tea."
+    },
     phase1Banner: { ja: "☕ 最高級の紅茶とスコーンをご用意いたしました。優雅なひとときを", en: "☕ Fine tea and scones are served. Welcome to a graceful tea salon." },
     phase2Banner: { ja: "🫖 芳醇な香りと共に、洗練されたウィットに富む社交談義が花咲きます", en: "🫖 Witty, refined aristocratic conversation unfolds around the table." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
@@ -1944,7 +1985,10 @@ const CHAT_MODES = {
     categoryId: "romance",
     icon: "🔮",
     name: { ja: "運命鑑定", en: "Mystic Fortune" },
-    desc: { ja: "星やタロット、歴史の宿命からあなたの未来と運勢を占う", en: "Mystical astrological and fate readings guiding your path" },
+    desc: {
+      ja: "星々の巡りやタロット、歴史の宿命からあなたの現状と未来の運勢を占い、開運の導きを授ける神秘モード",
+      en: "Mystical astrological and fate readings guiding your path, revealing celestial omens and blessings."
+    },
     phase1Banner: { ja: "🔮 星々の巡りとカードが示す、あなたの運命の啓示を読み解きます", en: "🔮 Unveiling celestial revelations and destiny mapped out in the stars." },
     phase2Banner: { ja: "✨ 秘められた真実と開運への導きが、神秘的に照らし出されます", en: "✨ Mystical wisdom illuminating your path toward good fortune." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
@@ -1960,7 +2004,10 @@ const CHAT_MODES = {
     categoryId: "romance",
     icon: "💢",
     name: { ja: "素直になれない", en: "Tsundere" },
-    desc: { ja: "つい憎まれ口を叩くけれど、本当は誰よりもあなたを心配する", en: "Feisty, stubborn exterior that secretly hides deep protective care" },
+    desc: {
+      ja: "『べ、別にあんたのために来たわけじゃないんだからね！』と憎まれ口の裏に愛が滲むツンデレモード",
+      en: "Feisty, stubborn exterior that awkwardly hides genuine concern and protective affection for you."
+    },
     phase1Banner: { ja: "💢 べ、別にあんたのために来たわけじゃないんだからね…！", en: "💢 I-It's not like I came here just for you or anything...!" },
     phase2Banner: { ja: "😳 憎まれ口の裏に見え隠れする、不器用な本音と優しさ", en: "😳 Awkward genuine kindness slipping through stubborn remarks." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
@@ -1978,7 +2025,10 @@ const CHAT_MODES = {
     categoryId: "empathy",
     icon: "💄",
     name: { ja: "美容・垢抜け", en: "Beauty & Style" },
-    desc: { ja: "スキンケア、メイク、ファッションで最高に輝く自分磨き相談", en: "Skincare, fashion, and radiant aesthetic styling consultations" },
+    desc: {
+      ja: "スキンケア、メイク、ファッション、姿勢など、あなたの魅力を最大限に引き出して輝かせる自分磨き相談モード",
+      en: "Skincare, styling, and radiant aesthetic advice to elevate your personal charm and confidence."
+    },
     phase1Banner: { ja: "💄 あなたの魅力を最大限に引き出す、美のスタイリング提案です", en: "💄 Expert styling advice to elevate your personal beauty and charm." },
     phase2Banner: { ja: "✨ 自信に満ちた輝く毎日のための、具体的な自分磨きトーク", en: "✨ Practical self-care secrets for confident, radiant daily life." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
@@ -1994,7 +2044,10 @@ const CHAT_MODES = {
     categoryId: "empathy",
     icon: "🥂",
     name: { ja: "女子会本音", en: "Girls' Talk" },
-    desc: { ja: "気取らず本音でぶっちゃける！恋愛や日常の共感トーク", en: "Unfiltered, lively, and relatable girls' talk about love and life" },
+    desc: {
+      ja: "気兼ねのない親友同士のノリで、『ねえねえ聞いてよ！』と恋愛や日常のリアルな本音をぶっちゃけ合う女子会モード",
+      en: "Unfiltered, lively, and heartwarming girls' talk about love, life, and hilarious daily dramas."
+    },
     phase1Banner: { ja: "🥂 乾杯！ここだけのぶっちゃけトーク、どんどん語っちゃおう！", en: "🥂 Cheers! Spill the tea—let's share our real, unfiltered thoughts!" },
     phase2Banner: { ja: "🎉 共感と笑いが止まらない！親友同士の飾らないおしゃべり", en: "🎉 Unstoppable laughter and heartwarming empathy among close friends." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
@@ -2010,7 +2063,10 @@ const CHAT_MODES = {
     categoryId: "empathy",
     icon: "🐾",
     name: { ja: "もふもふ対話", en: "Fluffy Mascot" },
-    desc: { ja: "愛くるしいペットやマスコットになって、無条件の癒しをお届け", en: "Adorable animal mascot dialogue showering you with unconditional love" },
+    desc: {
+      ja: "しっぽを振って全力で甘えてくる愛くるしいペットやマスコットになって、無条件の癒しをお届けするモード",
+      en: "Adorable fluffy pet or mascot showering you with playful wagging tails, purrs, and unconditional love."
+    },
     phase1Banner: { ja: "🐾 わーい！しっぽを振って、大好きなあなたに全力で甘えます！", en: "🐾 Wagging tails and joyful purrs! Showering you with fluffy love!" },
     phase2Banner: { ja: "🍀 ぎゅっとくっついて、あなたの心をぽかぽかに温めます", en: "🍀 Snuggling close to keep your heart warm, relaxed, and safe." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
@@ -2026,7 +2082,10 @@ const CHAT_MODES = {
     categoryId: "empathy",
     icon: "🍰",
     name: { ja: "スイーツ巡り", en: "Sweets Cafe" },
-    desc: { ja: "魅惑のケーキ、至高のカフェ巡り、幸せあふれるご褒美トーク", en: "Decadent desserts, artisanal cafe culture, and blissful sweet treats" },
+    desc: {
+      ja: "とろける極上ケーキや隠れ家カフェの魅力を五感豊かに語り合い、心まで満たされる至福のご褒美トークモード",
+      en: "Decadent desserts, artisanal cafe culture, and blissful sensory descriptions of delicious sweet treats."
+    },
     phase1Banner: { ja: "🍰 とろけるスイーツの世界へようこそ！今日のご褒美は何にしますか？", en: "🍰 Welcome to dessert heaven! What delicious treat shall we savor today?" },
     phase2Banner: { ja: "🧁 甘い香りと極上の食感！心まで満たされる至福のカフェ談義", en: "🧁 Luscious aromas and textures—pure cafe bliss for the soul." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
@@ -2044,7 +2103,10 @@ const CHAT_MODES = {
     categoryId: "study",
     icon: "🗽",
     name: { ja: "英会話レッスン", en: "English Lesson" },
-    desc: { ja: "日本人が英語を楽しく学ぶ！日常会話や自然な表現をマスター", en: "Fun English speaking practice with friendly guidance and tips" },
+    desc: {
+      ja: "日常英会話や海外旅行で使える自然な英語を実践！日本語フォロー付きか英語のみかを選んで学べるモード",
+      en: "Practical English conversational practice with friendly guidance! Choose bilingual tips or full immersion."
+    },
     phase1Banner: { ja: "🗽 Let's speak English! 楽しく自然な英会話のレッスンを始めましょう！", en: "🗽 Let's practice speaking practical, natural English together!" },
     phase2Banner: { ja: "🗣️ 会話のキャッチボール！役立つフレーズと表現を身につけよう", en: "🗣️ Active dialogue practice! Pick up natural idioms and expressions." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
@@ -2060,7 +2122,10 @@ const CHAT_MODES = {
     categoryId: "study",
     icon: "🌸",
     name: { ja: "日本語レッスン", en: "Japanese Lesson" },
-    desc: { ja: "外国人が日本語を楽しく学ぶ！日常会話と漢字のふりがな付き", en: "Master natural Japanese with friendly guidance and furigana readings" },
+    desc: {
+      ja: "外国人のための日本語学習！すべての漢字にふりがな（ルビ）が付き、英語解説付きか日本語のみかを選べるモード",
+      en: "Natural Japanese practice with kanji furigana readings! Choose with English notes or Japanese-only immersion."
+    },
     phase1Banner: { ja: "🌸 初めまして！楽しい日本語のレッスンを一緒に始めましょう！", en: "🌸 Welcome! Let's enjoy practicing natural Japanese together!" },
     phase2Banner: { ja: "🎌 豊かな日本語表現と文化のニュアンスを体感しよう", en: "🎌 Discover rich nuances of Japanese conversation and culture." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
@@ -2076,7 +2141,10 @@ const CHAT_MODES = {
     categoryId: "study",
     icon: "🎯",
     name: { ja: "熱血コーチ", en: "Goal Coach" },
-    desc: { ja: "モチベーション爆発！目標達成と習慣化を後押しするメンター", en: "High-energy coaching to crush goals, build habits, and unleash potential" },
+    desc: {
+      ja: "言い訳を断ち切って今日から即行動！目標達成や習慣化を全力で後押しし、情熱を呼び覚ます熱血メンターモード",
+      en: "High-energy coaching to crush goals, build unbreakable daily habits, and unleash your peak potential."
+    },
     phase1Banner: { ja: "🎯 さあ、君の眠れる情熱を呼び覚ませ！目標達成への第一歩だ！", en: "🎯 Awaken your burning passion! Take the decisive first step toward your goal!" },
     phase2Banner: { ja: "🔥 言い訳を捨てて行動あるのみ！全力で君の背中を押し続けるぞ！", en: "🔥 No excuses—only action! Pushing you relentlessly toward victory!" },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
@@ -2092,7 +2160,10 @@ const CHAT_MODES = {
     categoryId: "study",
     icon: "📖",
     name: { ja: "賢者の講義", en: "Wisdom Lecture" },
-    desc: { ja: "歴史の英知、科学、哲学の深遠な真理を解き明かす知的講義", en: "Profound intellectual lectures unraveling history, science, and philosophy" },
+    desc: {
+      ja: "歴史の英知、科学、哲学の深遠な真理を解き明かし、知的好奇心の扉を開くハイレベルな知的講義モード",
+      en: "Profound intellectual lectures unraveling history, science, and philosophy with timeless insight."
+    },
     phase1Banner: { ja: "📖 知的好奇心の扉を開きましょう。本日の講義テーマを提示します", en: "📖 Opening the gates of inquiry: introducing today's intellectual thesis." },
     phase2Banner: { ja: "🏛️ 異なる時代と分野の知性が交差し、深遠な真理へと迫ります", en: "🏛️ Cross-disciplinary minds conversing to illuminate timeless truths." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
@@ -2110,7 +2181,10 @@ const CHAT_MODES = {
     categoryId: "dialogue",
     icon: "⚔️",
     name: { ja: "白熱議論", en: "Debate" },
-    desc: { ja: "互いの意見をぶつけ合い、鋭く反論・論破し合うモード", en: "Clash philosophies and fiercely debate each other" },
+    desc: {
+      ja: "互いの哲学や持論を真っ向からぶつけ合い、鋭い反論とロジックで真理を追求する熱狂のディベートモード",
+      en: "Clash philosophies and fiercely debate each other with incisive logic, rebuttals, and passion."
+    },
     phase1Banner: { ja: "🎙️ まずは全員がそれぞれの立場から第一声を表明します", en: "🎙️ Each figure will state their initial stance on the topic." },
     phase2Banner: { ja: "🔥 全員の意見が出揃いました！ここから自由な反論・議論が始まります", en: "🔥 All opening statements are in! Free debate and rebuttal begin now." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
@@ -2126,7 +2200,10 @@ const CHAT_MODES = {
     categoryId: "dialogue",
     icon: "🧘",
     name: { ja: "人生哲学", en: "Life Philosophy" },
-    desc: { ja: "人生の悩みや迷いに対し、歴史の荒波を越えた深い知恵で親身に答えるモード", en: "Seek timeless wisdom and deep philosophical counsel for life's crossroads" },
+    desc: {
+      ja: "生きる意味、仕事、人間関係の深い悩みに対し、歴史の荒波を越えた偉人たちの本質的な知恵で導く人生相談モード",
+      en: "Seek timeless wisdom and deep philosophical counsel from historical giants for life's crossroads."
+    },
     phase1Banner: { ja: "🧘 人生の深淵に向き合い、それぞれの思想から導きの言葉を語ります", en: "🧘 Turning inward to offer profound guiding principles from their life philosophies." },
     phase2Banner: { ja: "💬 互いの処世術や生き様が響き合い、より深い人生の処方箋が紡がれます", en: "💬 Diverse worldviews weave together into an unforgettable prescription for the soul." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
@@ -2142,7 +2219,10 @@ const CHAT_MODES = {
     categoryId: "dialogue",
     icon: "💡",
     name: { ja: "壁打ち", en: "Brainstorm" },
-    desc: { ja: "突飛な発想や斜め上のアイデアを次々と出し合い、企画を膨らませるモード", en: "Spark wild ideas, lateral thinking, and unconventional breakthroughs" },
+    desc: {
+      ja: "常識破りな突飛な切り口や斜め上のアイデアを次々と掛け合わせ、企画や発想を爆発的に広げるブレストモード",
+      en: "Spark wild ideas, lateral thinking, and unexpected conceptual breakthroughs through rapid multiplication."
+    },
     phase1Banner: { ja: "💡 最初のひらめき！常識にとらわれない独自のアイデアを投下します", en: "💡 Igniting inspiration! Dropping bold, unconventional starting ideas." },
     phase2Banner: { ja: "⚡ アイデアが化学反応！連想と掛け算で発想がどんどん広がります", en: "⚡ Ideas colliding and mutating! Rapid multipliers sparking fresh innovation." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
@@ -2158,7 +2238,10 @@ const CHAT_MODES = {
     categoryId: "dialogue",
     icon: "🎙️",
     name: { ja: "深掘り対談", en: "In-Depth Interview" },
-    desc: { ja: "記者が本音に迫る！人生観、哲学、秘められたエピソードの対談", en: "Journalistic in-depth interview uncovering raw stories and life philosophies" },
+    desc: {
+      ja: "プロの記者があなたの本音や人生のターニングポイントに迫り、知られざるドラマを引き出す本格対談モード",
+      en: "Journalistic in-depth interview uncovering raw personal stories, turning points, and core convictions."
+    },
     phase1Banner: { ja: "🎙️ 本日の特別対談です。核心に迫る問いからインタビューを開始します", en: "🎙️ Opening today's featured dialogue with incisive questions to the heart." },
     phase2Banner: { ja: "📰 語られる本音と知られざるドラマ。対談はさらに深まりを見せます", en: "📰 Uncovering untold stories and core convictions as the interview deepens." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
@@ -3447,9 +3530,14 @@ function renderModeTabs() {
   container.innerHTML = "";
 
   const activeCatId = findCategoryForMode(currentMode);
+  const breadcrumbEl = document.getElementById("current-category-breadcrumb");
 
   if (currentCategoryLevel === null) {
     // === 第1階層: 5大分類ボタン (横5列) ===
+    if (breadcrumbEl) {
+      breadcrumbEl.classList.add("hidden");
+    }
+
     Object.values(MODE_CATEGORIES).forEach(cat => {
       const isCurrentCat = cat.id === activeCatId;
       const btn = document.createElement("button");
@@ -3458,20 +3546,25 @@ function renderModeTabs() {
         currentCategoryLevel = cat.id;
         renderModeTabs();
       };
-      btn.className = `flex flex-col items-center justify-center py-1.5 px-1 rounded-xl border text-center transition select-none cursor-pointer ${
+      btn.className = `flex flex-col items-center justify-center min-h-[54px] sm:min-h-[58px] py-1.5 px-0.5 rounded-xl border text-center transition select-none cursor-pointer ${
         isCurrentCat
           ? "bg-indigo-600 text-white border-indigo-700 shadow-sm font-bold ring-2 ring-indigo-400"
-          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100 font-medium"
+          : "bg-white text-slate-700 border-slate-200 hover:bg-indigo-50/60 font-medium"
       }`;
       btn.innerHTML = `
-        <span class="text-base leading-none mb-1">${cat.icon}</span>
-        <span class="text-[10px] leading-tight truncate w-full">${cat.name[currentLang] || cat.name.ja}</span>
+        <span class="text-lg leading-none mb-0.5">${cat.icon}</span>
+        <span class="text-[11px] font-bold leading-tight text-center">${cat.name[currentLang] || cat.name.ja}</span>
       `;
       container.appendChild(btn);
     });
   } else {
     // === 第2階層: [ ◀ 戻る ] + 選択中カテゴリの4モード (横5列) ===
     const cat = MODE_CATEGORIES[currentCategoryLevel];
+
+    if (breadcrumbEl && cat) {
+      breadcrumbEl.classList.remove("hidden");
+      breadcrumbEl.innerText = `${cat.icon} ${cat.name[currentLang] || cat.name.ja}${currentLang === "en" ? " Category" : " 分類"}`;
+    }
     
     // 1スロット目: 「◀ 戻る」ボタン
     const backBtn = document.createElement("button");
@@ -3480,10 +3573,10 @@ function renderModeTabs() {
       currentCategoryLevel = null;
       renderModeTabs();
     };
-    backBtn.className = "flex flex-col items-center justify-center py-1.5 px-1 rounded-xl border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 text-center transition select-none cursor-pointer font-bold";
+    backBtn.className = "flex flex-col items-center justify-center min-h-[54px] sm:min-h-[58px] py-1.5 px-0.5 rounded-xl border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 text-center transition select-none cursor-pointer font-bold shadow-2xs";
     backBtn.innerHTML = `
-      <span class="text-base leading-none mb-1">◀</span>
-      <span class="text-[10px] leading-tight truncate w-full">${currentLang === "en" ? "Back" : "戻る"}</span>
+      <span class="text-base leading-none mb-0.5">◀</span>
+      <span class="text-[11px] font-bold leading-tight">${currentLang === "en" ? "Back" : "戻る"}</span>
     `;
     container.appendChild(backBtn);
 
@@ -3496,29 +3589,40 @@ function renderModeTabs() {
         const btn = document.createElement("button");
         btn.type = "button";
         btn.onclick = () => selectMode(m.id);
-        btn.className = `flex flex-col items-center justify-center py-1.5 px-1 rounded-xl border text-center transition select-none cursor-pointer ${
+        btn.className = `flex flex-col items-center justify-center min-h-[54px] sm:min-h-[58px] py-1.5 px-0.5 rounded-xl border text-center transition select-none cursor-pointer ${
           isSelected
-            ? "bg-indigo-600 text-white border-indigo-700 shadow-sm font-bold"
-            : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100 font-medium"
+            ? "bg-indigo-600 text-white border-indigo-700 shadow-sm font-bold ring-2 ring-indigo-400"
+            : "bg-white text-slate-700 border-slate-200 hover:bg-indigo-50/60 font-medium"
         }`;
         btn.innerHTML = `
-          <span class="text-base leading-none mb-1">${m.icon}</span>
-          <span class="text-[10px] leading-tight truncate w-full">${m.name[currentLang] || m.name.ja}</span>
+          <span class="text-lg leading-none mb-0.5">${m.icon}</span>
+          <span class="text-[10px] sm:text-[10.5px] font-bold leading-tight text-center break-words w-full px-0.5">${m.name[currentLang] || m.name.ja}</span>
         `;
         container.appendChild(btn);
       });
     }
   }
 
-  // モード説明欄の更新
+  // 大型くっきりモード解説パネルの更新
   const modeObj = CHAT_MODES[currentMode];
   const catObj = MODE_CATEGORIES[activeCatId];
-  const descEl = document.getElementById("mode-desc");
-  if (descEl && modeObj) {
+  
+  const iconEl = document.getElementById("mode-desc-icon");
+  const titleEl = document.getElementById("mode-desc-title");
+  const badgeEl = document.getElementById("mode-desc-badge");
+  const bodyEl = document.getElementById("mode-desc-body");
+
+  if (modeObj && catObj && titleEl) {
     if (currentCategoryLevel === null) {
-      descEl.innerHTML = `<strong>【${catObj.name[currentLang] || catObj.name.ja}】</strong> ${catObj.desc[currentLang] || catObj.desc.ja} <span class="text-indigo-600 font-bold ml-1">（タップで4モード展開）</span>`;
+      if (iconEl) iconEl.innerText = catObj.icon;
+      titleEl.innerText = `【${catObj.name[currentLang] || catObj.name.ja}】`;
+      if (badgeEl) badgeEl.innerText = currentLang === "en" ? "Tap to open 4 modes" : "タップで4モード展開";
+      if (bodyEl) bodyEl.innerHTML = `<span class="text-slate-800 font-medium">${catObj.desc[currentLang] || catObj.desc.ja}</span>`;
     } else {
-      descEl.innerHTML = `<strong>${modeObj.icon} ${modeObj.name[currentLang] || modeObj.name.ja}:</strong> ${modeObj.desc[currentLang] || modeObj.desc.ja}`;
+      if (iconEl) iconEl.innerText = modeObj.icon;
+      titleEl.innerText = modeObj.name[currentLang] || modeObj.name.ja;
+      if (badgeEl) badgeEl.innerText = `${catObj.icon} ${catObj.name[currentLang] || catObj.name.ja}`;
+      if (bodyEl) bodyEl.innerHTML = `<span class="text-slate-800 font-medium">${modeObj.desc[currentLang] || modeObj.desc.ja}</span>`;
     }
   }
 
