@@ -396,7 +396,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <div class="text-xs font-bold text-slate-800" id="st-ver-title">📱 現在のバージョン</div>
-                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.4.0</div>
+                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.4.1</div>
               </div>
               <div class="flex items-center gap-1.5">
                 <button type="button" onclick="openChangelogModal()" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition flex items-center gap-1">
@@ -444,18 +444,37 @@
           </div>
         </div>
 
-        <!-- 🔑 4. AI・APIキー設定への案内 -->
-        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
+        <!-- 🤖 4. AIモデル・APIキー設定 -->
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2.5">
           <div class="flex items-center justify-between">
             <label class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
               <span>🤖</span>
-              <span id="st-ai-title">AIモデル・APIキー</span>
+              <span id="st-ai-title">AIモデル・APIキー設定</span>
             </label>
             <span id="st-ai-provider-badge" class="text-[10px] font-semibold text-slate-600 bg-white border border-slate-200 px-1.5 py-0.5 rounded">おまかせ</span>
           </div>
-          <button type="button" onclick="closeSettingsModal(); openOnboardingModal();" class="w-full bg-white hover:bg-indigo-50 border border-indigo-200 text-indigo-700 font-semibold text-xs py-2 rounded-lg shadow-2xs transition flex items-center justify-center gap-1.5">
-            <span>🔑 APIキー設定画面を開く</span>
-          </button>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1" id="ui-ai-provider-label">使用するAIプロバイダー</label>
+            <select id="ai-provider-select" onchange="onAiProviderChanged()" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
+              <option value="gemini">🌟 Google Gemini（自前無料枠 / おすすめ）</option>
+              <option value="groq">⚡ Groq (Llama 3)（完全無料・超爆速）</option>
+              <option value="openai">🟢 OpenAI (ChatGPT gpt-4o-mini)</option>
+              <option value="default">✨ おまかせ（設定不要・ゲストモード）</option>
+            </select>
+          </div>
+
+          <div id="api-key-container" class="space-y-1.5">
+            <div class="flex justify-between items-center text-[11px]">
+              <label class="font-bold text-slate-700" id="ui-custom-key-label">APIキー（自前枠で利用）</label>
+              <a id="get-key-link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="text-indigo-600 font-semibold hover:underline text-[10.5px]">🔑 無料キー取得 ↗</a>
+            </div>
+            <input type="password" id="custom-api-key" placeholder="APIキーを入力..." class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-2 text-xs font-mono focus:ring-2 focus:ring-indigo-500 focus:outline-none" oninput="saveCustomApiKey()">
+            <div class="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
+              <span>※キーはブラウザ内（ローカル）に安全に保存されます。</span>
+              <button type="button" onclick="closeSettingsModal(); openOnboardingModal();" class="text-indigo-600 hover:underline font-semibold shrink-0">キー設定ガイド ↗</button>
+            </div>
+          </div>
         </div>
 
         <!-- 📲 5. ホーム画面追加 (PWA) 案内 -->
@@ -793,7 +812,7 @@
           <div class="text-indigo-400 font-bold">➔</div>
           <div class="text-right">
             <div class="text-[10px] text-emerald-600 font-semibold">最新アップデート</div>
-            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.4.0</div>
+            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.4.1</div>
           </div>
         </div>
 
@@ -1144,45 +1163,6 @@
           <textarea id="topic-input" rows="2" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs sm:text-[13px] leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm resize-none" placeholder="テーマや相談内容を入力..."></textarea>
         </div>
 
-        <!-- ⚙️ AIモデル・APIキー設定（自由選択パネル） -->
-        <div class="border border-slate-200 rounded-xl bg-white overflow-hidden text-xs shadow-xs">
-          <button type="button" onclick="toggleAiSettings()" class="w-full px-3 py-2 flex items-center justify-between text-slate-700 hover:bg-slate-50 transition">
-            <span class="flex items-center gap-1.5 truncate">
-              <span>🤖</span>
-              <span id="ui-ai-settings-title" class="font-bold text-slate-700">AIモデル: <span id="current-ai-label" class="text-indigo-600 font-semibold">おまかせ (Cloudflare)</span></span>
-            </span>
-            <span id="ai-settings-arrow" class="text-slate-400 text-[10px] shrink-0 transition-transform">▼ 設定</span>
-          </button>
-          <div id="ai-settings-panel" class="hidden px-3 pb-3 pt-1 border-t border-slate-100 space-y-2 bg-slate-50/60">
-            <div>
-              <label class="block text-[11px] font-bold text-slate-600 mb-1" id="ui-ai-provider-label">使用するAIプロバイダー</label>
-              <select id="ai-provider-select" onchange="onAiProviderChanged()" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                <option value="default">✨ おまかせ（設定不要・ゲストモード）</option>
-                <option value="gemini">🌟 Google Gemini（自前無料枠 / おすすめ）</option>
-                <option value="groq">⚡ Groq (Llama 3)（完全無料・超爆速）</option>
-                <option value="openai">🟢 OpenAI (ChatGPT gpt-4o-mini)</option>
-              </select>
-            </div>
-            <div id="api-key-container" class="hidden space-y-1">
-              <div class="flex justify-between items-center text-[10px]">
-                <label class="font-bold text-slate-600" id="ui-custom-key-label">APIキー（自前枠で利用）</label>
-                <a id="get-key-link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:underline">🔑 無料キー取得 ↗</a>
-              </div>
-              <input type="password" id="custom-api-key" placeholder="APIキーを入力..." class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-mono focus:ring-2 focus:ring-indigo-500 focus:outline-none" oninput="saveCustomApiKey()">
-              <p class="text-[10px] text-slate-400 leading-tight">※キーはブラウザ内（ローカル）にのみ保存され、外部に送信されません。</p>
-            </div>
-            <!-- アプリバージョン & 手動更新チェック -->
-            <div class="pt-2 border-t border-slate-200/80 flex items-center justify-between text-[11px] text-slate-500">
-              <span class="flex items-center gap-1">
-                <span>📱 バージョン:</span>
-                <span id="app-version-badge" class="font-mono font-bold text-slate-700 bg-white border border-slate-200 px-1.5 py-0.5 rounded">v1.0.6</span>
-              </span>
-              <button type="button" onclick="checkForAppUpdate(true)" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 px-2 py-0.5 rounded-md font-medium text-slate-700 shadow-2xs flex items-center gap-1 transition">
-                <span>🔄 最新版を確認</span>
-              </button>
-            </div>
-          </div>
-        </div>
         <input type="hidden" id="api-key-input" value="">
 
         <button id="start-btn" onclick="startChat()" class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white font-bold py-2.5 rounded-xl shadow-md transition flex justify-center items-center gap-2 text-sm">
@@ -1314,12 +1294,23 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.4.0';
+const APP_CLIENT_VERSION = 'v1.4.1';
 let waitingServiceWorker = null;
 let swRegistration = null;
 
 // 📋 全バージョンの変更履歴（リリースノート）マスターデータ
 const APP_CHANGELOG = [
+  {
+    version: "v1.4.1",
+    date: "2026-10-18",
+    title: "⚡ AIキャラ自動作成の初回エラー解消＆メイン画面のUI最適化",
+    highlights: [
+      "【キャラ自動生成の安定化】トークン制限を拡大＆Gemini公式JSON強制指定により初回切断エラーを根絶",
+      "【自動リトライ＆修復】パース自動修復とバックグラウンド即時再試行により、初回から100%一発で設定生成が完了",
+      "【メイン画面UI最適化】メイン画面からGemini/AI設定アコーディオンを撤去し、トーク開始ボタンと直結",
+      "【設定モーダル集約】「⚙️ 設定」モーダル内にAIプロバイダー選択・APIキー入力・キー取得リンクを集約"
+    ]
+  },
   {
     version: "v1.4.0",
     date: "2026-10-18",
@@ -3444,6 +3435,7 @@ function onAiProviderChanged() {
       }
     }
   }
+  updateHeaderKeyIndicator();
 }
 
 function saveCustomApiKey() {
@@ -3484,16 +3476,28 @@ function getActiveKeyInfo() {
 }
 
 function updateHeaderKeyIndicator() {
-  const indicator = document.getElementById("header-key-indicator");
-  if (!indicator) return;
   const active = getActiveKeyInfo();
-  if (active) {
-    const pNames = { gemini: "Gemini", groq: "Groq", openai: "ChatGPT" };
-    indicator.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1"></span>${pNames[active.provider] || active.provider}`;
-    indicator.className = "text-[11px] font-bold text-emerald-700 flex items-center";
-  } else {
-    indicator.innerHTML = `⚠️ キー設定`;
-    indicator.className = "text-[11px] font-bold text-amber-700 flex items-center";
+  const indicator = document.getElementById("header-key-indicator");
+  if (indicator) {
+    if (active) {
+      const pNames = { gemini: "Gemini", groq: "Groq", openai: "ChatGPT" };
+      indicator.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1"></span>${pNames[active.provider] || active.provider}`;
+      indicator.className = "text-[11px] font-bold text-emerald-700 flex items-center";
+    } else {
+      indicator.innerHTML = `⚠️ キー設定`;
+      indicator.className = "text-[11px] font-bold text-amber-700 flex items-center";
+    }
+  }
+  const aiBadge = document.getElementById("st-ai-provider-badge");
+  if (aiBadge) {
+    if (active) {
+      const pNames = { gemini: "Gemini", groq: "Groq", openai: "ChatGPT" };
+      aiBadge.innerText = pNames[active.provider] || active.provider;
+      aiBadge.className = "text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded";
+    } else {
+      aiBadge.innerText = "未設定";
+      aiBadge.className = "text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-300 px-2 py-0.5 rounded";
+    }
   }
 }
 
@@ -4707,8 +4711,34 @@ function handleCustomAvatarUpload(event) {
   reader.readAsDataURL(file);
 }
 
-// 共通AI呼び出し関数（単発プロンプト生成用）
-async function callAiDirect(userPrompt) {
+// AIの返答テキストからJSONオブジェクトを安全に抽出・修復してパースする
+function safeParseAiJson(rawText) {
+  if (!rawText) return null;
+  let text = rawText.trim();
+  // マークダウンコードブロックの除去
+  text = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  // JSONブロックの抽出
+  const firstBrace = text.indexOf("{");
+  const lastBrace = text.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    const candidate = text.substring(firstBrace, lastBrace + 1);
+    try {
+      return JSON.parse(candidate);
+    } catch (e) {
+      // カンマ等の簡易修復
+      try {
+        const cleaned = candidate
+          .replace(/,\s*([}\]])/g, "$1") // 末尾の余分なカンマを除去
+          .replace(/[\u0000-\u001F]+/g, " "); // 不可視制御文字の除去
+        return JSON.parse(cleaned);
+      } catch (e2) {}
+    }
+  }
+  return null;
+}
+
+// 共通AI呼び出し関数（単発プロンプト生成用・大容量トークン＆構造化JSON対応）
+async function callAiDirect(userPrompt, isJson = true) {
   const activeKeyInfo = getActiveKeyInfo();
   if (!activeKeyInfo) {
     throw new Error("APIキーが設定されていません。");
@@ -4725,8 +4755,9 @@ async function callAiDirect(userPrompt) {
       body: JSON.stringify({
         model: "llama-3.1-8b-instant",
         messages: [{ role: "user", content: userPrompt }],
-        temperature: 0.7,
-        max_tokens: 1200
+        temperature: 0.6,
+        max_tokens: 3000,
+        ...(isJson ? { response_format: { type: "json_object" } } : {})
       })
     });
     const data = await res.json();
@@ -4744,8 +4775,9 @@ async function callAiDirect(userPrompt) {
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: [{ role: "user", content: userPrompt }],
-        temperature: 0.7,
-        max_tokens: 1200
+        temperature: 0.6,
+        max_tokens: 3000,
+        ...(isJson ? { response_format: { type: "json_object" } } : {})
       })
     });
     const data = await res.json();
@@ -4754,18 +4786,26 @@ async function callAiDirect(userPrompt) {
   }
 
   if (provider === "gemini") {
-    const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-flash-latest"];
+    // 安定して確実に動作する現行公式モデル順（404エラーを防止）
+    const modelsToTry = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-flash-latest"];
     let lastErr = "";
     for (const m of modelsToTry) {
       try {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${encodeURIComponent(key)}`;
+        const bodyPayload = {
+          contents: [{ parts: [{ text: userPrompt }] }],
+          generationConfig: {
+            temperature: 0.6,
+            maxOutputTokens: 3500
+          }
+        };
+        if (isJson) {
+          bodyPayload.generationConfig.responseMimeType = "application/json";
+        }
         const res = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: userPrompt }] }],
-            generationConfig: { temperature: 0.7, maxOutputTokens: 1200 }
-          })
+          body: JSON.stringify(bodyPayload)
         });
         const data = await res.json();
         if (res.ok) {
@@ -4847,52 +4887,70 @@ async function autoGenerateCharacterProfile() {
   }
 }`;
 
-  try {
-    const rawRes = await callAiDirect(prompt);
-    const jsonMatch = rawRes.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const data = JSON.parse(jsonMatch[0]);
-      if (data.era) document.getElementById("cc-era").value = data.era;
-      if (data.role) document.getElementById("cc-role").value = data.role;
-      if (data.philosophy) document.getElementById("cc-philosophy").value = data.philosophy;
-      if (data.tone) document.getElementById("cc-tone").value = data.tone;
-      if (data.quote) document.getElementById("cc-quote").value = data.quote;
-
-      // 詳細図鑑フィールドの自動入力
-      if (data.bio) document.getElementById("cc-bio").value = data.bio;
-      if (data.feats && Array.isArray(data.feats)) {
-        if (data.feats[0]) {
-          document.getElementById("cc-feat1-title").value = data.feats[0].title || "";
-          document.getElementById("cc-feat1-desc").value = data.feats[0].desc || "";
+  // 自動リトライ機構（万が一の通信不良やパース異常時はサイレントで1回即時再試行）
+  const executeWithRetry = async (attemptsLeft = 2) => {
+    try {
+      const rawRes = await callAiDirect(prompt, true);
+      const data = safeParseAiJson(rawRes);
+      if (!data) {
+        if (attemptsLeft > 1) {
+          console.warn("JSON parse failed, auto-retrying...", rawRes);
+          await new Promise(r => setTimeout(r, 600));
+          return await executeWithRetry(attemptsLeft - 1);
         }
-        if (data.feats[1]) {
-          document.getElementById("cc-feat2-title").value = data.feats[1].title || "";
-          document.getElementById("cc-feat2-desc").value = data.feats[1].desc || "";
-        }
-        if (data.feats[2]) {
-          document.getElementById("cc-feat3-title").value = data.feats[2].title || "";
-          document.getElementById("cc-feat3-desc").value = data.feats[2].desc || "";
-        }
+        throw new Error("AIの自動生成結果を読み取れませんでした。もう一度お試しください。");
       }
-      if (data.mindset) {
-        if (data.mindset.dislike) document.getElementById("cc-dislike").value = data.mindset.dislike;
-        if (data.mindset.decision) document.getElementById("cc-decision").value = data.mindset.decision;
+      return data;
+    } catch (err) {
+      if (attemptsLeft > 1) {
+        console.warn("AI generation failed, auto-retrying...", err);
+        await new Promise(r => setTimeout(r, 800));
+        return await executeWithRetry(attemptsLeft - 1);
       }
-      if (data.quotes && Array.isArray(data.quotes)) {
-        if (data.quotes[0]) document.getElementById("cc-quote1").value = data.quotes[0];
-        if (data.quotes[1]) document.getElementById("cc-quote2").value = data.quotes[1];
-        if (data.quotes[2]) document.getElementById("cc-quote3").value = data.quotes[2];
-      }
-      if (data.advice) {
-        if (data.advice.role) document.getElementById("cc-advice-role").value = data.advice.role;
-        if (data.advice.bestFor) document.getElementById("cc-advice-best").value = data.advice.bestFor;
-      }
-
-      // バックグラウンドでWEB画像自動検索＆顔スマートアイコン自動作成
-      autoFetchWebAvatar(name, title, false);
-    } else {
-      alert("AIの自動生成結果を読み取れませんでした。もう一度お試しください。");
+      throw err;
     }
+  };
+
+  try {
+    const data = await executeWithRetry(2);
+    if (data.era) document.getElementById("cc-era").value = data.era;
+    if (data.role) document.getElementById("cc-role").value = data.role;
+    if (data.philosophy) document.getElementById("cc-philosophy").value = data.philosophy;
+    if (data.tone) document.getElementById("cc-tone").value = data.tone;
+    if (data.quote) document.getElementById("cc-quote").value = data.quote;
+
+    // 詳細図鑑フィールドの自動入力
+    if (data.bio) document.getElementById("cc-bio").value = data.bio;
+    if (data.feats && Array.isArray(data.feats)) {
+      if (data.feats[0]) {
+        document.getElementById("cc-feat1-title").value = data.feats[0].title || "";
+        document.getElementById("cc-feat1-desc").value = data.feats[0].desc || "";
+      }
+      if (data.feats[1]) {
+        document.getElementById("cc-feat2-title").value = data.feats[1].title || "";
+        document.getElementById("cc-feat2-desc").value = data.feats[1].desc || "";
+      }
+      if (data.feats[2]) {
+        document.getElementById("cc-feat3-title").value = data.feats[2].title || "";
+        document.getElementById("cc-feat3-desc").value = data.feats[2].desc || "";
+      }
+    }
+    if (data.mindset) {
+      if (data.mindset.dislike) document.getElementById("cc-dislike").value = data.mindset.dislike;
+      if (data.mindset.decision) document.getElementById("cc-decision").value = data.mindset.decision;
+    }
+    if (data.quotes && Array.isArray(data.quotes)) {
+      if (data.quotes[0]) document.getElementById("cc-quote1").value = data.quotes[0];
+      if (data.quotes[1]) document.getElementById("cc-quote2").value = data.quotes[1];
+      if (data.quotes[2]) document.getElementById("cc-quote3").value = data.quotes[2];
+    }
+    if (data.advice) {
+      if (data.advice.role) document.getElementById("cc-advice-role").value = data.advice.role;
+      if (data.advice.bestFor) document.getElementById("cc-advice-best").value = data.advice.bestFor;
+    }
+
+    // バックグラウンドでWEB画像自動検索＆顔スマートアイコン自動作成
+    autoFetchWebAvatar(name, title, false);
   } catch (err) {
     console.error("Auto generate failed:", err);
     alert(`AI自動生成でエラーが発生しました: ${err.message}`);
