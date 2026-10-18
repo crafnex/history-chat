@@ -408,7 +408,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <div class="text-xs font-bold text-slate-800" id="st-ver-title">📱 現在のバージョン</div>
-                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.8.0</div>
+                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.8.1</div>
               </div>
               <div class="flex items-center gap-1.5">
                 <button type="button" onclick="openChangelogModal()" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition flex items-center gap-1">
@@ -423,53 +423,62 @@
         </div>
 
         <!-- 👤 2. あなたのプロフィール（マイペルソナ） -->
-        <div class="bg-indigo-50/70 border border-indigo-200/90 rounded-xl p-3 space-y-2.5">
+        <div id="persona-settings-card" class="bg-indigo-50/70 border border-indigo-200/90 rounded-xl p-3 space-y-2.5 transition">
           <div class="flex items-center justify-between">
             <label class="text-xs font-bold text-indigo-950 flex items-center gap-1.5">
               <span>👤</span>
               <span id="st-persona-title">あなたのプロフィール（マイペルソナ）</span>
             </label>
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">偉人が名前を呼んでくれる</span>
+            <div class="flex items-center gap-2">
+              <span id="persona-status-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full transition">🟢 有効</span>
+              <!-- トグルスイッチ -->
+              <label class="relative inline-flex items-center cursor-pointer select-none">
+                <input type="checkbox" id="persona-toggle-checkbox" onchange="onPersonaToggleChanged()" class="sr-only peer">
+                <div class="w-8 h-4.5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-indigo-600"></div>
+              </label>
+            </div>
           </div>
           
-          <div class="grid grid-cols-3 gap-2">
-            <!-- アバター絵文字 -->
-            <div class="col-span-1">
-              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">アイコン</label>
-              <input type="text" id="persona-icon-input" maxlength="4" value="🤠" class="w-full text-center text-lg bg-white border border-slate-300 rounded-lg py-1 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-              <!-- クイック選択 -->
-              <div class="flex flex-wrap gap-1 mt-1 justify-center">
-                <button type="button" onclick="setPersonaIcon('🤠')" class="text-xs hover:scale-125 transition">🤠</button>
-                <button type="button" onclick="setPersonaIcon('👤')" class="text-xs hover:scale-125 transition">👤</button>
-                <button type="button" onclick="setPersonaIcon('🌟')" class="text-xs hover:scale-125 transition">🌟</button>
-                <button type="button" onclick="setPersonaIcon('🌸')" class="text-xs hover:scale-125 transition">🌸</button>
-                <button type="button" onclick="setPersonaIcon('👑')" class="text-xs hover:scale-125 transition">👑</button>
+          <div id="persona-fields-container" class="space-y-2 transition duration-200">
+            <div class="grid grid-cols-3 gap-2">
+              <!-- アバター絵文字 -->
+              <div class="col-span-1">
+                <label class="block text-[10px] font-bold text-slate-600 mb-0.5">アイコン</label>
+                <input type="text" id="persona-icon-input" maxlength="4" value="🤠" class="w-full text-center text-lg bg-white border border-slate-300 rounded-lg py-1 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <!-- クイック選択 -->
+                <div class="flex flex-wrap gap-1 mt-1 justify-center">
+                  <button type="button" onclick="setPersonaIcon('🤠')" class="text-xs hover:scale-125 transition">🤠</button>
+                  <button type="button" onclick="setPersonaIcon('👤')" class="text-xs hover:scale-125 transition">👤</button>
+                  <button type="button" onclick="setPersonaIcon('🌟')" class="text-xs hover:scale-125 transition">🌟</button>
+                  <button type="button" onclick="setPersonaIcon('🌸')" class="text-xs hover:scale-125 transition">🌸</button>
+                  <button type="button" onclick="setPersonaIcon('👑')" class="text-xs hover:scale-125 transition">👑</button>
+                </div>
+              </div>
+              
+              <!-- お名前 & 敬称 -->
+              <div class="col-span-2 space-y-1">
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-600 mb-0.5">お名前・ニックネーム</label>
+                  <input type="text" id="persona-name-input" placeholder="例: 太郎 / Sarah" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-600 mb-0.5">偉人からの呼ばれ方（敬称）</label>
+                  <select id="persona-honorific-select" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
+                    <option value="さん">〇〇さん（親しみ）</option>
+                    <option value="殿">〇〇殿（武将・古風）</option>
+                    <option value="様">〇〇様（敬意・執事）</option>
+                    <option value="none">呼び捨て（タメ口）</option>
+                    <option value="キミ">キミ（親密）</option>
+                  </select>
+                </div>
               </div>
             </div>
             
-            <!-- お名前 & 敬称 -->
-            <div class="col-span-2 space-y-1">
-              <div>
-                <label class="block text-[10px] font-bold text-slate-600 mb-0.5">お名前・ニックネーム</label>
-                <input type="text" id="persona-name-input" placeholder="例: 太郎 / Sarah" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
-              </div>
-              <div>
-                <label class="block text-[10px] font-bold text-slate-600 mb-0.5">偉人からの呼ばれ方（敬称）</label>
-                <select id="persona-honorific-select" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
-                  <option value="さん">〇〇さん（親しみ）</option>
-                  <option value="殿">〇〇殿（武将・古風）</option>
-                  <option value="様">〇〇様（敬意・執事）</option>
-                  <option value="none">呼び捨て（タメ口）</option>
-                  <option value="キミ">キミ（親密）</option>
-                </select>
-              </div>
+            <!-- あなたの立場・状況 -->
+            <div>
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">あなたの立場・現状（AIが助言の参考にします）</label>
+              <input type="text" id="persona-title-input" placeholder="例: 20代の若手社員、脱サラを目指すエンジニア、歴史好きの学生" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
             </div>
-          </div>
-          
-          <!-- あなたの立場・状況 -->
-          <div>
-            <label class="block text-[10px] font-bold text-slate-600 mb-0.5">あなたの立場・現状（AIが助言の参考にします）</label>
-            <input type="text" id="persona-title-input" placeholder="例: 20代の若手社員、脱サラを目指すエンジニア、歴史好きの学生" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
           </div>
         </div>
 
@@ -961,7 +970,7 @@
           <div class="text-indigo-400 font-bold">➔</div>
           <div class="text-right">
             <div class="text-[10px] text-emerald-600 font-semibold">最新アップデート</div>
-            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.8.0</div>
+            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.8.1</div>
           </div>
         </div>
 
@@ -1578,8 +1587,8 @@
 
   </div>
 
-<script src="mode_topics.js?v=1.8.0"></script>
-<script src="character_details.js?v=1.8.0"></script>
+<script src="mode_topics.js?v=1.8.1"></script>
+<script src="character_details.js?v=1.8.1"></script>
 <script>
 // ============================================================================
 // 🛡️ API通信モード設定（各自のGroq / Gemini / OpenAIキーによる公式直接通信）
@@ -1644,12 +1653,23 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.8.0';
+const APP_CLIENT_VERSION = 'v1.8.1';
 let waitingServiceWorker = null;
 let swRegistration = null;
 
 // 📋 全バージョンの変更履歴（リリースノート）マスターデータ
 const APP_CHANGELOG = [
+  {
+    version: "v1.8.1",
+    date: "2026-10-18",
+    title: "🔘 マイペルソナ（自分設定）の有効 / 無効（ON/OFF）切り替え機能",
+    highlights: [
+      "【ON/OFF切り替えトグルを新設】設定モーダル内のマイペルソナカードにワンタップで切り替え可能なスイッチを設置",
+      "【有効（ON）時】偉人が名前・敬称を直接呼び、あなたの立場・悩みに深く寄り添った親密な対話を実現",
+      "【無効（OFF）時】個人情報を一切AIに渡さず、中立的な第三者視点での偉人同士の客観的な議論を純粋に楽しめます",
+      "【吹き出しの連動】OFF時は通常の『あなた』表記にすっきり戻り、用途に応じた自由な切り替えが可能に"
+    ]
+  },
   {
     version: "v1.8.0",
     date: "2026-10-18",
@@ -3266,9 +3286,15 @@ const PERSONA_STORAGE_KEY = 'history_chat_user_persona';
 function getUserPersona() {
   try {
     const raw = localStorage.getItem(PERSONA_STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const p = JSON.parse(raw);
+      if (typeof p.enabled === "undefined") {
+        p.enabled = Boolean(p.name);
+      }
+      return p;
+    }
   } catch (e) {}
-  return { name: "", icon: "🤠", title: "", honorific: "さん" };
+  return { enabled: false, name: "", icon: "🤠", title: "", honorific: "さん" };
 }
 
 function saveUserPersona(persona) {
@@ -3280,13 +3306,51 @@ function setPersonaIcon(icon) {
   if (el) el.value = icon;
 }
 
+function onPersonaToggleChanged() {
+  const checkbox = document.getElementById("persona-toggle-checkbox");
+  const isEnabled = checkbox ? checkbox.checked : false;
+  updatePersonaToggleUI(isEnabled);
+  savePersonaFromSettings();
+}
+
+function updatePersonaToggleUI(isEnabled) {
+  const badge = document.getElementById("persona-status-badge");
+  const container = document.getElementById("persona-fields-container");
+  const card = document.getElementById("persona-settings-card");
+  if (badge) {
+    if (isEnabled) {
+      badge.innerText = currentLang === "en" ? "🟢 Active (Name called)" : "🟢 有効（偉人が名前を呼びます）";
+      badge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 transition";
+    } else {
+      badge.innerText = currentLang === "en" ? "⚪ Off (Observer mode)" : "⚪ 無効（通常モード）";
+      badge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 border border-slate-300 transition";
+    }
+  }
+  if (container) {
+    if (isEnabled) {
+      container.classList.remove("opacity-40", "pointer-events-none");
+    } else {
+      container.classList.add("opacity-40", "pointer-events-none");
+    }
+  }
+  if (card) {
+    if (isEnabled) {
+      card.className = "bg-indigo-50/80 border border-indigo-200 rounded-xl p-3 space-y-2.5 transition";
+    } else {
+      card.className = "bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2.5 transition";
+    }
+  }
+}
+
 function savePersonaFromSettings() {
+  const checkbox = document.getElementById("persona-toggle-checkbox");
   const nameInput = document.getElementById("persona-name-input");
   const iconInput = document.getElementById("persona-icon-input");
   const titleInput = document.getElementById("persona-title-input");
   const honorificSelect = document.getElementById("persona-honorific-select");
   if (nameInput && iconInput) {
     const persona = {
+      enabled: checkbox ? checkbox.checked : false,
       name: nameInput.value.trim(),
       icon: iconInput.value.trim() || "🤠",
       title: titleInput ? titleInput.value.trim() : "",
@@ -3577,14 +3641,17 @@ function closeSettingsModal() {
 function updateSettingsModalState() {
   // 0. マイペルソナ（自分設定）の読み込み
   const persona = getUserPersona();
+  const checkbox = document.getElementById("persona-toggle-checkbox");
   const nameInput = document.getElementById("persona-name-input");
   const iconInput = document.getElementById("persona-icon-input");
   const titleInput = document.getElementById("persona-title-input");
   const honorificSelect = document.getElementById("persona-honorific-select");
+  if (checkbox) checkbox.checked = Boolean(persona.enabled);
   if (nameInput) nameInput.value = persona.name || "";
   if (iconInput) iconInput.value = persona.icon || "🤠";
   if (titleInput) titleInput.value = persona.title || "";
   if (honorificSelect) honorificSelect.value = persona.honorific || "さん";
+  updatePersonaToggleUI(Boolean(persona.enabled));
 
   // 1. 保留中のアップデートがあるか確認・同期
   const updateBox = document.getElementById("settings-update-available");
@@ -6808,7 +6875,7 @@ CRITICAL MANDATORY LANGUAGE REQUIREMENT (STRICTLY ENFORCED)
 
   const userPersona = getUserPersona();
   let personaPromptBlock = "";
-  if (userPersona && userPersona.name) {
+  if (userPersona && userPersona.enabled && userPersona.name) {
     let callName = userPersona.name;
     if (userPersona.honorific === "殿") callName += "殿";
     else if (userPersona.honorific === "さん") callName += "さん";
@@ -7293,16 +7360,18 @@ function appendUserMessage(text) {
   const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const readLabel = currentLang === "en" ? "Read" : "既読";
   const persona = getUserPersona();
-  const userName = persona.name || (currentLang === "en" ? "You" : "あなた");
-  const userIcon = persona.icon || "🤠";
+  const isPersonaActive = persona && persona.enabled && persona.name;
+  const userName = isPersonaActive ? persona.name : (currentLang === "en" ? "You" : "あなた");
+  const userIcon = isPersonaActive ? (persona.icon || "🤠") : "";
 
   const row = document.createElement("div");
   row.className = "flex flex-col items-end gap-1 msg-anim";
   row.innerHTML = `
+    ${isPersonaActive ? `
     <div class="flex items-center gap-1.5 text-white/90 text-[11px] font-bold pr-1">
       <span>${escapeHtml(userName)}</span>
       <span class="text-base leading-none">${userIcon}</span>
-    </div>
+    </div>` : ``} 
     <div class="flex justify-end items-end gap-1.5">
       <span class="text-[9px] text-white/80 shrink-0 text-right">${readLabel}<br>${now}</span>
       <div class="chat-bubble-text relative bg-[#8de055] text-slate-900 leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-tr-none shadow max-w-[85%] bubble-right">
