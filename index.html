@@ -408,7 +408,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <div class="text-xs font-bold text-slate-800" id="st-ver-title">📱 現在のバージョン</div>
-                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.8.5</div>
+                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.8.6</div>
               </div>
               <div class="flex items-center gap-1.5">
                 <button type="button" onclick="openChangelogModal()" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition flex items-center gap-1">
@@ -541,6 +541,23 @@
               <span>🇺🇸</span> English
             </button>
           </div>
+        </div>
+
+        <!-- 🎙️ 3.5 英語音声読み上げ速度設定 -->
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <span>🎙️</span>
+              <span id="st-tts-title">英語音声読み上げ速度</span>
+            </label>
+            <span id="st-tts-current-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">1.0x (標準)</span>
+          </div>
+          <div class="grid grid-cols-3 gap-1.5">
+            <button type="button" onclick="setTtsSpeed(0.8)" id="st-tts-btn-08" class="py-2 rounded-lg border text-xs font-medium text-center transition flex items-center justify-center gap-1 cursor-pointer">🐢 0.8x (ゆっくり)</button>
+            <button type="button" onclick="setTtsSpeed(1.0)" id="st-tts-btn-10" class="py-2 rounded-lg border text-xs font-bold text-center transition flex items-center justify-center gap-1 cursor-pointer">🔊 1.0x (標準)</button>
+            <button type="button" onclick="setTtsSpeed(1.2)" id="st-tts-btn-12" class="py-2 rounded-lg border text-xs font-medium text-center transition flex items-center justify-center gap-1 cursor-pointer">🐇 1.2x (早め)</button>
+          </div>
+          <p class="text-[10px] text-slate-500 leading-snug" id="st-tts-desc">英会話の吹き出し音声ボタンおよび吹き出し横の速度バッジにも連動します。</p>
         </div>
 
         <!-- 🤖 4. AIモデル・APIキー設定 -->
@@ -997,7 +1014,7 @@
           <div class="text-indigo-400 font-bold">➔</div>
           <div class="text-right">
             <div class="text-[10px] text-emerald-600 font-semibold">最新アップデート</div>
-            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.8.5</div>
+            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.8.6</div>
           </div>
         </div>
 
@@ -1537,9 +1554,9 @@
           </div>
         </div>
         <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
-          <!-- 🔊 音声読み上げ速度ボタン -->
-          <button id="tts-speed-btn" onclick="toggleTtsSpeed()" class="text-[11px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-200 font-medium flex items-center gap-1 transition" title="英語読み上げ速度の変更">
-            <span id="tts-speed-label">🔊 1.0x</span>
+          <!-- 🎙️ 音声読み上げ速度ボタン -->
+          <button id="tts-speed-btn" onclick="toggleTtsSpeed()" class="text-[11px] bg-slate-800/90 hover:bg-slate-700 border border-slate-600/80 px-2.5 py-1 rounded-lg text-amber-300 font-bold flex items-center gap-1 transition shadow-2xs cursor-pointer select-none" title="英語読み上げ速度の変更（0.8x / 1.0x / 1.2x）">
+            <span id="tts-speed-label">🎙️ 速度 1.0x</span>
           </button>
           <!-- ⭐ 神回トーク保存ボタン -->
           <button id="save-chat-btn" onclick="openSaveChatModal()" class="text-[11px] bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-xs transition" title="この会話を保存">
@@ -1575,15 +1592,6 @@
 
       <!-- フッター（継続＆ユーザー乱入） -->
       <div class="bg-white border-t border-slate-200 p-2.5 space-y-2 z-10 shrink-0">
-        <!-- 💬 おすすめ返信（英会話クイックリプライ3択） -->
-        <div id="quick-replies-container" class="hidden pb-1 space-y-1">
-          <div class="flex items-center justify-between text-[10px] text-slate-500 font-bold px-0.5">
-            <span class="flex items-center gap-1">💬 <span id="ui-quick-replies-title">おすすめの返信（タップで送信）:</span></span>
-            <span class="text-[9px] text-indigo-600 font-normal">タップで即送信</span>
-          </div>
-          <div id="quick-replies-list" class="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5"></div>
-        </div>
-
         <div class="flex gap-2">
           <button id="continue-btn" onclick="handleContinueButtonClick()" class="flex-1 bg-indigo-50 hover:bg-indigo-100 active:bg-indigo-200 text-indigo-700 font-bold py-1.5 rounded-lg text-xs transition border border-indigo-200 flex justify-center items-center gap-1">
             🔄 <span id="ui-continue-btn">トークの続きを見る (+4発言)</span>
@@ -1600,8 +1608,8 @@
 
   </div>
 
-<script src="mode_topics.js?v=1.8.5"></script>
-<script src="character_details.js?v=1.8.5"></script>
+<script src="mode_topics.js?v=1.8.6"></script>
+<script src="character_details.js?v=1.8.6"></script>
 <script>
 // ============================================================================
 // 🛡️ API通信モード設定（各自のGroq / Gemini / OpenAIキーによる公式直接通信）
@@ -1666,12 +1674,22 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.8.5';
+const APP_CLIENT_VERSION = 'v1.8.6';
 let waitingServiceWorker = null;
 let swRegistration = null;
 
 // 📋 全バージョンの変更履歴（リリースノート）マスターデータ
 const APP_CHANGELOG = [
+  {
+    version: "v1.8.6",
+    date: "2026-10-18",
+    title: "🎯 吹き出し内おすすめ返信3択（日本語訳付き）＆ 速度調整UI大幅改善",
+    highlights: [
+      "【吹き出し内『返信してみよう！』選択肢カード】偉人の吹き出し末尾に英語フレーズ＋日本語の意味が併記された3つの選択肢を表示。カードをタップするだけでそのまま返信・送信可能に",
+      "【吹き出し内からワンタップ速度変更】各セリフ右側の音声ボタン直下に速度バッジ（1.0x / 0.8x / 1.2x）を常時表示。音声を聴くその場で即座に速度を切り替え",
+      "【3重の速度調整導線】チャットヘッダー（🎙️ 速度: 1.0x）および『⚙️ 設定』モーダル内にも明示的な速度設定ボタンを新設"
+    ]
+  },
   {
     version: "v1.8.5",
     date: "2026-10-18",
@@ -6912,11 +6930,20 @@ CRITICAL MANDATORY LANGUAGE REQUIREMENT (STRICTLY ENFORCED)
       if (languageSubMode !== "only") {
         lessonInstructions = `
 【🗽 学習サポート構造（日本語フォロー付き）】
-英語のセリフ本文の直後に改行し、以下の2項目を必ず日本語で明記してください：
+英語のセリフ本文の直後に改行し、以下の2項目を必ず明記してください：
 💡【重要キー表現】
 ・今回使ったキーとなる単語・イディオム・日常会話フレーズの日本語訳と、ネイティブが使う自然なニュアンスの解説。
 🎯【返信してみよう！】
-・ユーザーが英語で返信したくなる簡単な問いかけや、使ってほしい英語フレーズの例示（例: 「"That sounds great!" を使って答えてみてね」）。
+★必ずユーザーがそのまま選択して返信できる「3つの実践的返信候補」を、英語フレーズと日本語の意味（訳）のセットで記載してください：
+1. [英語フレーズ]（日本語の意味）
+2. [英語フレーズ]（日本語の意味）
+3. [英語フレーズ]（日本語の意味）
+※会話が自然に弾むバリエーション（共感・具体例の質問・異なる視点の提示など）を3つ提示してください。
+例:
+🎯【返信してみよう！】
+1. That makes a lot of sense! Could you tell me more about that?（とても納得できます！それについてもっと詳しく教えてもらえますか？）
+2. I completely agree with your perspective.（あなたのお考えに心から賛同します。）
+3. That's an interesting idea, but how would you handle the risks?（面白いアイデアですが、リスクにはどう対処しますか？）
 `;
       } else {
         lessonInstructions = `
@@ -7377,22 +7404,103 @@ function toggleSpeed() {
 }
 
 // ================= 画面描画ヘルパー =================
+function parseReplyOptions(rawSectionText) {
+  const lines = rawSectionText.split(/\n+/).map(l => l.trim()).filter(Boolean);
+  const options = [];
+  for (const line of lines) {
+    if (line.includes("【返信してみよう") || line.includes("【使ってみよう") || line.startsWith("★")) continue;
+    // 形式: 1. English phrase (Japanese meaning) または 1. English (日本語)
+    const match = line.match(/^\d+[\.\)]\s*(.+?)(?:[\(（](.+?)[\)）]|\s*[:：\-—]\s*(.+))?$/);
+    if (match) {
+      const en = match[1].replace(/^[・\-\*\s]+/, "").trim();
+      const ja = (match[2] || match[3] || "").trim();
+      if (en.length >= 3) {
+        options.push({ en, ja });
+      }
+    }
+  }
+  return options;
+}
+
+function getFallbackReplyChoices() {
+  return [
+    { en: "That makes a lot of sense! Could you tell me more about that?", ja: "とても納得できます！それについてもっと詳しく教えてもらえますか？" },
+    { en: "I completely agree with your perspective.", ja: "あなたのお考えに心から賛同します。" },
+    { en: "That's an interesting idea, but how would you handle the risks?", ja: "面白いアイデアですが、リスクにはどう対処しますか？" }
+  ];
+}
+
+function renderReplyOptionsHtml(options) {
+  const choices = (options && options.length > 0) ? options : getFallbackReplyChoices();
+  let html = `<div class="mt-2.5 pt-2 border-t border-indigo-200/90 bg-indigo-50/90 -mx-1 px-3 py-2 rounded-xl border border-indigo-200 text-slate-800">
+    <div class="text-[11px] font-bold text-indigo-950 mb-1.5 flex items-center justify-between">
+      <span class="flex items-center gap-1">🎯 <span>【返信してみよう！】タップでそのまま返信</span></span>
+      <span class="text-[9px] text-indigo-700 bg-white/90 px-1.5 py-0.5 rounded border border-indigo-200 font-medium">選択して送信</span>
+    </div>
+    <div class="space-y-1.5 mt-1">`;
+
+  choices.slice(0, 3).forEach((opt, idx) => {
+    const safeEn = escapeHtml(opt.en);
+    const safeJa = opt.ja ? escapeHtml(opt.ja) : "";
+    html += `
+      <div class="quick-reply-choice-card w-full text-left bg-white hover:bg-indigo-100/90 active:scale-[0.98] border border-indigo-200/90 rounded-xl p-2.5 transition shadow-2xs group flex items-start justify-between gap-1.5 cursor-pointer select-none" data-reply="${safeEn}">
+        <div class="flex-1 min-w-0 pointer-events-none">
+          <div class="text-[12px] font-bold text-indigo-950 flex items-start gap-1 leading-snug">
+            <span class="text-indigo-600 font-extrabold text-[11px] shrink-0">${idx + 1}.</span>
+            <span class="break-words">${safeEn}</span>
+          </div>
+          ${safeJa ? `<div class="text-[11px] text-slate-500 mt-1 font-normal leading-snug ml-3.5">${safeJa}</div>` : ''}
+        </div>
+        <button type="button" class="bubble-reply-tts-btn shrink-0 w-6 h-6 rounded-full bg-indigo-50 hover:bg-indigo-200 active:scale-90 text-indigo-700 text-[11px] flex items-center justify-center transition shadow-2xs cursor-pointer ml-1" title="発音を聴く">
+          🔊
+        </button>
+      </div>`;
+  });
+
+  html += `</div></div>`;
+  return html;
+}
+
 function formatChatText(rawText) {
   let safe = escapeHtml(rawText);
   // ルビ変換: [漢字|かんじ] -> <ruby class="ruby-word">漢字<rt class="ruby-rt">かんじ</rt></ruby>
-  safe = safe.replace(/\[([^\|\]\r\n]+)\|([^\]\r\n]+)\]/g, '<ruby class="ruby-word">$1<rt class="ruby-rt">$2</rt></ruby>');
+  safe = safe.replace(/\[([^\]\|\r\n]+)\|([^\]\r\n]+)\]/g, '<ruby class="ruby-word">$1<rt class="ruby-rt">$2</rt></ruby>');
 
-  // 💡 または 🎯 で始まる学習メモブロックがあれば、セリフ本文と分離して見やすいカード内ブロックにする
-  if (safe.includes("💡") || safe.includes("🎯")) {
-    safe = safe.replace(/(?:\r?\n)*(💡|🎯)/g, (match, icon) => {
+  // 🎯【返信してみよう！】ブロックの検出と3択カード化
+  let replyBoxHtml = "";
+  if (safe.includes("🎯")) {
+    const parts = safe.split(/(?:\r?\n)*🎯/);
+    safe = parts[0];
+    const replySectionRaw = parts[1] || "";
+    // 💡 が 🎯 の後ろにある場合の考慮
+    const subParts = replySectionRaw.split(/(?:\r?\n)*💡/);
+    const replyText = subParts[0];
+    const parsedOpts = parseReplyOptions(replyText);
+    replyBoxHtml = renderReplyOptionsHtml(parsedOpts);
+
+    if (subParts[1]) {
+      safe += "\n💡" + subParts[1];
+    }
+  } else if (currentMode === "english") {
+    // 🎯 が含まれていない場合でも英会話ならフォールバック3択を生成
+    replyBoxHtml = renderReplyOptionsHtml(getFallbackReplyChoices());
+  }
+
+  // 💡 で始まる学習メモブロックをカード化
+  if (safe.includes("💡")) {
+    safe = safe.replace(/(?:\r?\n)*(💡)/g, (match, icon) => {
       return `<div class="learning-note-box mt-2 pt-2 border-t border-indigo-100 text-[12px] sm:text-[12.5px] text-slate-800 leading-relaxed font-normal bg-indigo-50/70 -mx-1 px-2.5 py-1.5 rounded-lg border border-indigo-200/60 my-1">${icon}`;
     });
     safe = safe + '</div>';
   }
 
-  // 改行を <br> に変換（div タグ周辺の二重改行を整理）
+  // 改行を <br> に変換
   safe = safe.replace(/\n/g, '<br>');
   safe = safe.replace(/<br><div/g, '<div').replace(/<\/div><br>/g, '</div>');
+
+  if (replyBoxHtml) {
+    safe += replyBoxHtml;
+  }
 
   return safe;
 }
@@ -7440,6 +7548,9 @@ function appendCharacterMessage(char, text, isInitialPhase = false) {
           <button type="button" class="tts-bubble-btn w-6 h-6 rounded-full bg-slate-700/80 hover:bg-indigo-600 active:scale-90 text-white text-[11px] flex items-center justify-center transition shadow-2xs select-none cursor-pointer" title="英語を読み上げ">
             🔊
           </button>
+          <button type="button" onclick="toggleTtsSpeed()" class="tts-bubble-speed-badge text-[9px] font-bold px-1 py-0.5 rounded bg-slate-800/80 hover:bg-slate-700 text-amber-300 border border-slate-600/60 transition shadow-2xs select-none cursor-pointer" title="読み上げ速度を変更（0.8x / 1.0x / 1.2x）">
+            ${currentTtsSpeed}x
+          </button>
           <span class="text-[9px] text-white/80">${now}</span>
         </div>
       </div>
@@ -7449,6 +7560,23 @@ function appendCharacterMessage(char, text, isInitialPhase = false) {
   if (ttsBtn) {
     ttsBtn.onclick = () => playTts(ttsBtn, text);
   }
+
+  // 🎯 吹き出し内クイック返信カードのイベントリスナー設定
+  row.querySelectorAll(".quick-reply-choice-card").forEach(card => {
+    const replyText = card.getAttribute("data-reply");
+    card.onclick = (e) => {
+      if (e.target.closest(".bubble-reply-tts-btn")) return;
+      selectQuickReply(replyText);
+    };
+    const miniTts = card.querySelector(".bubble-reply-tts-btn");
+    if (miniTts) {
+      miniTts.onclick = (e) => {
+        e.stopPropagation();
+        playTts(miniTts, replyText);
+      };
+    }
+  });
+
   area.appendChild(row);
   scrollToBottom();
 
@@ -7576,10 +7704,38 @@ function initTtsEngine() {
 function updateTtsSpeedUI() {
   const label = document.getElementById("tts-speed-label");
   if (label) {
-    if (currentTtsSpeed === 0.8) label.innerText = "🐢 0.8x";
-    else if (currentTtsSpeed === 1.2) label.innerText = "🐇 1.2x";
-    else label.innerText = "🔊 1.0x";
+    if (currentTtsSpeed === 0.8) label.innerText = "🐢 速度 0.8x";
+    else if (currentTtsSpeed === 1.2) label.innerText = "🐇 速度 1.2x";
+    else label.innerText = "🔊 速度 1.0x";
   }
+  // 全吹き出しの速度バッジを更新
+  document.querySelectorAll(".tts-bubble-speed-badge").forEach(el => {
+    el.innerText = `${currentTtsSpeed}x`;
+  });
+  // 設定モーダルのバッジとボタン表示を更新
+  const modalBadge = document.getElementById("st-tts-current-badge");
+  if (modalBadge) {
+    if (currentTtsSpeed === 0.8) modalBadge.innerText = "0.8x (ゆっくり)";
+    else if (currentTtsSpeed === 1.2) modalBadge.innerText = "1.2x (早め)";
+    else modalBadge.innerText = "1.0x (標準)";
+  }
+  const btn08 = document.getElementById("st-tts-btn-08");
+  const btn10 = document.getElementById("st-tts-btn-10");
+  const btn12 = document.getElementById("st-tts-btn-12");
+  if (btn08 && btn10 && btn12) {
+    [btn08, btn10, btn12].forEach(b => {
+      b.className = "py-2 rounded-lg border text-xs text-center transition flex items-center justify-center gap-1 cursor-pointer bg-white text-slate-700 font-medium border-slate-300";
+    });
+    const target = currentTtsSpeed === 0.8 ? btn08 : (currentTtsSpeed === 1.2 ? btn12 : btn10);
+    target.className = "py-2 rounded-lg border text-xs text-center transition flex items-center justify-center gap-1 cursor-pointer bg-indigo-600 text-white font-bold border-indigo-600 shadow-2xs";
+  }
+}
+
+function setTtsSpeed(val) {
+  currentTtsSpeed = parseFloat(val);
+  localStorage.setItem("history_chat_tts_speed", currentTtsSpeed);
+  updateTtsSpeedUI();
+  showToast(currentLang === "en" ? `🔊 Speech Speed: ${currentTtsSpeed}x` : `🔊 読み上げ速度: ${currentTtsSpeed}倍`);
 }
 
 function toggleTtsSpeed() {
