@@ -408,7 +408,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <div class="text-xs font-bold text-slate-800" id="st-ver-title">📱 現在のバージョン</div>
-                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.8.8</div>
+                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.8.9</div>
               </div>
               <div class="flex items-center gap-1.5">
                 <button type="button" onclick="openChangelogModal()" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition flex items-center gap-1">
@@ -1031,7 +1031,7 @@
           <div class="text-indigo-400 font-bold">➔</div>
           <div class="text-right">
             <div class="text-[10px] text-emerald-600 font-semibold">最新アップデート</div>
-            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.8.8</div>
+            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.8.9</div>
           </div>
         </div>
 
@@ -1801,14 +1801,14 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.8.8';
+const APP_CLIENT_VERSION = 'v1.8.9';
 let waitingServiceWorker = null;
 let swRegistration = null;
 
 // 📋 全バージョンの変更履歴（リリースノート）マスターデータ
 const APP_CHANGELOG = [
   {
-    version: "v1.8.8",
+    version: "v1.8.9",
     date: "2026-10-18",
     title: "🔤 トーク形式・参加メンバーのバランス調整 ＆ 全体文字サイズ1段階スケールアップ",
     highlights: [
@@ -7200,9 +7200,9 @@ async function callGeminiMicroBatch(speakerSequence, topic, isInitialPhase, user
       return `${idx + 1}${isEn ? 'st/nd/rd/th' : '番目'} [${c.id}] ${myName}: ${modeObj.phase1Instruction(myName, currentLang)}`;
     } else if (idx === 0 && userIntervention) {
       if (isEn) {
-        return `1st [${c.id}] ${myName}: Directly respond to the user's latest comment "${userIntervention}" from the stance of 【${modeObj.name.en} mode】 (2-3 sentences in English).`;
+        return `1st [${c.id}] ${myName}: Directly respond to the user's latest comment "${userIntervention}" from the stance of 【${modeObj.name.en} mode】 (2-3 sentences in English). Do NOT quote or repeat the user's sentence (e.g. avoid 'You said "..."' or 'Regarding "..."'); naturally advance the dialogue with your own historic insights.`;
       } else {
-        return `1番目 [${c.id}] ${myName}: 直前のユーザー発言「${userIntervention}」に対して、【${modeObj.name.ja}モード】のスタンスで直接返答する（2〜3文）。`;
+        return `1番目 [${c.id}] ${myName}: 直前のユーザー発言「${userIntervention}」に対して、【${modeObj.name.ja}モード】のスタンスで直接返答する（2〜3文）。※「〜とおっしゃいましたが」「『…』について」のようにユーザーの発言を引用・復唱することは絶対に避け、自然な会話の続きとして自分の見解や新たな問いかけを展開すること。`;
       }
     } else {
       let targetSpeakerName = "";
@@ -7813,6 +7813,17 @@ function toggleSpeed() {
 }
 
 // ================= 画面描画ヘルパー =================
+// 3択返信候補から余計な引用符・番号・記号を完全に除去して純粋なフレーズにする
+function cleanReplyOptionText(str) {
+  if (!str) return "";
+  return str
+    .replace(/^>+\s*/, "")                       // マークダウン引用記号
+    .replace(/^\d+[\.\)]\s*/, "")              // 先頭の番号 (1. や 1) など)
+    .replace(/^[・\-\*\s]+/, "")               // 先頭の箇条書き記号
+    .replace(/^["'“「『]+|["'”」』]+$/g, "")       // 前後の引用符・カッコ
+    .trim();
+}
+
 function parseReplyOptions(rawSectionText) {
   const lines = rawSectionText.split(/\n+/).map(l => l.trim()).filter(Boolean);
   const options = [];
@@ -7821,8 +7832,9 @@ function parseReplyOptions(rawSectionText) {
     // 形式: 1. English phrase (Japanese meaning) または 1. English (日本語)
     const match = line.match(/^\d+[\.\)]\s*(.+?)(?:[\(（](.+?)[\)）]|\s*[:：\-—]\s*(.+))?$/);
     if (match) {
-      const en = match[1].replace(/^[・\-\*\s]+/, "").trim();
-      const ja = (match[2] || match[3] || "").trim();
+      let en = cleanReplyOptionText(match[1]);
+      let ja = (match[2] || match[3] || "").trim();
+      ja = ja.replace(/^["'“「『]+|["'”」』]+$/g, "").trim();
       if (en.length >= 3) {
         options.push({ en, ja });
       }
@@ -7870,7 +7882,7 @@ function renderReplyOptionsHtml(options) {
   return html;
 }
 
-function formatChatText(rawText) {
+function formatChatText(rawText, isCharMessage = false) {
   let safe = escapeHtml(rawText);
   // ルビ変換: [漢字|かんじ] -> <ruby class="ruby-word">漢字<rt class="ruby-rt">かんじ</rt></ruby>
   safe = safe.replace(/\[([^\]\|\r\n]+)\|([^\]\r\n]+)\]/g, '<ruby class="ruby-word">$1<rt class="ruby-rt">$2</rt></ruby>');
@@ -7890,28 +7902,54 @@ function formatChatText(rawText) {
     if (subParts[1]) {
       safe += "\n💡" + subParts[1];
     }
-  } else if (currentMode === "english") {
-    // 🎯 が含まれていない場合でも英会話ならフォールバック3択を生成
+  } else if (currentMode === "english" && isCharMessage) {
+    // 🎯 が含まれていない場合でも英会話のAI発言ならフォールバック3択を生成
     replyBoxHtml = renderReplyOptionsHtml(getFallbackReplyChoices());
   }
 
-  // 💡 で始まる学習メモブロックをカード化
+  // セリフ本文部分と学習メモ（💡）の分離
+  let speechPart = safe;
+  let notesPart = "";
   if (safe.includes("💡")) {
-    safe = safe.replace(/(?:\r?\n)*(💡)/g, (match, icon) => {
-      return `<div class="learning-note-box mt-2 pt-2 border-t border-indigo-100 text-[12px] sm:text-[12.5px] text-slate-800 leading-relaxed font-normal bg-indigo-50/70 -mx-1 px-2.5 py-1.5 rounded-lg border border-indigo-200/60 my-1">${icon}`;
-    });
-    safe = safe + '</div>';
+    const noteSplit = safe.split(/(?:\r?\n)*(💡[\s\S]*)$/);
+    speechPart = noteSplit[0];
+    notesPart = noteSplit[1] || "";
   }
 
-  // 改行を <br> に変換
-  safe = safe.replace(/\n/g, '<br>');
-  safe = safe.replace(/<br><div/g, '<div').replace(/<\/div><br>/g, '</div>');
+  // セリフ本文の改行変換
+  let formattedSpeech = speechPart.replace(/\n/g, '<br>').trim();
+
+  // 英会話時、キャラクターが喋った部分の終わりにスピーカーマーク＆速度バッジをインライン配置
+  if (isCharMessage) {
+    formattedSpeech += `
+      <span class="inline-flex items-center gap-1.5 align-middle ml-2 select-none whitespace-nowrap not-italic">
+        <button type="button" class="char-speech-inline-tts-btn inline-flex items-center justify-center w-7 h-7 rounded-full bg-indigo-50 hover:bg-indigo-100 active:scale-90 text-indigo-700 text-sm border border-indigo-200/90 shadow-2xs transition cursor-pointer" title="英語セリフの発音を聴く">
+          🔊
+        </button>
+        <button type="button" onclick="toggleTtsSpeed()" class="tts-bubble-speed-badge text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 hover:bg-slate-200 text-indigo-800 border border-slate-300 transition shadow-2xs cursor-pointer" title="速度変更">
+          ${currentTtsSpeed}x
+        </button>
+      </span>
+    `;
+  }
+
+  // 💡 で始まる学習メモブロックをカード化
+  let formattedNotes = "";
+  if (notesPart) {
+    formattedNotes = notesPart.replace(/(?:\r?\n)*(💡)/g, (match, icon) => {
+      return `<div class="learning-note-box mt-2.5 pt-2 border-t border-indigo-100 text-[12px] sm:text-[12.5px] text-slate-800 leading-relaxed font-normal bg-indigo-50/70 -mx-1 px-2.5 py-1.5 rounded-lg border border-indigo-200/60 my-1">${icon}`;
+    });
+    formattedNotes = formattedNotes.replace(/\n/g, '<br>') + '</div>';
+  }
+
+  let finalHtml = formattedSpeech + formattedNotes;
+  finalHtml = finalHtml.replace(/<br><div/g, '<div').replace(/<\/div><br>/g, '</div>');
 
   if (replyBoxHtml) {
-    safe += replyBoxHtml;
+    finalHtml += replyBoxHtml;
   }
 
-  return safe;
+  return finalHtml;
 }
 
 function appendCharacterMessage(char, text, isInitialPhase = false) {
@@ -7939,6 +7977,9 @@ function appendCharacterMessage(char, text, isInitialPhase = false) {
     ? `<span class="text-[9px] bg-indigo-500/80 text-white px-1.5 py-0.2 rounded font-medium">${(badgeLabels[currentLang] || badgeLabels.ja)[currentMode] || "発言"}</span>`
     : ``;
 
+  // セリフ本文部分と解説・返信カードの分離
+  const rawSpeech = extractEnglishSpeechText(text);
+
   const row = document.createElement("div");
   row.className = "flex items-start gap-3 msg-anim";
   row.innerHTML = `
@@ -7951,23 +7992,15 @@ function appendCharacterMessage(char, text, isInitialPhase = false) {
       </div>
       <div class="flex items-end gap-1.5">
         <div class="chat-bubble-text relative bg-white text-slate-800 leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-tl-none shadow bubble-left">
-          ${formatChatText(text)}
+          ${formatChatText(text, true)}
         </div>
-        <div class="flex flex-col items-center gap-1 shrink-0">
-          <button type="button" class="tts-bubble-btn w-6 h-6 rounded-full bg-slate-700/80 hover:bg-indigo-600 active:scale-90 text-white text-[11px] flex items-center justify-center transition shadow-2xs select-none cursor-pointer" title="英語を読み上げ">
-            🔊
-          </button>
-          <button type="button" onclick="toggleTtsSpeed()" class="tts-bubble-speed-badge text-[9px] font-bold px-1 py-0.5 rounded bg-slate-800/80 hover:bg-slate-700 text-amber-300 border border-slate-600/60 transition shadow-2xs select-none cursor-pointer" title="読み上げ速度を変更（0.8x / 1.0x / 1.2x）">
-            ${currentTtsSpeed}x
-          </button>
-          <span class="text-[9px] text-white/80">${now}</span>
-        </div>
+        <span class="text-[9px] text-white/80 shrink-0 select-none pb-0.5">${now}</span>
       </div>
     </div>
   `;
-  const ttsBtn = row.querySelector(".tts-bubble-btn");
+  const ttsBtn = row.querySelector(".char-speech-inline-tts-btn");
   if (ttsBtn) {
-    ttsBtn.onclick = () => playTts(ttsBtn, text);
+    ttsBtn.onclick = () => playTts(ttsBtn, rawSpeech);
   }
 
   // 🎯 吹き出し内クイック返信カードのイベントリスナー設定
@@ -8003,6 +8036,13 @@ function appendCharacterMessage(char, text, isInitialPhase = false) {
   });
 }
 
+function formatUserMessageText(rawText) {
+  if (!rawText) return "";
+  const clean = cleanReplyOptionText(rawText);
+  let safe = escapeHtml(clean);
+  return safe.replace(/\n/g, '<br>');
+}
+
 function appendUserMessage(text) {
   const area = document.getElementById("messages-area");
   const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -8023,7 +8063,7 @@ function appendUserMessage(text) {
       <div class="flex items-end justify-end gap-1.5 w-full">
         <span class="text-[9px] text-white/80 shrink-0 text-right leading-tight">${readLabel}<br>${now}</span>
         <div class="chat-bubble-text relative bg-[#8de055] text-slate-900 leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-tr-none shadow bubble-right break-words max-w-full">
-          ${formatChatText(text)}
+          ${formatUserMessageText(text)}
         </div>
       </div>
     </div>
@@ -8270,9 +8310,10 @@ function renderQuickReplies(replies = null) {
 }
 
 function selectQuickReply(text) {
+  const clean = cleanReplyOptionText(text);
   const input = document.getElementById("user-msg-input");
   if (input) {
-    input.value = text;
+    input.value = clean;
     sendUserMessage();
   }
   const container = document.getElementById("quick-replies-container");
