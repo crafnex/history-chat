@@ -408,7 +408,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <div class="text-xs font-bold text-slate-800" id="st-ver-title">📱 現在のバージョン</div>
-                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.8.1</div>
+                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.8.2</div>
               </div>
               <div class="flex items-center gap-1.5">
                 <button type="button" onclick="openChangelogModal()" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition flex items-center gap-1">
@@ -480,6 +480,33 @@
               <input type="text" id="persona-title-input" placeholder="例: 20代の若手社員、脱サラを目指すエンジニア、歴史好きの学生" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
             </div>
           </div>
+        </div>
+
+        <!-- 📚 2.5 保存した神回トーク & 📥 共有キャラクター受取 -->
+        <div class="grid grid-cols-2 gap-2">
+          <!-- 📚 保存一覧カード -->
+          <button type="button" onclick="closeSettingsModal(); openArchiveModal();" class="bg-amber-50/80 hover:bg-amber-100/90 active:scale-[0.98] border border-amber-300/80 rounded-xl p-3 text-left transition flex flex-col justify-between shadow-2xs group cursor-pointer">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xl group-hover:scale-110 transition">📚</span>
+              <span id="st-archive-count-badge" class="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-amber-200/80 text-amber-900 border border-amber-300">0件</span>
+            </div>
+            <div>
+              <div class="font-bold text-xs text-amber-950" id="st-archive-card-title">保存した神回トーク</div>
+              <div class="text-[10px] text-amber-800/80 leading-tight mt-0.5" id="st-archive-card-desc">過去の会話を読み返す</div>
+            </div>
+          </button>
+
+          <!-- 📥 共有キャラ受取カード -->
+          <button type="button" onclick="closeSettingsModal(); openImportCharModal();" class="bg-indigo-50/80 hover:bg-indigo-100/90 active:scale-[0.98] border border-indigo-200 rounded-xl p-3 text-left transition flex flex-col justify-between shadow-2xs group cursor-pointer">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xl group-hover:scale-110 transition">📥</span>
+              <span class="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-indigo-100 text-indigo-700">IMPORT</span>
+            </div>
+            <div>
+              <div class="font-bold text-xs text-indigo-950" id="st-import-card-title">共有キャラ受取</div>
+              <div class="text-[10px] text-indigo-800/80 leading-tight mt-0.5" id="st-import-card-desc">URL・コードから追加</div>
+            </div>
+          </button>
         </div>
 
         <!-- 🔤 3. 文字サイズ設定 -->
@@ -970,7 +997,7 @@
           <div class="text-indigo-400 font-bold">➔</div>
           <div class="text-right">
             <div class="text-[10px] text-emerald-600 font-semibold">最新アップデート</div>
-            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.8.1</div>
+            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.8.2</div>
           </div>
         </div>
 
@@ -1413,23 +1440,8 @@
             <span>📲 インストール</span>
           </button>
 
-          <!-- ➕ 自作キャラクター追加ボタン -->
-          <button type="button" onclick="openCustomCharModal()" class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-white px-2.5 py-1 rounded-lg text-xs font-bold shadow-2xs flex items-center gap-1 transition">
-            <span>➕</span> <span id="ui-add-custom-btn">キャラ作成</span>
-          </button>
-
-          <!-- 📥 共有キャラ受取・追加ボタン -->
-          <button type="button" onclick="openImportCharModal()" class="bg-indigo-50 hover:bg-indigo-100 active:bg-indigo-200 border border-indigo-200 text-indigo-700 px-2 py-1 rounded-lg text-xs font-bold shadow-2xs flex items-center gap-1 transition" title="共有リンクやコードからキャラクターを追加">
-            <span>📥</span> <span>受取</span>
-          </button>
-
-          <!-- 📚 保存した神回トーク（アーカイブ）ボタン -->
-          <button type="button" onclick="openArchiveModal()" class="bg-amber-50 hover:bg-amber-100 active:bg-amber-200 border border-amber-300 text-amber-900 px-2.5 py-1 rounded-lg text-xs font-bold shadow-2xs flex items-center gap-1 transition" title="保存した神回トークを読む">
-            <span>📚</span> <span>保存一覧</span>
-          </button>
-
           <!-- ⚙️ 設定画面ボタン -->
-          <button type="button" onclick="openSettingsModal()" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 px-2.5 py-1 rounded-lg text-xs font-bold text-slate-700 shadow-2xs flex items-center gap-1 transition">
+          <button type="button" onclick="openSettingsModal()" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-700 shadow-2xs flex items-center gap-1.5 transition">
             <span>⚙️</span> <span id="ui-settings-btn-setup">設定</span>
           </button>
         </div>
@@ -1587,8 +1599,8 @@
 
   </div>
 
-<script src="mode_topics.js?v=1.8.1"></script>
-<script src="character_details.js?v=1.8.1"></script>
+<script src="mode_topics.js?v=1.8.2"></script>
+<script src="character_details.js?v=1.8.2"></script>
 <script>
 // ============================================================================
 // 🛡️ API通信モード設定（各自のGroq / Gemini / OpenAIキーによる公式直接通信）
@@ -1653,12 +1665,22 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.8.1';
+const APP_CLIENT_VERSION = 'v1.8.2';
 let waitingServiceWorker = null;
 let swRegistration = null;
 
 // 📋 全バージョンの変更履歴（リリースノート）マスターデータ
 const APP_CHANGELOG = [
+  {
+    version: "v1.8.2",
+    date: "2026-10-18",
+    title: "✨ メイン画面ヘッダーのスマート化 & 設定内への機能集約",
+    highlights: [
+      "【メイン画面ヘッダーの整理】画面上部のキャラ作成ボタンを整理し、タイトルと設定ボタンが押しやすい洗練されたモダンUIに刷新",
+      "【保存一覧・受取を設定モーダルへ集約】『📚 保存した神回トーク』と『📥 共有キャラ受取』を設定（⚙️）内に専用カードとして新設",
+      "【動的バッジ表示】設定モーダルを開くだけで、現在保存されている神回トークの件数が一目で確認可能に"
+    ]
+  },
   {
     version: "v1.8.1",
     date: "2026-10-18",
@@ -3653,6 +3675,14 @@ function updateSettingsModalState() {
   if (honorificSelect) honorificSelect.value = persona.honorific || "さん";
   updatePersonaToggleUI(Boolean(persona.enabled));
 
+  // 0.5 保存した神回トーク件数の更新
+  const archiveCountBadge = document.getElementById("st-archive-count-badge");
+  if (archiveCountBadge) {
+    const savedChats = getSavedChats();
+    const count = savedChats.length;
+    archiveCountBadge.innerText = currentLang === "en" ? `${count} items` : `${count}件`;
+  }
+
   // 1. 保留中のアップデートがあるか確認・同期
   const updateBox = document.getElementById("settings-update-available");
   if (updateBox) {
@@ -3820,6 +3850,10 @@ function updateStaticUiTexts() {
   setEl("font-cycle-label-chat", currentFontText);
 
   const isEn = currentLang === "en";
+  setEl("st-archive-card-title", isEn ? "Saved Dialogues" : "保存した神回トーク");
+  setEl("st-archive-card-desc", isEn ? "Read archived chats" : "過去の会話を読み返す");
+  setEl("st-import-card-title", isEn ? "Import Character" : "共有キャラ受取");
+  setEl("st-import-card-desc", isEn ? "Add via URL or code" : "URL・コードから追加");
   setEl("ob-title", isEn ? "AI Initial Setup (100% Free)" : "AIの初期設定（完全無料）");
   setEl("ob-subtitle", isEn ? "Chat with legends safely using your own free quota" : "あなた自身の無料枠で安全に偉人と会話できます");
   setEl("ob-step1-label", isEn ? "1. Select AI Provider (All have free tier)" : "1. 使用するAIを選ぶ（どれも完全無料枠あり）");
