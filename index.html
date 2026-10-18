@@ -529,10 +529,18 @@
             </div>
             <div class="flex-1 min-w-0">
               <div class="text-xs font-bold text-slate-800 flex items-center justify-between">
-                <span>アイコン画像の設定</span>
-                <span class="text-[9.5px] text-amber-700 bg-amber-100 px-1.5 py-0.2 rounded font-medium">3つの方法</span>
+                <span>アイコン画像</span>
+                <span id="cc-avatar-status-badge" class="hidden text-[9px] px-1.5 py-0.5 rounded font-bold bg-indigo-100 text-indigo-700 animate-pulse"></span>
               </div>
-              <p class="text-[10px] text-slate-500 leading-tight mt-0.5">写真フォルダ、WEBの画像URL、またはAIによる自動イラスト生成から選べます。</p>
+              <p class="text-[10px] text-slate-500 leading-tight mt-0.5">「自動生成」を押すとWEBから顔画像を自動検索＆顔中心にクロップしてセットされます。</p>
+              <div class="flex items-center gap-2 mt-1">
+                <button type="button" onclick="autoFetchWebAvatar(null, null, true)" class="text-[10px] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold px-2 py-0.5 rounded-md transition flex items-center gap-1">
+                  🌐 WEB顔画像を自動取得
+                </button>
+                <button type="button" onclick="generateInstantSymbolAvatar(null, null, null, true)" class="text-[10px] text-slate-600 hover:text-slate-800 font-medium hover:underline">
+                  ⚡ シンボル作成
+                </button>
+              </div>
               <input type="file" id="cc-file-input" accept="image/*" class="hidden" onchange="handleCustomAvatarUpload(event)">
               <input type="hidden" id="cc-avatar-data" value="">
             </div>
@@ -547,7 +555,7 @@
 
           <!-- パネル1: 写真フォルダから選択 -->
           <div id="cc-panel-file" class="flex items-center justify-between gap-2 pt-0.5">
-            <span class="text-[10px] text-slate-500">スマホの写真や画像を正方形に自動圧縮</span>
+            <span class="text-[10px] text-slate-500">スマホの写真や画像を顔中心に自動トリミング</span>
             <button type="button" onclick="document.getElementById('cc-file-input').click()" class="shrink-0 text-[10.5px] bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold px-3 py-1 rounded-lg shadow-2xs transition">
               写真を選ぶ
             </button>
@@ -569,7 +577,7 @@
                 🔍 Google画像検索で探す
               </button>
             </div>
-            <p class="text-[9px] text-slate-400 leading-tight">※画像URLの貼り付け、またはWEB画像をコピーしてこの画面でCtrl+V（ペースト）するだけで即座にアイコンになります。</p>
+            <p class="text-[9px] text-slate-400 leading-tight">※画像URLの貼り付け、またはWEB画像をコピーしてこの画面でCtrl+V（ペースト）するだけで即座に顔アイコンになります。</p>
           </div>
 
           <!-- パネル3: AIイラスト生成（完全無料） -->
@@ -613,7 +621,7 @@
               <div class="text-[11px] font-bold text-amber-950 flex items-center gap-1">
                 <span>✨</span><span>AIにおまかせ生成</span>
               </div>
-              <p class="text-[9.5px] text-amber-900/80 leading-tight">アニメ・偉人の口調・名言・ストーリー・3大功績を一発自動作成！</p>
+              <p class="text-[9.5px] text-amber-900/80 leading-tight">アニメ・偉人の設定・口調・名言・WEB顔アイコンまで一発全自動作成！</p>
             </div>
             <button type="button" id="cc-ai-gen-btn" onclick="autoGenerateCharacterProfile()" class="shrink-0 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1">
               <span id="cc-ai-gen-icon">✨</span>
@@ -1248,7 +1256,7 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.2.2';
+const APP_CLIENT_VERSION = 'v1.3.0';
 let waitingServiceWorker = null;
 let swRegistration = null;
 
@@ -4074,21 +4082,35 @@ async function loadAvatarFromUrl(targetUrl = null) {
   }
 }
 
-// 汎用: Imageソース（Base64またはURL）を正方形Canvasに描画してセットする関数
-function processImageSourceToAvatar(src, successMsg = "画像をセットしました！") {
+// 汎用: Imageソース（Base64またはURL）を「顔・上半身フォーカス」正方形Canvasに描画してセットする関数
+function processImageSourceToAvatar(src, successMsg = null) {
   const img = new Image();
+  img.crossOrigin = "anonymous";
   img.onload = () => {
     try {
       const canvas = document.createElement("canvas");
       canvas.width = 256; canvas.height = 256;
       const ctx = canvas.getContext("2d");
       const minDim = Math.min(img.width, img.height);
-      const sx = (img.width - minDim) / 2;
-      const sy = (img.height - minDim) / 2;
+
+      let sx = 0, sy = 0;
+      if (img.width > img.height) {
+        // 横長画像: 横中央
+        sx = (img.width - minDim) / 2;
+        sy = 0;
+      } else {
+        // 縦長画像: 人物の顔は上部にあるため、上部12%付近を中心に切り出す（顔スマートクロップ）
+        sx = 0;
+        const extraH = img.height - minDim;
+        sy = Math.min(extraH, Math.max(0, Math.floor(img.height * 0.12)));
+      }
+
       ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, 256, 256);
-      setCustomAvatarPreview(canvas.toDataURL("image/jpeg", 0.85));
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
+      setCustomAvatarPreview(dataUrl);
       if (successMsg) alert(successMsg);
     } catch (e) {
+      // CORS tainted 等の場合は元srcを直接セット
       setCustomAvatarPreview(src);
       if (successMsg) alert(successMsg);
     }
@@ -4098,6 +4120,84 @@ function processImageSourceToAvatar(src, successMsg = "画像をセットしま�
     if (successMsg) alert(successMsg);
   };
   img.src = src;
+}
+
+// 🌐 WEB画像自動検索＆顔スマートアイコン自動作成エンジン（Wikipedia公式画像＋AI顔ポートレート）
+async function autoFetchWebAvatar(name = null, title = null, notify = false) {
+  const charName = name || (document.getElementById("cc-name-ja") ? document.getElementById("cc-name-ja").value.trim() : "");
+  const charTitle = title || (document.getElementById("cc-title-ja") ? document.getElementById("cc-title-ja").value.trim() : "");
+
+  if (!charName) {
+    if (notify) alert("先に「名前」を入力してください（例: 孫悟空、フリーレン、坂本龍馬 など）");
+    return;
+  }
+
+  const avatarBadge = document.getElementById("cc-avatar-status-badge");
+  if (avatarBadge) {
+    avatarBadge.innerText = "🔍 WEB画像検索中...";
+    avatarBadge.classList.remove("hidden");
+  }
+
+  try {
+    // 1. Wikipedia API で公式肖像画・ビジュアルを検索（歴史偉人・著名人・実在人物・作品）
+    const wikiUrl = `https://ja.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(charName)}&prop=pageimages&format=json&pithumbsize=500&origin=*`;
+    let foundImg = null;
+    try {
+      const res = await fetch(wikiUrl);
+      if (res.ok) {
+        const data = await res.json();
+        const pages = (data.query && data.query.pages) || {};
+        for (let k in pages) {
+          if (pages[k].thumbnail && pages[k].thumbnail.source) {
+            foundImg = pages[k].thumbnail.source;
+            break;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Wikipedia image search error:", e);
+    }
+
+    if (foundImg) {
+      processImageSourceToAvatar(foundImg, notify ? `「${charName}」の公式ビジュアルから顔アイコンを作成しました！` : null);
+      if (avatarBadge) {
+        avatarBadge.innerText = "✅ 公式画像を取得";
+        setTimeout(() => avatarBadge.classList.add("hidden"), 3000);
+      }
+      return;
+    }
+
+    // 2. Wikipediaに画像がない場合（アニメ・ゲームキャラ等）:
+    // AIによる「顔・上半身ポートレート特化」イラストを直接画像ロード（fetchを使わないのでBotブロック・CORSエラー完全ゼロ！）
+    if (avatarBadge) avatarBadge.innerText = "🎨 顔アイコン生成中...";
+    const stylePrompt = `${charName}, ${charTitle}, anime character close-up face portrait, avatar icon, official character art, solo, vibrant, high detail`;
+    const seed = Math.floor(Math.random() * 1000000);
+    const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(stylePrompt)}?width=256&height=256&seed=${seed}&nologo=true`;
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      processImageSourceToAvatar(pollinationsUrl, notify ? `「${charName}」の顔アイコンを自動作成しました！` : null);
+      if (avatarBadge) {
+        avatarBadge.innerText = "✅ アイコン完成";
+        setTimeout(() => avatarBadge.classList.add("hidden"), 3000);
+      }
+    };
+    img.onerror = () => {
+      // 最後の安全網: 即時シンボルアイコン
+      generateInstantSymbolAvatar(charName, charTitle, null, false);
+      if (avatarBadge) {
+        avatarBadge.innerText = "⚡ シンボルアバター";
+        setTimeout(() => avatarBadge.classList.add("hidden"), 3000);
+      }
+    };
+    img.src = pollinationsUrl;
+
+  } catch (err) {
+    console.warn("autoFetchWebAvatar failed:", err);
+    generateInstantSymbolAvatar(charName, charTitle, null, false);
+    if (avatarBadge) avatarBadge.classList.add("hidden");
+  }
 }
 
 // クリップボードからのワンタップ貼り付け＆読込（画像バイナリ・URL・Base64両対応）
@@ -4147,8 +4247,8 @@ function searchCharacterImageOnGoogle() {
   window.open(searchUrl, "_blank");
 }
 
-// 🎨 AI画像生成機能（即時シンボルアイコン先行セット ＋ Pollinations公式API直接通信＆Base64保存）
-async function generateAiAvatar(isAuto = false) {
+// 🎨 AI画像生成機能（ネイティブ画像ロード＆顔スマートクロップ）
+function generateAiAvatar(isAuto = false) {
   const name = document.getElementById("cc-name-ja").value.trim();
   const title = document.getElementById("cc-title-ja").value.trim();
   const role = document.getElementById("cc-role").value || "role_passion";
@@ -4166,11 +4266,11 @@ async function generateAiAvatar(isAuto = false) {
 
   let stylePrompt = "";
   if (style === "anime") {
-    stylePrompt = `masterpiece, high quality anime character portrait avatar of ${name}, ${title}, vibrant colors, clean anime illustration, square icon, solo`;
+    stylePrompt = `masterpiece, anime character close-up face portrait avatar of ${name}, ${title}, vibrant colors, clean anime illustration, square icon, solo`;
   } else if (style === "realistic") {
-    stylePrompt = `masterpiece, oil painting classical historical portrait square icon of ${name}, ${title}, high detail, realistic textures, classical art`;
+    stylePrompt = `masterpiece, oil painting classical portrait square icon of ${name}, ${title}, close-up face, high detail, realistic textures`;
   } else if (style === "chibi") {
-    stylePrompt = `cute chibi anime sticker of ${name}, ${title}, clean pastel colors, adorable character avatar, solo, square icon`;
+    stylePrompt = `cute chibi anime sticker of ${name}, ${title}, clean pastel colors, adorable character face avatar, solo, square icon`;
   }
 
   const btn = document.getElementById("cc-ai-avatar-btn");
@@ -4179,45 +4279,29 @@ async function generateAiAvatar(isAuto = false) {
   const origText = btnText ? btnText.innerText : "AIで描画する";
   if (btn) btn.disabled = true;
   if (btnIcon) btnIcon.className = "animate-spin inline-block";
-  if (btnText) btnText.innerText = "描画中(約10秒)...";
+  if (btnText) btnText.innerText = "描画中...";
 
   const seed = Math.floor(Math.random() * 1000000);
-  const encoded = encodeURIComponent(stylePrompt);
-  // Pollinations AI公式API（元々 Access-Control-Allow-Origin: * のため直接fetch可能・プロキシ不要）
-  const pollinationsUrl = `https://image.pollinations.ai/prompt/${encoded}?width=256&height=256&seed=${seed}&nologo=true`;
+  const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(stylePrompt)}?width=256&height=256&seed=${seed}&nologo=true`;
 
-  try {
-    // タイムアウト付きフェッチ（25秒）
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000);
-
-    const res = await fetch(pollinationsUrl, {
-      signal: controller.signal,
-      headers: { "Accept": "image/*" }
-    });
-    clearTimeout(timeoutId);
-
-    if (res.ok) {
-      const blob = await res.blob();
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        processImageSourceToAvatar(e.target.result, null);
-        alert(`🎨 「${name}」のAIアイコン描画が完了しました！`);
-      };
-      reader.readAsDataURL(blob);
-    } else {
-      throw new Error(`HTTP ${res.status}`);
-    }
-  } catch (err) {
-    console.warn("AI avatar remote generation skipped or timed out, keeping instant symbol avatar:", err);
-    if (!isAuto) {
-      alert("AI画像サーバーが混雑または応答待ちとなりました。代わりに自動作成された「名前入りシンボルアイコン」がセットされています。このまま保存できます！");
-    }
-  } finally {
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onload = () => {
+    processImageSourceToAvatar(pollinationsUrl, isAuto ? null : `🎨 「${name}」のAIアイコン描画が完了しました！`);
     if (btn) btn.disabled = false;
     if (btnIcon) btnIcon.className = "";
     if (btnText) btnText.innerText = origText;
-  }
+  };
+  img.onerror = () => {
+    console.warn("AI avatar image load fallback to symbol avatar");
+    if (!isAuto) {
+      alert("AI画像サーバーが混雑または応答待ちとなりました。代わりに自動作成された「名前入りシンボルアイコン」がセットされています。このまま保存できます！");
+    }
+    if (btn) btn.disabled = false;
+    if (btnIcon) btnIcon.className = "";
+    if (btnText) btnText.innerText = origText;
+  };
+  img.src = pollinationsUrl;
 }
 
 // モーダル表示中の画像・URL直接貼り付け（Ctrl+V / Cmd+V）ハンドラ
@@ -4573,8 +4657,8 @@ async function autoGenerateCharacterProfile() {
         if (data.advice.bestFor) document.getElementById("cc-advice-best").value = data.advice.bestFor;
       }
 
-      // バックグラウンドでAIイラスト生成を試行（取得できたら自動差し替え）
-      generateAiAvatar(true);
+      // バックグラウンドでWEB画像自動検索＆顔スマートアイコン自動作成
+      autoFetchWebAvatar(name, title, false);
     } else {
       alert("AIの自動生成結果を読み取れませんでした。もう一度お試しください。");
     }
