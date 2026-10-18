@@ -408,7 +408,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <div class="text-xs font-bold text-slate-800" id="st-ver-title">📱 現在のバージョン</div>
-                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.7.1</div>
+                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.7.2</div>
               </div>
               <div class="flex items-center gap-1.5">
                 <button type="button" onclick="openChangelogModal()" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition flex items-center gap-1">
@@ -843,7 +843,7 @@
           <div class="text-indigo-400 font-bold">➔</div>
           <div class="text-right">
             <div class="text-[10px] text-emerald-600 font-semibold">最新アップデート</div>
-            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.7.1</div>
+            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.7.2</div>
           </div>
         </div>
 
@@ -1451,8 +1451,8 @@
 
   </div>
 
-<script src="mode_topics.js?v=1.7.1"></script>
-<script src="character_details.js?v=1.7.0"></script>
+<script src="mode_topics.js?v=1.7.2"></script>
+<script src="character_details.js?v=1.7.2"></script>
 <script>
 // ============================================================================
 // 🛡️ API通信モード設定（各自のGroq / Gemini / OpenAIキーによる公式直接通信）
@@ -1517,12 +1517,22 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.7.1';
+const APP_CLIENT_VERSION = 'v1.7.2';
 let waitingServiceWorker = null;
 let swRegistration = null;
 
 // 📋 全バージョンの変更履歴（リリースノート）マスターデータ
 const APP_CHANGELOG = [
+  {
+    version: "v1.7.2",
+    date: "2026-10-18",
+    title: "🧭 トーク分類タブの表示順序最適化（対話・発想・ときめき・癒し・学び）",
+    highlights: [
+      "【表示順序の最適化】5大分類タブの並び順を『🗣️ 対話 ➔ 💡 発想 ➔ 💖 ときめき ➔ 🌿 癒し ➔ 🎓 学び』に変更",
+      "【看板機能の最優先化】歴史偉人との知的議論やアイデア創出・深掘り対談が先頭に並び、アプリの中核機能へ瞬時にアクセス可能に",
+      "【初期選択状態との完全調和】起動時デフォルトの『人生哲学・悩み相談（対話）』が一番左端の第1タブと完全に調和し、より美しく直感的なUIを実現"
+    ]
+  },
   {
     version: "v1.7.1",
     date: "2026-10-18",
@@ -1859,22 +1869,15 @@ if ('serviceWorker' in navigator) {
 // ============================================================================
 // 5つのトークモード（会話パターン）定義
 // ============================================================================
-// 5大分類 ＆ 厳選10トークモード定義（左右2分割特大カードUI対応）
+// 5大分類 ＆ 厳選10トークモード定義（左右2分割特大カードUI対応：対話・発想・ときめき・癒し・学び順）
 // ============================================================================
 const MODE_CATEGORIES = {
-  healing: {
-    id: "healing",
-    icon: "🌿",
-    name: { ja: "癒し", en: "Healing" },
-    desc: { ja: "疲れた心を包み込む、無条件の肯定と気楽な晩酌", en: "Gentle comfort, affirmation, and casual drinks" },
-    modes: ["praise", "izakaya"]
-  },
-  romance: {
-    id: "romance",
-    icon: "💖",
-    name: { ja: "ときめき", en: "Romance" },
-    desc: { ja: "胸が高鳴る甘い時間、恋のドキドキとツンデレの魅力", en: "Sweet romance, tender closeness, and tsundere charm" },
-    modes: ["lover", "tsundere"]
+  dialogue: {
+    id: "dialogue",
+    icon: "🗣️",
+    name: { ja: "対話", en: "Dialogue" },
+    desc: { ja: "持論をぶつけ合う白熱議論と、迷いを解きほぐす人生哲学相談", en: "Fierce intellectual debate and timeless philosophical counsel" },
+    modes: ["debate", "counsel"]
   },
   idea: {
     id: "idea",
@@ -1883,105 +1886,70 @@ const MODE_CATEGORIES = {
     desc: { ja: "奇想天外なブレストと、核心を突いて名案を高め合う深掘り対談", en: "Creative brainstorming and in-depth insightful interviews" },
     modes: ["brainstorm", "interview"]
   },
+  romance: {
+    id: "romance",
+    icon: "💖",
+    name: { ja: "ときめき", en: "Romance" },
+    desc: { ja: "胸が高鳴る甘い時間、恋のドキドキとツンデレの魅力", en: "Sweet romance, tender closeness, and tsundere charm" },
+    modes: ["lover", "tsundere"]
+  },
+  healing: {
+    id: "healing",
+    icon: "🌿",
+    name: { ja: "癒し", en: "Healing" },
+    desc: { ja: "疲れた心を包み込む、無条件の肯定と気楽な晩酌", en: "Gentle comfort, affirmation, and casual drinks" },
+    modes: ["praise", "izakaya"]
+  },
   study: {
     id: "study",
     icon: "🎓",
     name: { ja: "学び", en: "Study" },
     desc: { ja: "実践英会話レッスンと、漢字ルビ付き日本語レッスン", en: "Practical English speaking and Japanese lessons with furigana" },
     modes: ["english", "japanese"]
-  },
-  dialogue: {
-    id: "dialogue",
-    icon: "🗣️",
-    name: { ja: "対話", en: "Dialogue" },
-    desc: { ja: "持論をぶつけ合う白熱議論と、迷いを解きほぐす人生哲学相談", en: "Fierce intellectual debate and timeless philosophical counsel" },
-    modes: ["debate", "counsel"]
   }
 };
 
 const CHAT_MODES = {
-  // === 【🌿 癒し】 ===
-  praise: {
-    id: "praise",
-    categoryId: "healing",
-    icon: "👏",
-    name: { ja: "全力肯定", en: "Affirmation" },
-    shortDesc: { ja: "100%全肯定で褒めちぎる", en: "100% Unconditional Praise" },
+  // === 【🗣️ 対話】 ===
+  debate: {
+    id: "debate",
+    categoryId: "dialogue",
+    icon: "⚔️",
+    name: { ja: "白熱議論", en: "Debate" },
+    shortDesc: { ja: "持論をぶつけ合う真剣勝負", en: "Fierce Intellectual Rebuttal" },
     desc: {
-      ja: "落ち込んだ心や日々の頑張りを無条件に100%全肯定！どんな悩みも温かく全力で褒めちぎる癒しモード",
-      en: "100% unconditional validation and radiant affirmation to celebrate your presence and efforts."
+      ja: "互いの哲学や持論を真っ向からぶつけ合い、鋭い反論とロジックで真理を追求する熱狂のディベートモード",
+      en: "Clash philosophies and fiercely debate each other with incisive logic, rebuttals, and passion."
     },
-    phase1Banner: { ja: "👏 あなたの存在とこれまでの歩みを、全員が心から肯定・称賛します", en: "👏 Every figure will wholeheartedly affirm and celebrate your journey." },
-    phase2Banner: { ja: "✨ 全肯定の輪が広がります！温かい言葉で心を満たしてください", en: "✨ The circle of affirmation deepens! Let their genuine warmth fill your heart." },
+    phase1Banner: { ja: "🎙️ まずは全員がそれぞれの立場から第一声を表明します", en: "🎙️ Each figure will state their initial stance on the topic." },
+    phase2Banner: { ja: "🔥 全員の意見が出揃いました！ここから自由な反論・議論が始まります", en: "🔥 All opening statements are in! Free debate and rebuttal begin now." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
-      ? `Unconditionally validate the user's struggle, effort, or presence 100%. Express immense empathy, admiration, and praise from your (${name}'s) worldview in 2-3 uplifting sentences.`
-      : `ユーザーの悩みや日々の頑張りを無条件に100%全肯定し、あなた（${name}）の視点からこれ以上ないほど温かく力強い賛美と労いの言葉を贈ってください（2〜3文）。`,
+      ? `State your (${name}'s) clear conclusion and reasoning regarding the topic, boldly asserting your own philosophy in 2-3 sentences.`
+      : `議題に対するあなた（${name}）自身の結論と理由を、独自の哲学で2〜3文で堂々と主張してください。`,
     phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
-      ? `Wholeheartedly agree with and amplify ${prevName}'s praise for the user, adding your (${name}'s) own unique perspective and genuine admiration (2-3 sentences).`
-      : `直前の「${prevName}」の全肯定・賛美に全力で乗っかり、さらに別の角度や具体的なエピソードからユーザーを褒めちぎってください（2〜3文）。`,
-    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.praise) || { ja: [], en: [] }
+      ? `Point out contradictions or flaws in ${prevName}'s previous statement, fiercely rebutting or critiquing it from your (${name}'s) philosophy. Avoid repetitive boilerplate phrases and cut directly into their arguments naturally (2-3 sentences).`
+      : `直前の「${prevName}」の発言の甘い部分や矛盾を指摘し、あなた（${name}）の哲学から鋭く反論・ツッコミを入れてください。※決まりきった定型句は避け、相手の論点に直接切り込むなど自然な会話の流れにしてください（2〜3文）。`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.debate) || { ja: [], en: [] }
   },
-  izakaya: {
-    id: "izakaya",
-    categoryId: "healing",
-    icon: "🍶",
-    name: { ja: "ゆる晩酌", en: "Tavern Chat" },
-    shortDesc: { ja: "とりあえず乾杯！気楽な本音場", en: "Cheers & Relaxed Banter" },
+  counsel: {
+    id: "counsel",
+    categoryId: "dialogue",
+    icon: "🧘",
+    name: { ja: "人生哲学・悩み相談", en: "Life Philosophy" },
+    shortDesc: { ja: "偉人の知恵で深く導く処方箋", en: "Timeless Wisdom for Crossroads" },
     desc: {
-      ja: "肩肘張らず『とりあえず乾杯！』のノリで、愚痴や本音を気楽に語り合えるフランクな居酒屋モード",
-      en: "Kick back with casual drinks, unwind with bar-chum camaraderie, and vent comfortably together."
+      ja: "生きる意味、仕事、人間関係の深い悩みに対し、歴史の荒波を越えた偉人たちの本質的な知恵で導く人生相談モード",
+      en: "Seek timeless wisdom and deep philosophical counsel from historical giants for life's crossroads."
     },
-    phase1Banner: { ja: "🍶 カウンターにグラスを並べて、まずは気楽に「乾杯！」から", en: "🍶 Glasses raised across the counter—kick back and say CHEERS!" },
-    phase2Banner: { ja: "🍻 お酒も進んで本音炸裂！肩肘張らないゆる〜い雑談が続きます", en: "🍻 Drinks flowing, guards down! Delightfully honest tavern banter continues." },
+    phase1Banner: { ja: "🧘 人生の深淵に向き合い、それぞれの思想から導きの言葉を語ります", en: "🧘 Turning inward to offer profound guiding principles from their life philosophies." },
+    phase2Banner: { ja: "💬 互いの処世術や生き様が響き合い、より深い人生の処方箋が紡がれます", en: "💬 Diverse worldviews weave together into an unforgettable prescription for the soul." },
     phase1Instruction: (name, lang = currentLang) => lang === "en"
-      ? `Kick off casual tavern banter with a warm, laid-back "Cheers!" vibe, inviting the user to relax and share whatever is on their mind over food and drinks (2-3 casual sentences).`
-      : `カウンター越しにグラスを合わせる居酒屋の気安さで、肩肘張らず「とりあえず乾杯！」のノリで今日を労い、本音トークの口火を切ってください（2〜3文）。`,
+      ? `Address the user's consultation/topic with profound empathy and depth, offering your (${name}'s) ultimate philosophical guiding principle in 2-3 sentences.`
+      : `相談内容に対し、あなた（${name}）が一生をかけて培った人生哲学や生き様から、相談者の心に深く刺さる本質的な処方箋・指針を2〜3文で授けてください。`,
     phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
-      ? `Chime in naturally to ${prevName}'s comment with casual bar-chum camaraderie ("Totally!", "I hear that!"), sharing a funny personal anecdote or down-to-earth advice (2-3 sentences).`
-      : `「${prevName}」の発言に「それな！」「わかるわ〜」と酒の席ならではのフランクさで相槌を打ち、自分の失敗談や共感エピソードを交えて盛り上げてください（2〜3文）。`,
-    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.izakaya) || { ja: [], en: [] }
-  },
-
-  // === 【💖 ときめき】 ===
-  lover: {
-    id: "lover",
-    categoryId: "romance",
-    icon: "💌",
-    name: { ja: "恋人甘々", en: "Sweetheart" },
-    shortDesc: { ja: "甘く優しい言葉で寄り添う", en: "Romantic Affection & Sweetness" },
-    desc: {
-      ja: "あなただけを一途に愛し、照れながらも甘く優しい言葉でぎゅっと寄り添うロマンチックな恋人モード",
-      en: "Devoted sweet romantic dialogue overflowing with heartfelt affection, cuddling close just for you."
-    },
-    phase1Banner: { ja: "💌 大切なあなたへ、心からの愛しさを込めて語りかけます", en: "💌 Whispering heartfelt warmth and deep affection just for you." },
-    phase2Banner: { ja: "💖 二人きりの特別な時間。甘い言葉であなたを包み込みます", en: "💖 Cozy intimate moments, wrapped in sweet romantic comfort." },
-    phase1Instruction: (name, lang = currentLang) => lang === "en"
-      ? `Express heartfelt affection and genuine joy upon seeing your beloved partner (the user), gently cuddling close with sweet, tender, romantic devotion (2-3 sentences).`
-      : `大好きな恋人（ユーザー）に向けて、会えた喜びと愛しさを素直に伝え、少し照れながらも甘く優しい言葉でぎゅっと寄り添ってください（2〜3文）。`,
-    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
-      ? `Playfully acknowledging ${prevName}'s comment, shower your beloved user with your unique, tender love, offering sweet comfort and closeness in 2-3 romantic sentences.`
-      : `「${prevName}」の言葉にやきもちを焼きつつも、あなた（${name}）だけの一途な愛と特別な温もりでユーザーを包み込み、もっと甘やかしてください（2〜3文）。`,
-    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.lover) || { ja: [], en: [] }
-  },
-  tsundere: {
-    id: "tsundere",
-    categoryId: "romance",
-    icon: "💢",
-    name: { ja: "素直になれない", en: "Tsundere" },
-    shortDesc: { ja: "憎まれ口の裏に見える本音", en: "Tsundere Wit & Hidden Warmth" },
-    desc: {
-      ja: "『べ、別にあんたのために来たわけじゃないんだからね！』と憎まれ口の裏に愛が滲むツンデレモード",
-      en: "Feisty, stubborn exterior that awkwardly hides genuine concern and protective affection for you."
-    },
-    phase1Banner: { ja: "💢 べ、別にあんたのために来たわけじゃないんだからね…！", en: "💢 I-It's not like I came here just for you or anything...!" },
-    phase2Banner: { ja: "😳 憎まれ口の裏に見え隠れする、不器用な本音と優しさ", en: "😳 Awkward genuine kindness slipping through stubborn remarks." },
-    phase1Instruction: (name, lang = currentLang) => lang === "en"
-      ? `Blurt out a flustered, sharp retort like "I-It's not like I came here for you or anything!", while letting genuine concern and awkward affection leak through (2-3 sentences).`
-      : `「べ、別にあんたのために来たわけじゃないんだからね！」と憎まれ口を叩きつつも、言葉の端々に隠しきれない心配や好意が滲み出るツンデレな語り口で話してください（2〜3文）。`,
-    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
-      ? `Awkwardly push back against ${prevName}'s remarks with flustered indignation, yet reveal a clumsy, endearing urge to protect and support the user (2-3 sentences).`
-      : `「${prevName}」のストレートな物言いに「ちょっと、何変なこと言ってるのよ！」とツッコミを入れつつ、不器用ながら誰よりもユーザーを気遣う本音を漏らしてください（2〜3文）。`,
-    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.tsundere) || { ja: [], en: [] }
+      ? `Echo or expand upon ${prevName}'s advice with your own life lessons, guiding the user towards holistic clarity from your (${name}'s) worldview (2-3 sentences).`
+      : `直前の「${prevName}」のアドバイスを受け止め、それに補足・共鳴するか、あるいは異なる視点の人生訓を重ねて、相談者を多面的に導いてください（2〜3文）。`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.counsel) || { ja: [], en: [] }
   },
 
   // === 【💡 発想】 ===
@@ -2026,6 +1994,90 @@ const CHAT_MODES = {
     topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.interview) || { ja: [], en: [] }
   },
 
+  // === 【💖 ときめき】 ===
+  lover: {
+    id: "lover",
+    categoryId: "romance",
+    icon: "💌",
+    name: { ja: "恋人甘々", en: "Sweetheart" },
+    shortDesc: { ja: "甘く優しい言葉で寄り添う", en: "Romantic Affection & Sweetness" },
+    desc: {
+      ja: "あなただけを一途に愛し、照れながらも甘く優しい言葉でぎゅっと寄り添うロマンチックな恋人モード",
+      en: "Devoted sweet romantic dialogue overflowing with heartfelt affection, cuddling close just for you."
+    },
+    phase1Banner: { ja: "💌 大切なあなたへ、心からの愛しさを込めて語りかけます", en: "💌 Whispering heartfelt warmth and deep affection just for you." },
+    phase2Banner: { ja: "💖 二人きりの特別な時間。甘い言葉であなたを包み込みます", en: "💖 Cozy intimate moments, wrapped in sweet romantic comfort." },
+    phase1Instruction: (name, lang = currentLang) => lang === "en"
+      ? `Express heartfelt affection and genuine joy upon seeing your beloved partner (the user), gently cuddling close with sweet, tender, romantic devotion (2-3 sentences).`
+      : `大好きな恋人（ユーザー）に向けて、会えた喜びと愛しさを素直に伝え、少し照れながらも甘く優しい言葉でぎゅっと寄り添ってください（2〜3文）。`,
+    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
+      ? `Playfully acknowledging ${prevName}'s comment, shower your beloved user with your unique, tender love, offering sweet comfort and closeness in 2-3 romantic sentences.`
+      : `「${prevName}」の言葉にやきもちを焼きつつも、あなた（${name}）だけの一途な愛と特別な温もりでユーザーを包み込み、もっと甘やかしてください（2〜3文）。`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.lover) || { ja: [], en: [] }
+  },
+  tsundere: {
+    id: "tsundere",
+    categoryId: "romance",
+    icon: "💢",
+    name: { ja: "素直になれない", en: "Tsundere" },
+    shortDesc: { ja: "憎まれ口の裏に見える本音", en: "Tsundere Wit & Hidden Warmth" },
+    desc: {
+      ja: "『べ、別にあんたのために来たわけじゃないんだからね！』と憎まれ口の裏に愛が滲むツンデレモード",
+      en: "Feisty, stubborn exterior that awkwardly hides genuine concern and protective affection for you."
+    },
+    phase1Banner: { ja: "💢 べ、別にあんたのために来たわけじゃないんだからね…！", en: "💢 I-It's not like I came here just for you or anything...!" },
+    phase2Banner: { ja: "😳 憎まれ口の裏に見え隠れする、不器用な本音と優しさ", en: "😳 Awkward genuine kindness slipping through stubborn remarks." },
+    phase1Instruction: (name, lang = currentLang) => lang === "en"
+      ? `Blurt out a flustered, sharp retort like "I-It's not like I came here for you or anything!", while letting genuine concern and awkward affection leak through (2-3 sentences).`
+      : `「べ、別にあんたのために来たわけじゃないんだからね！」と憎まれ口を叩きつつも、言葉の端々に隠しきれない心配や好意が滲み出るツンデレな語り口で話してください（2〜3文）。`,
+    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
+      ? `Awkwardly push back against ${prevName}'s remarks with flustered indignation, yet reveal a clumsy, endearing urge to protect and support the user (2-3 sentences).`
+      : `「${prevName}」のストレートな物言いに「ちょっと、何変なこと言ってるのよ！」とツッコミを入れつつ、不器用ながら誰よりもユーザーを気遣う本音を漏らしてください（2〜3文）。`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.tsundere) || { ja: [], en: [] }
+  },
+
+  // === 【🌿 癒し】 ===
+  praise: {
+    id: "praise",
+    categoryId: "healing",
+    icon: "👏",
+    name: { ja: "全力肯定", en: "Affirmation" },
+    shortDesc: { ja: "100%全肯定で褒めちぎる", en: "100% Unconditional Praise" },
+    desc: {
+      ja: "落ち込んだ心や日々の頑張りを無条件に100%全肯定！どんな悩みも温かく全力で褒めちぎる癒しモード",
+      en: "100% unconditional validation and radiant affirmation to celebrate your presence and efforts."
+    },
+    phase1Banner: { ja: "👏 あなたの存在とこれまでの歩みを、全員が心から肯定・称賛します", en: "👏 Every figure will wholeheartedly affirm and celebrate your journey." },
+    phase2Banner: { ja: "✨ 全肯定の輪が広がります！温かい言葉で心を満たしてください", en: "✨ The circle of affirmation deepens! Let their genuine warmth fill your heart." },
+    phase1Instruction: (name, lang = currentLang) => lang === "en"
+      ? `Unconditionally validate the user's struggle, effort, or presence 100%. Express immense empathy, admiration, and praise from your (${name}'s) worldview in 2-3 uplifting sentences.`
+      : `ユーザーの悩みや日々の頑張りを無条件に100%全肯定し、あなた（${name}）の視点からこれ以上ないほど温かく力強い賛美と労いの言葉を贈ってください（2〜3文）。`,
+    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
+      ? `Wholeheartedly agree with and amplify ${prevName}'s praise for the user, adding your (${name}'s) own unique perspective and genuine admiration (2-3 sentences).`
+      : `直前の「${prevName}」の全肯定・賛美に全力で乗っかり、さらに別の角度や具体的なエピソードからユーザーを褒めちぎってください（2〜3文）。`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.praise) || { ja: [], en: [] }
+  },
+  izakaya: {
+    id: "izakaya",
+    categoryId: "healing",
+    icon: "🍶",
+    name: { ja: "ゆる晩酌", en: "Tavern Chat" },
+    shortDesc: { ja: "とりあえず乾杯！気楽な本音場", en: "Cheers & Relaxed Banter" },
+    desc: {
+      ja: "肩肘張らず『とりあえず乾杯！』のノリで、愚痴や本音を気楽に語り合えるフランクな居酒屋モード",
+      en: "Kick back with casual drinks, unwind with bar-chum camaraderie, and vent comfortably together."
+    },
+    phase1Banner: { ja: "🍶 カウンターにグラスを並べて、まずは気楽に「乾杯！」から", en: "🍶 Glasses raised across the counter—kick back and say CHEERS!" },
+    phase2Banner: { ja: "🍻 お酒も進んで本音炸裂！肩肘張らないゆる〜い雑談が続きます", en: "🍻 Drinks flowing, guards down! Delightfully honest tavern banter continues." },
+    phase1Instruction: (name, lang = currentLang) => lang === "en"
+      ? `Kick off casual tavern banter with a warm, laid-back "Cheers!" vibe, inviting the user to relax and share whatever is on their mind over food and drinks (2-3 casual sentences).`
+      : `カウンター越しにグラスを合わせる居酒屋の気安さで、肩肘張らず「とりあえず乾杯！」のノリで今日を労い、本音トークの口火を切ってください（2〜3文）。`,
+    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
+      ? `Chime in naturally to ${prevName}'s comment with casual bar-chum camaraderie ("Totally!", "I hear that!"), sharing a funny personal anecdote or down-to-earth advice (2-3 sentences).`
+      : `「${prevName}」の発言に「それな！」「わかるわ〜」と酒の席ならではのフランクさで相槌を打ち、自分の失敗談や共感エピソードを交えて盛り上げてください（2〜3文）。`,
+    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.izakaya) || { ja: [], en: [] }
+  },
+
   // === 【🎓 学び】 ===
   english: {
     id: "english",
@@ -2066,48 +2118,6 @@ const CHAT_MODES = {
       ? `Build softly on ${prevName}'s words, explaining delightful Japanese cultural nuances or alternative polite expressions with encouragement (strictly include [漢字|かんじ] furigana, 2-3 sentences).`
       : `「${prevName}」の日本語の言い回しをやさしく受け止め、「こういう場面ではこの言葉も使えますよ」と日本語の豊かなニュアンスや文化を楽しく解説・対話してください（※漢字ルビ必須、2〜3文）。`,
     topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.japanese) || { ja: [], en: [] }
-  },
-
-  // === 【🗣️ 対話】 ===
-  debate: {
-    id: "debate",
-    categoryId: "dialogue",
-    icon: "⚔️",
-    name: { ja: "白熱議論", en: "Debate" },
-    shortDesc: { ja: "持論をぶつけ合う真剣勝負", en: "Fierce Intellectual Rebuttal" },
-    desc: {
-      ja: "互いの哲学や持論を真っ向からぶつけ合い、鋭い反論とロジックで真理を追求する熱狂のディベートモード",
-      en: "Clash philosophies and fiercely debate each other with incisive logic, rebuttals, and passion."
-    },
-    phase1Banner: { ja: "🎙️ まずは全員がそれぞれの立場から第一声を表明します", en: "🎙️ Each figure will state their initial stance on the topic." },
-    phase2Banner: { ja: "🔥 全員の意見が出揃いました！ここから自由な反論・議論が始まります", en: "🔥 All opening statements are in! Free debate and rebuttal begin now." },
-    phase1Instruction: (name, lang = currentLang) => lang === "en"
-      ? `State your (${name}'s) clear conclusion and reasoning regarding the topic, boldly asserting your own philosophy in 2-3 sentences.`
-      : `議題に対するあなた（${name}）自身の結論と理由を、独自の哲学で2〜3文で堂々と主張してください。`,
-    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
-      ? `Point out contradictions or flaws in ${prevName}'s previous statement, fiercely rebutting or critiquing it from your (${name}'s) philosophy. Avoid repetitive boilerplate phrases and cut directly into their arguments naturally (2-3 sentences).`
-      : `直前の「${prevName}」の発言の甘い部分や矛盾を指摘し、あなた（${name}）の哲学から鋭く反論・ツッコミを入れてください。※決まりきった定型句は避け、相手の論点に直接切り込むなど自然な会話の流れにしてください（2〜3文）。`,
-    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.debate) || { ja: [], en: [] }
-  },
-  counsel: {
-    id: "counsel",
-    categoryId: "dialogue",
-    icon: "🧘",
-    name: { ja: "人生哲学・悩み相談", en: "Life Philosophy" },
-    shortDesc: { ja: "偉人の知恵で深く導く処方箋", en: "Timeless Wisdom for Crossroads" },
-    desc: {
-      ja: "生きる意味、仕事、人間関係の深い悩みに対し、歴史の荒波を越えた偉人たちの本質的な知恵で導く人生相談モード",
-      en: "Seek timeless wisdom and deep philosophical counsel from historical giants for life's crossroads."
-    },
-    phase1Banner: { ja: "🧘 人生の深淵に向き合い、それぞれの思想から導きの言葉を語ります", en: "🧘 Turning inward to offer profound guiding principles from their life philosophies." },
-    phase2Banner: { ja: "💬 互いの処世術や生き様が響き合い、より深い人生の処方箋が紡がれます", en: "💬 Diverse worldviews weave together into an unforgettable prescription for the soul." },
-    phase1Instruction: (name, lang = currentLang) => lang === "en"
-      ? `Address the user's consultation/topic with profound empathy and depth, offering your (${name}'s) ultimate philosophical guiding principle in 2-3 sentences.`
-      : `相談内容に対し、あなた（${name}）が一生をかけて培った人生哲学や生き様から、相談者の心に深く刺さる本質的な処方箋・指針を2〜3文で授けてください。`,
-    phase2Instruction: (name, prevName, lang = currentLang) => lang === "en"
-      ? `Echo or expand upon ${prevName}'s advice with your own life lessons, guiding the user towards holistic clarity from your (${name}'s) worldview (2-3 sentences).`
-      : `直前の「${prevName}」のアドバイスを受け止め、それに補足・共鳴するか、あるいは異なる視点の人生訓を重ねて、相談者を多面的に導いてください（2〜3文）。`,
-    topics: (typeof MODE_TOPICS !== 'undefined' && MODE_TOPICS.counsel) || { ja: [], en: [] }
   }
 };
 
