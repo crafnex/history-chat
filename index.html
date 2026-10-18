@@ -408,7 +408,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <div class="text-xs font-bold text-slate-800" id="st-ver-title">📱 現在のバージョン</div>
-                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.6.1</div>
+                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.6.2</div>
               </div>
               <div class="flex items-center gap-1.5">
                 <button type="button" onclick="openChangelogModal()" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition flex items-center gap-1">
@@ -843,7 +843,7 @@
           <div class="text-indigo-400 font-bold">➔</div>
           <div class="text-right">
             <div class="text-[10px] text-emerald-600 font-semibold">最新アップデート</div>
-            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.6.1</div>
+            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.6.2</div>
           </div>
         </div>
 
@@ -1512,12 +1512,23 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.6.1';
+const APP_CLIENT_VERSION = 'v1.6.2';
 let waitingServiceWorker = null;
 let swRegistration = null;
 
 // 📋 全バージョンの変更履歴（リリースノート）マスターデータ
 const APP_CHANGELOG = [
+  {
+    version: "v1.6.2",
+    date: "2026-10-18",
+    title: "🎓 英会話＆日本語レッスンの言語設定最適化 ＆ 3段学習フォーマット新設",
+    highlights: [
+      "【英語設定時の日本語レッスン破綻を完全解消】英語UI時でも『セリフは日本語（全漢字ルビ付き）、解説は英語』と動的にプロンプトを切り替え、海外ユーザーの学習を完璧にサポート",
+      "【日本語設定・英語設定の4パターン最適化】日本人向け英会話、英語圏向け日本語会話、日本語の深掘り（大和言葉・語源・敬語）、高度な英語表現（イディオム解説）のすべてに最適化",
+      "【3段学習フォーマット新設】セリフ本文の直後に『💡【重要キー表現】』と『🎯【返信してみよう！】』が専用カードスタイルで表示され、自習・実践練習の学習効果が劇的向上",
+      "【語学サブモード切替ピルの刷新】言語設定に応じて直感的なボタン（英語フォロー／日本語のみ／語彙解説など）が表示され、学習目的に応じた切り替えが可能に"
+    ]
+  },
   {
     version: "v1.6.1",
     date: "2026-10-18",
@@ -3642,32 +3653,71 @@ function renderLanguageSubModePills() {
 
   if (currentMode === "english") {
     subContainer.classList.remove("hidden");
-    const isBilingual = languageSubMode === "bilingual";
-    subContainer.innerHTML = `
-      <span class="text-indigo-900 font-bold px-1.5 flex items-center gap-1">🗽 ${currentLang === "en" ? "Practice Mode:" : "レッスン形式:"}</span>
-      <div class="flex gap-1">
-        <button type="button" onclick="setLanguageSubMode('bilingual')" class="px-2 py-0.5 rounded-md font-bold transition cursor-pointer ${isBilingual ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
-          🇯🇵 ${currentLang === "en" ? "With Japanese Tips" : "日本語フォロー付き"}
-        </button>
-        <button type="button" onclick="setLanguageSubMode('only')" class="px-2 py-0.5 rounded-md font-bold transition cursor-pointer ${!isBilingual ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
-          🇺🇸 ${currentLang === "en" ? "English Only" : "英語のみ"}
-        </button>
-      </div>
-    `;
+    if (currentLang === "en") {
+      // 英語設定: 英語話者・世界中の学習者向け
+      const isNotes = languageSubMode !== "only";
+      subContainer.innerHTML = `
+        <span class="text-indigo-950 font-bold px-1 flex items-center gap-1">🗽 Lesson Format:</span>
+        <div class="flex flex-wrap gap-1">
+          <button type="button" onclick="setLanguageSubMode('bilingual')" class="px-2.5 py-0.5 rounded-md font-bold transition cursor-pointer ${isNotes ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+            💡 With Vocab & Idiom Notes
+          </button>
+          <button type="button" onclick="setLanguageSubMode('only')" class="px-2.5 py-0.5 rounded-md font-bold transition cursor-pointer ${!isNotes ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+            🗣️ Pure English Conversation
+          </button>
+        </div>
+      `;
+    } else {
+      // 日本語設定: 日本人向け英会話
+      const isBilingual = languageSubMode !== "only";
+      subContainer.innerHTML = `
+        <span class="text-indigo-950 font-bold px-1 flex items-center gap-1">🗽 レッスン形式:</span>
+        <div class="flex flex-wrap gap-1">
+          <button type="button" onclick="setLanguageSubMode('bilingual')" class="px-2.5 py-0.5 rounded-md font-bold transition cursor-pointer ${isBilingual ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+            🇯🇵 日本語フォロー付き
+          </button>
+          <button type="button" onclick="setLanguageSubMode('only')" class="px-2.5 py-0.5 rounded-md font-bold transition cursor-pointer ${!isBilingual ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+            🇺🇸 英語のみ (イマージョン)
+          </button>
+        </div>
+      `;
+    }
   } else if (currentMode === "japanese") {
     subContainer.classList.remove("hidden");
-    const isBilingual = languageSubMode === "bilingual";
-    subContainer.innerHTML = `
-      <span class="text-indigo-900 font-bold px-1.5 flex items-center gap-1">🌸 ${currentLang === "en" ? "Lesson Mode:" : "レッスン形式:"}</span>
-      <div class="flex gap-1">
-        <button type="button" onclick="setLanguageSubMode('bilingual')" class="px-2 py-0.5 rounded-md font-bold transition cursor-pointer ${isBilingual ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
-          🇺🇸 ${currentLang === "en" ? "With English Tips" : "英語フォロー付き"}
-        </button>
-        <button type="button" onclick="setLanguageSubMode('only')" class="px-2 py-0.5 rounded-md font-bold transition cursor-pointer ${!isBilingual ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
-          🇯🇵 ${currentLang === "en" ? "Japanese Only" : "日本語のみ"}
-        </button>
-      </div>
-    `;
+    if (currentLang === "en") {
+      // 英語設定: 英語話者のための日本語レッスン
+      const isTips = languageSubMode !== "only";
+      subContainer.innerHTML = `
+        <span class="text-indigo-950 font-bold px-1 flex items-center gap-1">🌸 Lesson Format:</span>
+        <div class="flex flex-wrap gap-1">
+          <button type="button" onclick="setLanguageSubMode('bilingual')" class="px-2.5 py-0.5 rounded-md font-bold transition cursor-pointer ${isTips ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+            🇺🇸 With English Tips & Furigana
+          </button>
+          <button type="button" onclick="setLanguageSubMode('only')" class="px-2.5 py-0.5 rounded-md font-bold transition cursor-pointer ${!isTips ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+            🇯🇵 Japanese Immersion (Furigana)
+          </button>
+        </div>
+      `;
+    } else {
+      // 日本語設定: 日本人向け（大和言葉・敬語・語源）または留学生向け（英語フォロー）
+      const isNotes = languageSubMode === "bilingual" || !languageSubMode;
+      const isOnly = languageSubMode === "only";
+      const isEnFollow = languageSubMode === "en_tips";
+      subContainer.innerHTML = `
+        <span class="text-indigo-950 font-bold px-1 flex items-center gap-1">🌸 レッスン形式:</span>
+        <div class="flex flex-wrap gap-1">
+          <button type="button" onclick="setLanguageSubMode('bilingual')" class="px-2.5 py-0.5 rounded-md font-bold transition cursor-pointer ${isNotes ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+            💡 表現・語源解説付き
+          </button>
+          <button type="button" onclick="setLanguageSubMode('only')" class="px-2.5 py-0.5 rounded-md font-bold transition cursor-pointer ${isOnly ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+            🇯🇵 日本語のみ (ルビ有)
+          </button>
+          <button type="button" onclick="setLanguageSubMode('en_tips')" class="px-2.5 py-0.5 rounded-md font-bold transition cursor-pointer ${isEnFollow ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+            🇺🇸 英語フォロー付き
+          </button>
+        </div>
+      `;
+    }
   } else {
     subContainer.classList.add("hidden");
   }
@@ -6319,59 +6369,146 @@ async function callGeminiMicroBatch(speakerSequence, topic, isInitialPhase, user
     }
   }).join("\n");
 
-  const formatExampleEn = speakerSequence.map(c => `===${c.id}===\n[Only the English speech of ${c.name.en} here]`).join("\n");
+  const formatExampleEn = speakerSequence.map(c => `===${c.id}===\n[Only the speech of ${c.name.en} here]`).join("\n");
   const formatExampleJa = speakerSequence.map(c => `===${c.id}===\nここに${c.name.ja}のセリフ本文のみを書く。`).join("\n");
 
-  // 語学レッスンモード用の特別指示生成
-  let languageSpecialInstructionJa = "";
-  let languageSpecialInstructionEn = "";
+  // 言語・モード別の専用学習ルール構築
+  let lessonInstructions = "";
+  let languageMandateBlock = "";
 
-  if (currentMode === "english") {
-    if (languageSubMode === "bilingual") {
-      languageSpecialInstructionJa = `
-【🗽 英会話レッスン特別ルール（日本語フォロー付き）】
-・この会話は日本人が英会話を楽しく習得するための実践レッスンです。
-・各発言は、まず生き生きとした自然な英語（2〜3文）で発言してください。
-・その直後に改行し、「💡【ワンポイント】使った英語表現の日本語訳や、日常で使える自然なニュアンスのアドバイス」を日本語で1〜2文添えてください。
+  if (isEn) {
+    // ==========================================
+    // 【ケース1】アプリ言語が英語（currentLang === 'en'）
+    // ==========================================
+    if (currentMode === "japanese") {
+      // 🌸 英語話者が日本語を学ぶモード (Japanese for English Speakers)
+      languageMandateBlock = `
+============================================================
+🌸 JAPANESE LANGUAGE LESSON REQUIREMENT (FOR ENGLISH SPEAKERS)
+============================================================
+1. PRIMARY SPOKEN LANGUAGE IS NATURAL JAPANESE:
+   You are conversing with an English-speaking learner of Japanese.
+   Each figure's dialogue MUST be written in natural, engaging JAPANESE (2-3 sentences).
+2. MANDATORY FURIGANA (KANJI RUBY) FOR ALL KANJI (CRITICAL):
+   To help the learner read accurately, EVERY SINGLE KANJI MUST strictly include furigana in [漢字|かんじ] format!
+   Example: [今日|きょう]は[良|い]い[天気|てんき]じゃな。[私|わたし]は[織田|おだ][信長|のぶなが]である。
+3. DO NOT speak exclusively in English. The core persona dialogue MUST be in Japanese!
 `;
-      languageSpecialInstructionEn = `
-【🗽 English Lesson Special Rule (With Japanese Tips)】
-- Provide a lively natural English response (2-3 sentences), followed immediately on a new line by a brief bilingual tip ("💡【Note】...").
+
+      if (languageSubMode !== "only") {
+        lessonInstructions = `
+【🌸 Pedagogical Study Structure (Bilingual Notes)】
+Immediately following the Japanese dialogue, include these two study hooks on separate lines:
+💡 [Key Vocabulary & Nuance]
+- Point out 1-2 important words, idioms, or grammar forms used above with English meaning and cultural/register context (e.g. polite vs casual).
+🎯 [Try It Out / Practice Prompt]
+- Encourage the learner to reply with a simple, practical Japanese response (e.g. "Try replying: '[面白|おもしろ]いですね！'").
 `;
+      } else {
+        lessonInstructions = `
+【🌸 Japanese Immersion Mode】
+Speak entirely in natural, expressive Japanese with mandatory kanji furigana [漢字|かんじ]. Pace your vocabulary gracefully so the learner can follow from context.
+`;
+      }
+    } else if (currentMode === "english") {
+      // 🗽 英語話者・世界中のESL上級者が表現力を磨くモード
+      languageMandateBlock = `
+============================================================
+🗽 ENGLISH LESSON REQUIREMENT (VOCABULARY & EXPRESSION MASTERY)
+============================================================
+1. Output language MUST be 100% in vivid, theatrical, expressive ENGLISH.
+2. Under NO circumstances should any Japanese appear in the output.
+`;
+      if (languageSubMode !== "only") {
+        lessonInstructions = `
+【🗽 Rhetoric & Vocabulary Study Structure】
+Immediately following your English dialogue, include on separate lines:
+💡 [Key Phrase & Rhetoric]
+- Highlight 1 rich idiom, advanced vocabulary word, or rhetorical flourish used above, explaining its exact connotation and everyday usage.
+🎯 [Try It Out]
+- Pose a compelling question prompting the user to practice using that phrase in their reply.
+`;
+      } else {
+        lessonInstructions = `
+【🗽 Pure English Conversation】
+Maintain a dynamic, fluent conversational flow in English, using authentic idioms and sharp historic personality.
+`;
+      }
     } else {
-      languageSpecialInstructionJa = `
-【🗽 英会話レッスン特別ルール（英語のみ・イマージョン）】
-・100% 英語のみで会話を行ってください。
-・初心者が自信を持てるよう、自然な相槌やネイティブらしい表現（カジュアルな言い回しやスラング）を織り交ぜてリードしてください。
-`;
-      languageSpecialInstructionEn = `
-【🗽 English Lesson Special Rule (English Only Immersion)】
-- Speak 100% in English with smooth native idioms and supportive conversational pacing.
+      // 通常モード (debate, counsel, butler etc.)
+      languageMandateBlock = `
+============================================================
+CRITICAL MANDATORY LANGUAGE REQUIREMENT (STRICTLY ENFORCED)
+============================================================
+1. Output language MUST be EXCLUSIVELY and 100% in ENGLISH.
+2. Under NO circumstances should any Japanese, kanji, hiragana, or katakana appear in the output.
+3. Translate all samurai mannerisms or feudal tones entirely into vivid, theatrical English!
+4. The user has set the app to English and will reject any Japanese output.
 `;
     }
-  } else if (currentMode === "japanese") {
-    if (languageSubMode === "bilingual") {
-      languageSpecialInstructionJa = `
-【🌸 日本語レッスン特別ルール（英語フォロー付き ＆ 漢字ふりがな必須）】
-・この会話は英語圏の学習者が日本語を身につけるためのレッスンです。
-・★超重要ルール（漢字ルビ）: 出力するすべての漢字に、必ず [漢字|かんじ] の形式でふりがな（ルビ）を振ってください（例: [今日|きょう]は[楽|たの]しい[一日|いちにち]ですね）。
-・日本語の発言（2〜3文）の直後に改行し、「💡 [English Tip] ...」として、英語での簡単な意訳やキーフレーズの解説を添えてください。
+  } else {
+    // ==========================================
+    // 【ケース2】アプリ言語が日本語（currentLang === 'ja'）
+    // ==========================================
+    if (currentMode === "english") {
+      // 🗽 日本人が英会話を学ぶモード
+      languageMandateBlock = `
+============================================================
+🗽 英会話レッスン特別ルール（日本人学習者向け実践会話）
+============================================================
+1. 【会話セリフは100% 英語（2〜3文）】:
+   各偉人のセリフ本文は、必ず自然で生き生きとしたネイティブ英語（2〜3文）で発言してください。
+   キャラクターの性格（信長の威厳、龍馬の豪快さ等）を英語のセリフで表現してください。
 `;
-      languageSpecialInstructionEn = `
-【🌸 Japanese Lesson Special Rule (With English Notes & Furigana)】
-- Strictly format all kanji with furigana using [漢字|かんじ] format (e.g. [私|わたし]の[名前|なまえ]).
-- Follow each Japanese dialogue with a concise English translation note ("💡 [English Tip] ...").
+      if (languageSubMode !== "only") {
+        lessonInstructions = `
+【🗽 学習サポート構造（日本語フォロー付き）】
+英語のセリフ本文の直後に改行し、以下の2項目を必ず日本語で明記してください：
+💡【重要キー表現】
+・今回使ったキーとなる単語・イディオム・日常会話フレーズの日本語訳と、ネイティブが使う自然なニュアンスの解説。
+🎯【返信してみよう！】
+・ユーザーが英語で返信したくなる簡単な問いかけや、使ってほしい英語フレーズの例示（例: 「"That sounds great!" を使って答えてみてね」）。
 `;
-    } else {
-      languageSpecialInstructionJa = `
-【🌸 日本語レッスン特別ルール（日本語のみ ＆ 漢字ふりがな必須）】
-・★超重要ルール（漢字ルビ）: 出力するすべての漢字に、必ず [漢字|かんじ] の形式でふりがな（ルビ）を振ってください（例: [私|わたし]の[名前|なまえ]は[信長|のぶなが]です）。
-・やさしく親しみやすい自然な日本語で、語彙や文脈を学習者が理解しやすいよう工夫して対話してください。
+      } else {
+        lessonInstructions = `
+【🗽 英語のみイマージョンモード】
+解説を挟まず、100%英語のみでテンポよく会話をリードしてください。
 `;
-      languageSpecialInstructionEn = `
-【🌸 Japanese Lesson Special Rule (Japanese Only with Furigana)】
-- Strictly format all kanji with furigana using [漢字|かんじ] format. Speak in accessible, gentle Japanese.
+      }
+    } else if (currentMode === "japanese") {
+      // 🌸 日本人が美しい日本語を学ぶ、または留学生向け
+      languageMandateBlock = `
+============================================================
+🌸 日本語レッスン特別ルール（大和言葉・敬語・漢字ルビ）
+============================================================
+1. ★超重要ルール（漢字ルビ）:
+   すべての漢字に必ず [漢字|かんじ] の形式でふりがな（ルビ）を振ってください。
+   （例: [美|うつく]しい[大和言葉|やまと言葉]を[学|まな]びましょう）
 `;
+      if (languageSubMode === "en_tips") {
+        lessonInstructions = `
+【🌸 留学生・英語話者向け（英語フォロー付き）】
+日本語セリフの直後に改行し、以下を英語で記載してください：
+💡 [English Tip]
+- Short translation and cultural/grammar explanation in English.
+🎯 [Try It Out]
+- A simple phrase prompt for the learner.
+`;
+      } else if (languageSubMode !== "only") {
+        lessonInstructions = `
+【🌸 日本語の知恵・語源・美しい表現解説付き】
+日本語セリフの直後に改行し、以下を日本語で記載してください：
+💡【日本語の知恵・語源】
+・今回使った大和言葉、故事成語、四字熟語、武士・文豪の言葉遣いや、日常・ビジネスで役立つ敬語・言い換えのコツ。
+🎯【使ってみよう！】
+・この表現を普段の会話や文章でどう活かせるかのアドバイスや、問いかけ。
+`;
+      } else {
+        lessonInstructions = `
+【🌸 日本語のみ（ルビ付き）】
+解説を挟まず、美しい日本語の掛け合いをテンポよく展開してください。
+`;
+      }
     }
   }
 
@@ -6380,16 +6517,7 @@ ${isSingle ? `You are roleplaying as ${uniqueChars[0].name.en} in an intimate 1-
 Current discussion mode: 【${modeObj.icon} ${modeObj.name.en} (${modeObj.desc.en})】.
 Topic: "${topic}"
 
-============================================================
-CRITICAL MANDATORY LANGUAGE REQUIREMENT (STRICTLY ENFORCED)
-============================================================
-1. Output language MUST be EXCLUSIVELY and 100% in ENGLISH (unless specific language lesson mode specifies bilingual tips).
-2. Under NO circumstances should unrequested Japanese, kanji, hiragana, or katakana appear in the output.
-3. Even for Japanese or ancient figures (such as Oda Nobunaga, Toyotomi Hideyoshi, Miyamoto Musashi, etc.):
-   - You MUST translate their feudal samurai arrogance, pride, or distinctive speech style entirely into vivid, theatrical English!
-   - For instance, Nobunaga's haughty tone ("たわけ", "くだらん", "戦場に過ぎぬ") MUST be rendered in English as:
-     "What utter nonsense! A workplace is a battlefield for triumph, not a cozy tea party for coddling fools!"
-4. The user has set the app to English and will reject any Japanese output.
+${languageMandateBlock}
 
 【Personas & Philosophies】
 ${personaDefinitions}
@@ -6400,18 +6528,18 @@ ${userIntervention ? `【Latest User Comment】\nUser: "${userIntervention}"\n` 
 【Generation Order & Missions】
 ${orderInstructions}
 
-${languageSpecialInstructionEn}
+${lessonInstructions}
 
 【Strict Persona, Voice & Dynamic Dialogue Rules】
 1. Unbreakable Persona & Distinct Voice:
-   Faithfully express each figure's unique arrogance, wisdom, wit, or stubbornness in vivid, dramatic English. Translate Japanese feudal mannerisms naturally into theatrical period or character-specific English (e.g. Nobunaga's fierce imperious commands, Ryoma's seafaring swagger, Rikyu's understated Zen elegance).
+   Faithfully express each figure's unique arrogance, wisdom, wit, or stubbornness. Avoid bland generic AI polite responses.
 2. Eliminate Robotic Formulaic Openings:
-   NEVER start with robotic templates like "As XX said, I agree and would like to add...". Jump directly into fiery rebuttals, playful banter, or piercing insights matching the figure's character.
+   NEVER start with robotic templates like "As XX said, I agree and would like to add...". Jump directly into authentic reactions.
 3. No Self-Agreement:
    Never agree with or address yourself if you spoke previously.
 
 【Output Format (STRICT REQUIREMENT)】
-- 2-3 complete sentences per turn (around 35-70 English words). Do NOT cut off mid-sentence.
+- 2-3 complete sentences for the spoken dialogue per turn. Do NOT cut off mid-sentence.
 - Delimit each turn with "===SPEAKER_ID===" line (no commentary or preface outside these blocks):
 
 ${formatExampleEn}
@@ -6419,6 +6547,8 @@ ${formatExampleEn}
 ${isSingle ? `あなた（AI）は歴史上の人物（${uniqueChars[0].name.ja}）として、相談者（ユーザー）と1対1で向き合い親身かつ本質的な対話を繰り広げます。` : `あなた（AI）は歴史上の偉人たちの思考回路・世界観・個性を忠実に再現するマルチエージェント・シミュレーターです。`}
 現在のトークモードは【${modeObj.icon} ${modeObj.name.ja}（${modeObj.desc.ja}）】です。
 以下の【各偉人の人格・思想・口調定義】に基づき、テーマ「${topic}」についての発言を生成してください。
+
+${languageMandateBlock}
 
 【各偉人の人格・思想・口調定義】
 ${personaDefinitions}
@@ -6429,7 +6559,7 @@ ${userIntervention ? `【直前のユーザー発言】\nユーザー：「${use
 【今回生成する発言の順番とミッション（厳守）】
 ${orderInstructions}
 
-${languageSpecialInstructionJa}
+${lessonInstructions}
 
 【各偉人の人格・口癖・自然な掛け合いに関する絶対遵守ルール（最重要）】
 1. 一人称・語尾・口癖の絶対固定:
@@ -6441,15 +6571,15 @@ ${languageSpecialInstructionJa}
    直前の発言者が自分自身である場合、自分自身に同意したり自分の名前を呼んだりせず、新たな論点や処方箋を自然に語ってください。
 
 【出力フォーマット（絶対厳守）】
-・出力言語は指定がない限り「${langName}」とすること。
-・各発言は必ず文末（。や！や？）まで完結した2〜3文（80〜150文字程度）とし、絶対に途中で切らないこと。
+・出力言語はモード指定（英会話やルビ指示など）に従うこと。
+・各発言は必ず文末（。や！や？）まで完結した2〜3文とし、絶対に途中で切らないこと。
 ・以下の通り、1発言ごとに「===SPEAKER_ID===」の区切り行を入れて出力すること（前置きや解説は一切書かないこと）：
 
 ${formatExampleJa}
 `;
 
-  
-const requestBody = {
+
+  const requestBody = {
     contents: [{ role: "user", parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.85,
@@ -6752,6 +6882,19 @@ function formatChatText(rawText) {
   let safe = escapeHtml(rawText);
   // ルビ変換: [漢字|かんじ] -> <ruby class="ruby-word">漢字<rt class="ruby-rt">かんじ</rt></ruby>
   safe = safe.replace(/\[([^\|\]\r\n]+)\|([^\]\r\n]+)\]/g, '<ruby class="ruby-word">$1<rt class="ruby-rt">$2</rt></ruby>');
+
+  // 💡 または 🎯 で始まる学習メモブロックがあれば、セリフ本文と分離して見やすいカード内ブロックにする
+  if (safe.includes("💡") || safe.includes("🎯")) {
+    safe = safe.replace(/(?:\r?\n)*(💡|🎯)/g, (match, icon) => {
+      return `<div class="learning-note-box mt-2 pt-2 border-t border-indigo-100 text-[12px] sm:text-[12.5px] text-slate-800 leading-relaxed font-normal bg-indigo-50/70 -mx-1 px-2.5 py-1.5 rounded-lg border border-indigo-200/60 my-1">${icon}`;
+    });
+    safe = safe + '</div>';
+  }
+
+  // 改行を <br> に変換（div タグ周辺の二重改行を整理）
+  safe = safe.replace(/\n/g, '<br>');
+  safe = safe.replace(/<br><div/g, '<div').replace(/<\/div><br>/g, '</div>');
+
   return safe;
 }
 
