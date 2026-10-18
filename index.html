@@ -408,7 +408,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <div class="text-xs font-bold text-slate-800" id="st-ver-title">📱 現在のバージョン</div>
-                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.8.2</div>
+                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.8.3</div>
               </div>
               <div class="flex items-center gap-1.5">
                 <button type="button" onclick="openChangelogModal()" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition flex items-center gap-1">
@@ -997,7 +997,7 @@
           <div class="text-indigo-400 font-bold">➔</div>
           <div class="text-right">
             <div class="text-[10px] text-emerald-600 font-semibold">最新アップデート</div>
-            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.8.2</div>
+            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.8.3</div>
           </div>
         </div>
 
@@ -1460,20 +1460,8 @@
         <!-- 中段: 選択中分類の2大モード (左右2分割 50%/50% 特大カード) -->
         <div id="mode-slots" class="grid grid-cols-2 gap-1.5 sm:gap-2 mb-1.5"></div>
         
-        <!-- 下段: 大型くっきりモード解説パネル -->
-        <div id="mode-desc-card" class="bg-white border border-indigo-200/90 rounded-xl p-2.5 shadow-xs transition">
-          <div class="flex items-center justify-between gap-2 mb-1">
-            <div class="flex items-center gap-1.5 min-w-0">
-              <span id="mode-desc-icon" class="text-base sm:text-lg shrink-0">💡</span>
-              <span id="mode-desc-title" class="font-bold text-slate-900 text-xs sm:text-[13.5px] truncate"></span>
-            </div>
-            <span id="mode-desc-badge" class="text-[10px] sm:text-[10.5px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0"></span>
-          </div>
-          <div id="mode-desc-body" class="text-xs sm:text-[12.5px] text-slate-700 leading-relaxed font-normal"></div>
-          
-          <!-- 語学レッスン用サブモード切替ピル（英会話・日本語レッスン時のみ動的表示） -->
-          <div id="language-submode-container" class="hidden mt-2 pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-1 text-xs"></div>
-        </div>
+        <!-- 語学レッスン時のみ動的表示されるスマート形式セレクター（通常時は完全非表示 0px） -->
+        <div id="language-submode-container" class="hidden mb-1.5 py-1 px-2.5 rounded-xl bg-indigo-50/90 border border-indigo-200/80 flex flex-wrap items-center justify-between gap-1 text-xs shadow-2xs"></div>
       </div>
 
       <!-- 選択中のメンバーバー -->
@@ -1599,8 +1587,8 @@
 
   </div>
 
-<script src="mode_topics.js?v=1.8.2"></script>
-<script src="character_details.js?v=1.8.2"></script>
+<script src="mode_topics.js?v=1.8.3"></script>
+<script src="character_details.js?v=1.8.3"></script>
 <script>
 // ============================================================================
 // 🛡️ API通信モード設定（各自のGroq / Gemini / OpenAIキーによる公式直接通信）
@@ -1665,12 +1653,22 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.8.2';
+const APP_CLIENT_VERSION = 'v1.8.3';
 let waitingServiceWorker = null;
 let swRegistration = null;
 
 // 📋 全バージョンの変更履歴（リリースノート）マスターデータ
 const APP_CHANGELOG = [
+  {
+    version: "v1.8.3",
+    date: "2026-10-18",
+    title: "📐 トーク形式UIスリム化＆キャラクター選択画面の特大化",
+    highlights: [
+      "【大型解説パネルの撤廃】画面の縦幅を圧迫していた詳細説明パネルを完全削除し、キャラクター一覧グリッドを大幅に拡大",
+      "【トーク形式決定カードの直感化】カード内の説明文を刷新し、どんな会話ができるか一目で分かる明瞭なフレーズに最適化",
+      "【語学専用の形式セレクター】英会話・日本語レッスンの時のみカード直下にスマートな形式ピルを表示し、他モードではスペース消費ゼロ（0px）を実現"
+    ]
+  },
   {
     version: "v1.8.2",
     date: "2026-10-18",
@@ -2096,7 +2094,7 @@ const CHAT_MODES = {
     categoryId: "dialogue",
     icon: "⚔️",
     name: { ja: "白熱議論", en: "Debate" },
-    shortDesc: { ja: "持論をぶつけ合う真剣勝負", en: "Fierce Intellectual Rebuttal" },
+    shortDesc: { ja: "持論と哲学でとことんディベート", en: "Fierce Debate & Incisive Rebuttal" },
     desc: {
       ja: "互いの哲学や持論を真っ向からぶつけ合い、鋭い反論とロジックで真理を追求する熱狂のディベートモード",
       en: "Clash philosophies and fiercely debate each other with incisive logic, rebuttals, and passion."
@@ -2116,7 +2114,7 @@ const CHAT_MODES = {
     categoryId: "dialogue",
     icon: "🧘",
     name: { ja: "人生哲学・悩み相談", en: "Life Philosophy" },
-    shortDesc: { ja: "偉人の知恵で深く導く処方箋", en: "Timeless Wisdom for Crossroads" },
+    shortDesc: { ja: "偉人の人生観で悩みを深く解決", en: "Timeless Wisdom for Life Crossroads" },
     desc: {
       ja: "生きる意味、仕事、人間関係の深い悩みに対し、歴史の荒波を越えた偉人たちの本質的な知恵で導く人生相談モード",
       en: "Seek timeless wisdom and deep philosophical counsel from historical giants for life's crossroads."
@@ -2138,7 +2136,7 @@ const CHAT_MODES = {
     categoryId: "idea",
     icon: "💡",
     name: { ja: "壁打ちブレスト", en: "Brainstorm" },
-    shortDesc: { ja: "斜め上の発想を掛け合わせ", en: "Wild Angles & Rapid Ideas" },
+    shortDesc: { ja: "斜め上のひらめき・アイデア掛け算", en: "Wild Angles & Rapid Ideas Multiplying" },
     desc: {
       ja: "常識破りな突飛な切り口や斜め上のアイデアを次々と掛け合わせ、企画や発想を爆発的に広げるブレストモード",
       en: "Spark wild ideas, lateral thinking, and unexpected conceptual breakthroughs through rapid multiplication."
@@ -2158,7 +2156,7 @@ const CHAT_MODES = {
     categoryId: "idea",
     icon: "🎙️",
     name: { ja: "深掘り対談", en: "In-Depth Interview" },
-    shortDesc: { ja: "どんどん良い意見を出し合う", en: "Deep Dialogue & Great Ideas" },
+    shortDesc: { ja: "本質を抉り出し名案を高め合う", en: "Deep Dialogue & Great Solutions" },
     desc: {
       ja: "お題や課題の本質を抉り出し、互いにどんどん建設的な名案・知見を出し合ってアイデアや解決策を高め合う知的共創対談モード",
       en: "In-depth intellectual dialogue uncovering core truths, rapidly generating great insights and solutions together."
@@ -2180,7 +2178,7 @@ const CHAT_MODES = {
     categoryId: "romance",
     icon: "💌",
     name: { ja: "恋人甘々", en: "Sweetheart" },
-    shortDesc: { ja: "甘く優しい言葉で寄り添う", en: "Romantic Affection & Sweetness" },
+    shortDesc: { ja: "あなたを一途に愛して甘やかす", en: "Sweet Love, Warmth & Gentle Closeness" },
     desc: {
       ja: "あなただけを一途に愛し、照れながらも甘く優しい言葉でぎゅっと寄り添うロマンチックな恋人モード",
       en: "Devoted sweet romantic dialogue overflowing with heartfelt affection, cuddling close just for you."
@@ -2200,7 +2198,7 @@ const CHAT_MODES = {
     categoryId: "romance",
     icon: "💢",
     name: { ja: "素直になれない", en: "Tsundere" },
-    shortDesc: { ja: "憎まれ口の裏に見える本音", en: "Tsundere Wit & Hidden Warmth" },
+    shortDesc: { ja: "ツンデレ！強がりの裏にある本音", en: "Feisty Tsundere Wit & Clumsy Care" },
     desc: {
       ja: "『べ、別にあんたのために来たわけじゃないんだからね！』と憎まれ口の裏に愛が滲むツンデレモード",
       en: "Feisty, stubborn exterior that awkwardly hides genuine concern and protective affection for you."
@@ -2222,7 +2220,7 @@ const CHAT_MODES = {
     categoryId: "healing",
     icon: "👏",
     name: { ja: "全力肯定", en: "Affirmation" },
-    shortDesc: { ja: "100%全肯定で褒めちぎる", en: "100% Unconditional Praise" },
+    shortDesc: { ja: "疲れた心と頑張りを100%全肯定", en: "100% Healing Affirmation & Praise" },
     desc: {
       ja: "落ち込んだ心や日々の頑張りを無条件に100%全肯定！どんな悩みも温かく全力で褒めちぎる癒しモード",
       en: "100% unconditional validation and radiant affirmation to celebrate your presence and efforts."
@@ -2242,7 +2240,7 @@ const CHAT_MODES = {
     categoryId: "healing",
     icon: "🍶",
     name: { ja: "ゆる晩酌", en: "Tavern Chat" },
-    shortDesc: { ja: "とりあえず乾杯！気楽な本音場", en: "Cheers & Relaxed Banter" },
+    shortDesc: { ja: "居酒屋のノリで気楽に本音トーク", en: "Tavern Drinks & Relaxed Honest Banter" },
     desc: {
       ja: "肩肘張らず『とりあえず乾杯！』のノリで、愚痴や本音を気楽に語り合えるフランクな居酒屋モード",
       en: "Kick back with casual drinks, unwind with bar-chum camaraderie, and vent comfortably together."
@@ -2264,7 +2262,7 @@ const CHAT_MODES = {
     categoryId: "study",
     icon: "🗽",
     name: { ja: "英会話レッスン", en: "English Lesson" },
-    shortDesc: { ja: "実践英会話＋キー表現＋返信練習", en: "Speaking, Expressions & Practice" },
+    shortDesc: { ja: "実践的な日常英会話と表現の練習", en: "Practical Conversational English Practice" },
     desc: {
       ja: "日常英会話や海外旅行で使える自然な英語を実践！ネイティブ表現、重要キー表現、返信練習の3段学習モード",
       en: "Practical English conversational practice with friendly guidance! Natural dialog, key idioms, and reply practice."
@@ -2284,7 +2282,7 @@ const CHAT_MODES = {
     categoryId: "study",
     icon: "🌸",
     name: { ja: "日本語レッスン", en: "Japanese Lesson" },
-    shortDesc: { ja: "全漢字ルビ付き日本語学習", en: "Furigana Ruby & Cultural Notes" },
+    shortDesc: { ja: "全漢字ふりがな付きでやさしく学ぶ", en: "Learn Japanese with Furigana Ruby" },
     desc: {
       ja: "外国人のための日本語学習！すべての漢字にふりがな（ルビ）が付き、英語解説付きか日本語のみかを選べるモード",
       en: "Natural Japanese practice with kanji furigana readings! Choose with English notes or Japanese-only immersion."
@@ -4014,7 +4012,7 @@ function renderModeTabs() {
           <div class="text-[12.5px] sm:text-[13.5px] font-bold leading-tight truncate ${isSelected ? 'text-white' : 'text-slate-900'}">
             ${m.name[currentLang] || m.name.ja}
           </div>
-          <div class="text-[10px] sm:text-[11px] leading-tight mt-0.5 truncate ${isSelected ? 'text-indigo-100' : 'text-slate-500'}">
+          <div class="text-[9.5px] sm:text-[10.5px] leading-snug mt-0.5 line-clamp-2 ${isSelected ? 'text-indigo-100' : 'text-slate-600 font-medium'}">
             ${(m.shortDesc && (m.shortDesc[currentLang] || m.shortDesc.ja)) || (m.desc[currentLang] || m.desc.ja)}
           </div>
         </div>
@@ -4023,21 +4021,7 @@ function renderModeTabs() {
     });
   }
 
-  // 4. 下段: 大型くっきりモード解説パネルの更新
-  const modeObj = CHAT_MODES[currentMode];
-  const iconEl = document.getElementById("mode-desc-icon");
-  const titleEl = document.getElementById("mode-desc-title");
-  const badgeEl = document.getElementById("mode-desc-badge");
-  const bodyEl = document.getElementById("mode-desc-body");
-
-  if (modeObj && activeCat && titleEl) {
-    if (iconEl) iconEl.innerText = modeObj.icon;
-    titleEl.innerText = modeObj.name[currentLang] || modeObj.name.ja;
-    if (badgeEl) badgeEl.innerText = `${activeCat.icon} ${activeCat.name[currentLang] || activeCat.name.ja}`;
-    if (bodyEl) bodyEl.innerHTML = `<span class="text-slate-800 font-medium">${modeObj.desc[currentLang] || modeObj.desc.ja}</span>`;
-  }
-
-  // 語学サブモード切替ピルの表示・非表示
+  // 4. 語学サブモード切替ピルの表示・非表示（英会話・日本語レッスン時のみ動的表示）
   renderLanguageSubModePills();
 }
 
