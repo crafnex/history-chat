@@ -408,7 +408,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <div class="text-xs font-bold text-slate-800" id="st-ver-title">📱 現在のバージョン</div>
-                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.7.2</div>
+                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.8.0</div>
               </div>
               <div class="flex items-center gap-1.5">
                 <button type="button" onclick="openChangelogModal()" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition flex items-center gap-1">
@@ -422,7 +422,58 @@
           </div>
         </div>
 
-        <!-- 🔤 2. 文字サイズ設定 -->
+        <!-- 👤 2. あなたのプロフィール（マイペルソナ） -->
+        <div class="bg-indigo-50/70 border border-indigo-200/90 rounded-xl p-3 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-indigo-950 flex items-center gap-1.5">
+              <span>👤</span>
+              <span id="st-persona-title">あなたのプロフィール（マイペルソナ）</span>
+            </label>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">偉人が名前を呼んでくれる</span>
+          </div>
+          
+          <div class="grid grid-cols-3 gap-2">
+            <!-- アバター絵文字 -->
+            <div class="col-span-1">
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">アイコン</label>
+              <input type="text" id="persona-icon-input" maxlength="4" value="🤠" class="w-full text-center text-lg bg-white border border-slate-300 rounded-lg py-1 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+              <!-- クイック選択 -->
+              <div class="flex flex-wrap gap-1 mt-1 justify-center">
+                <button type="button" onclick="setPersonaIcon('🤠')" class="text-xs hover:scale-125 transition">🤠</button>
+                <button type="button" onclick="setPersonaIcon('👤')" class="text-xs hover:scale-125 transition">👤</button>
+                <button type="button" onclick="setPersonaIcon('🌟')" class="text-xs hover:scale-125 transition">🌟</button>
+                <button type="button" onclick="setPersonaIcon('🌸')" class="text-xs hover:scale-125 transition">🌸</button>
+                <button type="button" onclick="setPersonaIcon('👑')" class="text-xs hover:scale-125 transition">👑</button>
+              </div>
+            </div>
+            
+            <!-- お名前 & 敬称 -->
+            <div class="col-span-2 space-y-1">
+              <div>
+                <label class="block text-[10px] font-bold text-slate-600 mb-0.5">お名前・ニックネーム</label>
+                <input type="text" id="persona-name-input" placeholder="例: 太郎 / Sarah" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-600 mb-0.5">偉人からの呼ばれ方（敬称）</label>
+                <select id="persona-honorific-select" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
+                  <option value="さん">〇〇さん（親しみ）</option>
+                  <option value="殿">〇〇殿（武将・古風）</option>
+                  <option value="様">〇〇様（敬意・執事）</option>
+                  <option value="none">呼び捨て（タメ口）</option>
+                  <option value="キミ">キミ（親密）</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <!-- あなたの立場・状況 -->
+          <div>
+            <label class="block text-[10px] font-bold text-slate-600 mb-0.5">あなたの立場・現状（AIが助言の参考にします）</label>
+            <input type="text" id="persona-title-input" placeholder="例: 20代の若手社員、脱サラを目指すエンジニア、歴史好きの学生" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
+          </div>
+        </div>
+
+        <!-- 🔤 3. 文字サイズ設定 -->
         <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
           <div class="flex items-center justify-between">
             <label class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
@@ -815,6 +866,73 @@
       </div>
     </div>
 
+    <!-- ================= 0-D. 神回トーク保存モーダル ================= -->
+    <div id="save-chat-modal" class="hidden absolute inset-0 z-[60] bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-3" onclick="if(event.target === this) closeSaveChatModal()">
+      <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl flex flex-col p-4 border border-slate-200">
+        <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">⭐</span>
+            <h3 class="text-sm font-bold text-slate-800">神回トークをお気に入りに保存</h3>
+          </div>
+          <button type="button" onclick="closeSaveChatModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold px-1.5 py-0.5 rounded-md hover:bg-slate-100 transition">✕</button>
+        </div>
+        
+        <p class="text-[11px] text-slate-600 mb-2.5 leading-snug">
+          現在の会話ログを端末に保存します。後からいつでも「📚 保存一覧」から読み返せます。
+        </p>
+
+        <div class="space-y-2 mb-3">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-700 mb-0.5">保存タイトル</label>
+            <input type="text" id="save-chat-title-input" placeholder="例: 信長とソクラテスの白熱議論" class="w-full bg-slate-50 border border-slate-300 focus:border-indigo-500 rounded-lg px-2.5 py-1.5 text-xs outline-none font-medium">
+          </div>
+        </div>
+
+        <div class="flex gap-2">
+          <button type="button" onclick="closeSaveChatModal()" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-xl text-xs transition">
+            キャンセル
+          </button>
+          <button type="button" onclick="confirmSaveCurrentChat()" class="w-2/3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-2 rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5">
+            <span>💾</span>
+            <span>保存する</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= 0-E. 保存した神回トーク（アーカイブ）一覧モーダル ================= -->
+    <div id="archive-modal" class="hidden absolute inset-0 z-[60] bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-3" onclick="if(event.target === this) closeArchiveModal()">
+      <div class="bg-white w-full max-w-md max-h-[92%] rounded-2xl shadow-2xl flex flex-col p-4 border border-slate-200">
+        
+        <!-- ヘッダー -->
+        <div class="flex items-center justify-between pb-2.5 mb-2 border-b border-slate-100 shrink-0">
+          <div class="flex items-center gap-2">
+            <span class="text-2xl">📚</span>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <h3 class="text-sm font-bold text-slate-800">保存した神回トーク</h3>
+                <span id="archive-count-badge" class="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 border border-amber-300">0件</span>
+              </div>
+              <p class="text-[10px] text-slate-500 leading-tight mt-0.5">過去にお気に入りに保存した会話をいつでも読み返せます</p>
+            </div>
+          </div>
+          <button type="button" onclick="closeArchiveModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold px-2 py-0.5 rounded-md hover:bg-slate-100 transition">✕</button>
+        </div>
+
+        <!-- 一覧リスト -->
+        <div id="archive-list-container" class="flex-1 overflow-y-auto space-y-2.5 pr-1 text-xs">
+          <!-- JSで動的レンダリング -->
+        </div>
+
+        <!-- フッター -->
+        <div class="pt-2.5 border-t border-slate-100 flex justify-end shrink-0 mt-2">
+          <button type="button" onclick="closeArchiveModal()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2 rounded-xl text-xs transition shadow-sm">
+            閉じる
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- ================= 0-B. アプリアップデート＆更新履歴（リリースノート）確認モーダル ================= -->
     <div id="app-update-modal" class="hidden absolute inset-0 z-[60] bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-3" onclick="if(event.target === this) closeAppUpdateModal()">
       <div class="bg-white w-full max-w-md max-h-[92%] rounded-2xl shadow-2xl flex flex-col p-4 border border-slate-200">
@@ -843,7 +961,7 @@
           <div class="text-indigo-400 font-bold">➔</div>
           <div class="text-right">
             <div class="text-[10px] text-emerald-600 font-semibold">最新アップデート</div>
-            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.7.2</div>
+            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.8.0</div>
           </div>
         </div>
 
@@ -1296,6 +1414,11 @@
             <span>📥</span> <span>受取</span>
           </button>
 
+          <!-- 📚 保存した神回トーク（アーカイブ）ボタン -->
+          <button type="button" onclick="openArchiveModal()" class="bg-amber-50 hover:bg-amber-100 active:bg-amber-200 border border-amber-300 text-amber-900 px-2.5 py-1 rounded-lg text-xs font-bold shadow-2xs flex items-center gap-1 transition" title="保存した神回トークを読む">
+            <span>📚</span> <span>保存一覧</span>
+          </button>
+
           <!-- ⚙️ 設定画面ボタン -->
           <button type="button" onclick="openSettingsModal()" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 px-2.5 py-1 rounded-lg text-xs font-bold text-slate-700 shadow-2xs flex items-center gap-1 transition">
             <span>⚙️</span> <span id="ui-settings-btn-setup">設定</span>
@@ -1405,6 +1528,10 @@
           </div>
         </div>
         <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
+          <!-- ⭐ 神回トーク保存ボタン -->
+          <button id="save-chat-btn" onclick="openSaveChatModal()" class="text-[11px] bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-xs transition" title="この会話を保存">
+            <span>⭐</span> <span>保存</span>
+          </button>
           <button id="pause-btn" onclick="togglePauseQueue()" class="text-[11px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-200 font-medium flex items-center gap-1">⏸️ 一時停止</button>
           <button id="speed-btn" onclick="toggleSpeed()" class="text-[11px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-200 font-medium">🐢 1.0x</button>
           <button id="flush-btn" onclick="flushDisplayQueue()" class="text-[11px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-200 font-medium">一括表示</button>
@@ -1451,8 +1578,8 @@
 
   </div>
 
-<script src="mode_topics.js?v=1.7.2"></script>
-<script src="character_details.js?v=1.7.2"></script>
+<script src="mode_topics.js?v=1.8.0"></script>
+<script src="character_details.js?v=1.8.0"></script>
 <script>
 // ============================================================================
 // 🛡️ API通信モード設定（各自のGroq / Gemini / OpenAIキーによる公式直接通信）
@@ -1517,12 +1644,23 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.7.2';
+const APP_CLIENT_VERSION = 'v1.8.0';
 let waitingServiceWorker = null;
 let swRegistration = null;
 
 // 📋 全バージョンの変更履歴（リリースノート）マスターデータ
 const APP_CHANGELOG = [
+  {
+    version: "v1.8.0",
+    date: "2026-10-18",
+    title: "🎭 マイペルソナ（自分設定）登録 ＆ 💾 神回トーク保存（アーカイブ・再読）機能",
+    highlights: [
+      "【マイペルソナ（自分設定）登録】お名前・アイコン・立場・呼ばれ方を設定可能に！偉人たちが『〇〇殿、その悩みであれば…』『〇〇さん、今日も頑張ったね』と名前を呼んで親身に語りかけてくれます",
+      "【ユーザー発言吹き出しの進化】チャット画面のユーザーメッセージに自分のアイコンとお名前が綺麗に表示され、自己投影と没入感が大幅アップ",
+      "【神回トークの保存（お気に入り・アーカイブ）】チャット画面右上の『⭐ 保存』から、いつでもタイトルを付けて端末に無制限保存可能に",
+      "【保存したトークの再読＆エクスポート】トップ画面の『📚 保存一覧』から、過去の神回ログをそのまま完全再現して読み返せるほか、Markdownテキストとしてワンタップコピー可能"
+    ]
+  },
   {
     version: "v1.7.2",
     date: "2026-10-18",
@@ -3119,6 +3257,307 @@ function initFontSize() {
   setFontSize(saved);
 }
 
+
+// ============================================================================
+// 🎭 ユーザーマイペルソナ（自分設定）管理
+// ============================================================================
+const PERSONA_STORAGE_KEY = 'history_chat_user_persona';
+
+function getUserPersona() {
+  try {
+    const raw = localStorage.getItem(PERSONA_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return { name: "", icon: "🤠", title: "", honorific: "さん" };
+}
+
+function saveUserPersona(persona) {
+  localStorage.setItem(PERSONA_STORAGE_KEY, JSON.stringify(persona));
+}
+
+function setPersonaIcon(icon) {
+  const el = document.getElementById("persona-icon-input");
+  if (el) el.value = icon;
+}
+
+function savePersonaFromSettings() {
+  const nameInput = document.getElementById("persona-name-input");
+  const iconInput = document.getElementById("persona-icon-input");
+  const titleInput = document.getElementById("persona-title-input");
+  const honorificSelect = document.getElementById("persona-honorific-select");
+  if (nameInput && iconInput) {
+    const persona = {
+      name: nameInput.value.trim(),
+      icon: iconInput.value.trim() || "🤠",
+      title: titleInput ? titleInput.value.trim() : "",
+      honorific: honorificSelect ? honorificSelect.value : "さん"
+    };
+    saveUserPersona(persona);
+  }
+}
+
+// ============================================================================
+// 💾 神回トーク保存（お気に入り・アーカイブ）＆再読システム
+// ============================================================================
+const SAVED_CHATS_STORAGE_KEY = 'history_chat_saved_sessions';
+let currentSessionMessages = []; // 現在のチャットセッションの全発言ログ
+
+function getSavedChats() {
+  try {
+    const raw = localStorage.getItem(SAVED_CHATS_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return [];
+}
+
+function saveSavedChats(list) {
+  localStorage.setItem(SAVED_CHATS_STORAGE_KEY, JSON.stringify(list));
+}
+
+function openSaveChatModal() {
+  if (currentSessionMessages.length === 0) {
+    alert(currentLang === "en" ? "There are no messages in this session to save." : "まだ保存する会話メッセージがありません。");
+    return;
+  }
+  const modal = document.getElementById("save-chat-modal");
+  const titleInput = document.getElementById("save-chat-title-input");
+  if (modal && titleInput) {
+    const topic = document.getElementById("chat-room-title").innerText || "";
+    titleInput.value = topic.replace(/^No.d+s*/, '') || (currentLang === "en" ? "Historical Dialogue" : "偉人たちの神回トーク");
+    modal.classList.remove("hidden");
+    titleInput.focus();
+  }
+}
+
+function closeSaveChatModal() {
+  const modal = document.getElementById("save-chat-modal");
+  if (modal) modal.classList.add("hidden");
+}
+
+function confirmSaveCurrentChat() {
+  const titleInput = document.getElementById("save-chat-title-input");
+  const title = (titleInput && titleInput.value.trim()) || (currentLang === "en" ? "Historical Dialogue" : "偉人たちの神回トーク");
+  const modeObj = CHAT_MODES[currentMode] || {};
+
+  const savedItem = {
+    id: "chat_" + Date.now(),
+    title: title,
+    savedAt: new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    modeId: currentMode,
+    modeName: modeObj.name ? (modeObj.name[currentLang] || modeObj.name.ja) : "",
+    modeIcon: modeObj.icon || "💬",
+    topic: document.getElementById("chat-room-title").innerText || "",
+    members: selectedIds.map(id => {
+      const c = CHARACTERS.find(x => x.id === id);
+      return c ? { id: c.id, name: c.name[currentLang] || c.name.ja, icon: c.icon, avatarUrl: c.avatarUrl || null, customAvatarUrl: c.customAvatarUrl || null } : null;
+    }).filter(Boolean),
+    messages: [...currentSessionMessages]
+  };
+
+  const list = getSavedChats();
+  list.unshift(savedItem); // 新しい順
+  saveSavedChats(list);
+
+  closeSaveChatModal();
+  showToast(currentLang === "en" ? "⭐ Dialogue saved to Archive!" : "⭐ 神回トークをお気に入りに保存しました！");
+}
+
+function openArchiveModal() {
+  renderSavedChats();
+  const modal = document.getElementById("archive-modal");
+  if (modal) modal.classList.remove("hidden");
+}
+
+function closeArchiveModal() {
+  const modal = document.getElementById("archive-modal");
+  if (modal) modal.classList.add("hidden");
+}
+
+function renderSavedChats() {
+  const container = document.getElementById("archive-list-container");
+  const badge = document.getElementById("archive-count-badge");
+  if (!container) return;
+  const list = getSavedChats();
+
+  if (badge) badge.innerText = `${list.length}${currentLang === "en" ? " items" : "件"}`;
+  container.innerHTML = "";
+
+  if (list.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-8 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+        <span class="text-3xl block mb-1">📭</span>
+        <p class="font-bold text-xs text-slate-600">${currentLang === "en" ? "No saved dialogues yet" : "保存された神回トークはまだありません"}</p>
+        <p class="text-[10px] text-slate-400 mt-0.5">${currentLang === "en" ? "Tap '⭐ Save' during any chat to keep unforgettable moments!" : "チャット中の『⭐ 保存』ボタンから心に残った会話を残せます"}</p>
+      </div>
+    `;
+    return;
+  }
+
+  list.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "bg-white border border-slate-200 rounded-xl p-3 shadow-2xs hover:border-amber-300 transition space-y-2";
+    
+    // 参加メンバーのアバター列
+    const memberAvatarsHtml = (item.members || []).map(m => `
+      <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 border border-slate-200 text-xs shadow-2xs" title="${escapeHtml(m.name)}">
+        ${m.icon || "👤"}
+      </span>
+    `).join("");
+
+    const msgCount = (item.messages || []).filter(m => m.type === "char" || m.type === "user").length;
+
+    card.innerHTML = `
+      <div class="flex items-start justify-between gap-2">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-1.5 mb-1">
+            <span class="text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 px-1.5 py-0.2 rounded font-bold shrink-0">
+              ${item.modeIcon} ${escapeHtml(item.modeName)}
+            </span>
+            <span class="text-[10px] text-slate-400 shrink-0">${item.savedAt}</span>
+          </div>
+          <h4 class="font-bold text-slate-900 text-xs sm:text-[13px] leading-snug line-clamp-2">
+            ${escapeHtml(item.title)}
+          </h4>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between text-[11px] pt-1 border-t border-slate-100">
+        <div class="flex items-center gap-1">
+          <div class="flex -space-x-1.5 mr-1">${memberAvatarsHtml}</div>
+          <span class="text-slate-500 font-medium text-[10px]">💬 ${msgCount}${currentLang === "en" ? " msgs" : "発言"}</span>
+        </div>
+        <div class="flex items-center gap-1 shrink-0">
+          <button type="button" onclick="loadSavedChat('${item.id}')" class="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold px-2.5 py-1 rounded-lg text-xs shadow-xs transition flex items-center gap-1">
+            <span>📖</span> <span>${currentLang === "en" ? "Read" : "読む"}</span>
+          </button>
+          <button type="button" onclick="copySavedChatMarkdown('${item.id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2 py-1 rounded-lg text-xs transition" title="${currentLang === "en" ? "Copy Markdown" : "テキストをコピー"}">
+            <span>📋</span>
+          </button>
+          <button type="button" onclick="deleteSavedChat('${item.id}')" class="text-slate-400 hover:text-red-600 font-bold px-1.5 py-1 rounded-lg text-xs transition" title="${currentLang === "en" ? "Delete" : "削除"}">
+            <span>🗑️</span>
+          </button>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function loadSavedChat(chatId) {
+  const list = getSavedChats();
+  const item = list.find(x => x.id === chatId);
+  if (!item) return;
+
+  closeArchiveModal();
+
+  // チャット画面を開く
+  document.getElementById("setup-view").classList.add("hidden");
+  document.getElementById("chat-view").classList.remove("hidden");
+  const area = document.getElementById("messages-area");
+  area.innerHTML = "";
+
+  // ヘッダーと議題を再現
+  document.getElementById("chat-mode-badge").innerText = `${item.modeIcon} ${item.modeName}`;
+  document.getElementById("chat-room-title").innerText = item.title;
+  const memberNames = (item.members || []).map(m => m.name).join(", ");
+  document.getElementById("chat-room-members").innerText = `${memberNames} (${(item.members || []).length}${currentLang === "en" ? " members" : "名"})`;
+
+  // 会話メッセージを一括レンダリング
+  (item.messages || []).forEach(m => {
+    if (m.type === "char") {
+      const charObj = {
+        id: m.charId,
+        name: { ja: m.charName, en: m.charName },
+        title: { ja: m.charTitle, en: m.charTitle },
+        icon: m.charIcon,
+        avatarUrl: m.avatarUrl,
+        customAvatarUrl: m.customAvatarUrl
+      };
+      appendCharacterMessage(charObj, m.text, m.isInitialPhase);
+    } else if (m.type === "user") {
+      const readLabel = currentLang === "en" ? "Read" : "既読";
+      const row = document.createElement("div");
+      row.className = "flex flex-col items-end gap-1 msg-anim";
+      row.innerHTML = `
+        <div class="flex items-center gap-1.5 text-white/90 text-[11px] font-bold pr-1">
+          <span>${escapeHtml(m.speakerName || (currentLang === "en" ? "You" : "あなた"))}</span>
+          <span class="text-base">${m.speakerIcon || "🤠"}</span>
+        </div>
+        <div class="flex justify-end items-end gap-1.5">
+          <span class="text-[9px] text-white/80 shrink-0 text-right">${readLabel}<br>${m.time || ""}</span>
+          <div class="chat-bubble-text relative bg-[#8de055] text-slate-900 leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-tr-none shadow max-w-[85%] bubble-right">
+            ${formatChatText(m.text)}
+          </div>
+        </div>
+      `;
+      area.appendChild(row);
+    } else if (m.type === "system") {
+      const div = document.createElement("div");
+      div.className = "flex justify-center my-2";
+      div.innerHTML = `
+        <span class="bg-black/25 text-white text-[11px] px-3 py-1 rounded-full backdrop-blur-sm text-center">
+          ${escapeHtml(m.text)}
+        </span>
+      `;
+      area.appendChild(div);
+    }
+  });
+
+  scrollToBottom();
+}
+
+function copySavedChatMarkdown(chatId) {
+  const list = getSavedChats();
+  const item = list.find(x => x.id === chatId);
+  if (!item) return;
+
+  let md = `# ${item.title}\n\n`;
+  md += `- 日時: ${item.savedAt}\n`;
+  md += `- モード: ${item.modeIcon} ${item.modeName}\n`;
+  md += `- 議題: ${item.topic}\n\n---\n\n`;
+
+  (item.messages || []).forEach(m => {
+    if (m.type === "char") {
+      md += `**${m.charName}** (${m.charTitle}) [${m.time || ""}]:\n${m.text}\n\n`;
+    } else if (m.type === "user") {
+      md += `**${m.speakerName || "あなた"}** [${m.time || ""}]:\n${m.text}\n\n`;
+    } else if (m.type === "system") {
+      md += `> ${m.text}\n\n`;
+    }
+  });
+
+  navigator.clipboard.writeText(md).then(() => {
+    showToast(currentLang === "en" ? "📋 Markdown copied to clipboard!" : "📋 会話ログ（Markdown）をコピーしました！");
+  }).catch(() => {
+    alert(currentLang === "en" ? "Failed to copy to clipboard" : "クリップボードへのコピーに失敗しました");
+  });
+}
+
+function deleteSavedChat(chatId) {
+  if (!confirm(currentLang === "en" ? "Delete this saved dialogue from this device?" : "この保存された会話を端末から削除しますか？")) return;
+  const list = getSavedChats().filter(x => x.id !== chatId);
+  saveSavedChats(list);
+  renderSavedChats();
+  showToast(currentLang === "en" ? "Deleted from archive." : "アーカイブから削除しました。");
+}
+
+function showToast(msg) {
+  let toast = document.getElementById("app-global-toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "app-global-toast";
+    toast.className = "fixed bottom-5 left-1/2 -translate-x-1/2 z-[100] bg-slate-900/90 text-white font-bold text-xs px-4 py-2 rounded-full shadow-lg transition-all duration-300 pointer-events-none opacity-0 translate-y-2 backdrop-blur-xs flex items-center gap-1.5";
+    document.body.appendChild(toast);
+  }
+  toast.innerText = msg;
+  toast.classList.remove("opacity-0", "translate-y-2");
+  toast.classList.add("opacity-100", "translate-y-0");
+  setTimeout(() => {
+    toast.classList.remove("opacity-100", "translate-y-0");
+    toast.classList.add("opacity-0", "translate-y-2");
+  }, 2400);
+}
+
 // ============================================================================
 // ⚙️ アプリ設定モーダル管理 (文字サイズ・言語・アップデート・キー管理)
 // ============================================================================
@@ -3130,11 +3569,23 @@ function openSettingsModal() {
 }
 
 function closeSettingsModal() {
+  savePersonaFromSettings();
   const modal = document.getElementById("settings-modal");
   if (modal) modal.classList.add("hidden");
 }
 
 function updateSettingsModalState() {
+  // 0. マイペルソナ（自分設定）の読み込み
+  const persona = getUserPersona();
+  const nameInput = document.getElementById("persona-name-input");
+  const iconInput = document.getElementById("persona-icon-input");
+  const titleInput = document.getElementById("persona-title-input");
+  const honorificSelect = document.getElementById("persona-honorific-select");
+  if (nameInput) nameInput.value = persona.name || "";
+  if (iconInput) iconInput.value = persona.icon || "🤠";
+  if (titleInput) titleInput.value = persona.title || "";
+  if (honorificSelect) honorificSelect.value = persona.honorific || "さん";
+
   // 1. 保留中のアップデートがあるか確認・同期
   const updateBox = document.getElementById("settings-update-available");
   if (updateBox) {
@@ -5760,6 +6211,7 @@ async function startChat() {
   }
 
   stopAllTimers();
+  currentSessionMessages = []; // 新セッション開始時にメッセージログを初期化
   const sessionId = currentSessionId;
   const modeObj = CHAT_MODES[currentMode];
 
@@ -6354,12 +6806,46 @@ CRITICAL MANDATORY LANGUAGE REQUIREMENT (STRICTLY ENFORCED)
     }
   }
 
+  const userPersona = getUserPersona();
+  let personaPromptBlock = "";
+  if (userPersona && userPersona.name) {
+    let callName = userPersona.name;
+    if (userPersona.honorific === "殿") callName += "殿";
+    else if (userPersona.honorific === "さん") callName += "さん";
+    else if (userPersona.honorific === "様") callName += "様";
+    else if (userPersona.honorific === "キミ") callName = isEn ? "you" : "キミ";
+    
+    if (isEn) {
+      personaPromptBlock = `
+============================================================
+👤 USER PERSONA & PROFILE
+============================================================
+- User Name: ${userPersona.name}
+- How you MUST address the user: "${callName}"
+- User's Background/Situation: ${userPersona.title || "A seeker of historical wisdom"}
+- Guideline: When addressing, advising, or encouraging the user (in affirmation, life counsel, romance, tavern chat, etc.), address them as "${callName}" and tailor your philosophical insight to their background.
+`;
+    } else {
+      personaPromptBlock = `
+============================================================
+👤 対話相手（ユーザー）のプロフィール
+============================================================
+・ユーザーのお名前: ${userPersona.name}
+・偉人からの呼びかけ方: 「${callName}」
+・ユーザーの立場・現状: ${userPersona.title || "人生の指針を探す現代の相談者"}
+・対応指針: ユーザーへ語りかけたりアドバイスを贈る際（人生相談、全力肯定、恋人甘々、晩酌など）は、親しみを込めて「${callName}」と名前を呼び、ユーザーの境遇に深く寄り添って発言してください。
+`;
+    }
+  }
+
   const prompt = isEn ? `
 ${isSingle ? `You are roleplaying as ${uniqueChars[0].name.en} in an intimate 1-on-1 dialogue with the user.` : `You are a multi-agent historical AI simulator faithfully roleplaying the mentalities, worldviews, and distinct personalities of historical figures.`}
 Current discussion mode: 【${modeObj.icon} ${modeObj.name.en} (${modeObj.desc.en})】.
 Topic: "${topic}"
 
 ${languageMandateBlock}
+
+${personaPromptBlock}
 
 【Personas & Philosophies】
 ${personaDefinitions}
@@ -6391,6 +6877,8 @@ ${isSingle ? `あなた（AI）は歴史上の人物（${uniqueChars[0].name.ja}
 以下の【各偉人の人格・思想・口調定義】に基づき、テーマ「${topic}」についての発言を生成してください。
 
 ${languageMandateBlock}
+
+${personaPromptBlock}
 
 【各偉人の人格・思想・口調定義】
 ${personaDefinitions}
@@ -6785,23 +7273,53 @@ function appendCharacterMessage(char, text, isInitialPhase = false) {
   `;
   area.appendChild(row);
   scrollToBottom();
+
+  currentSessionMessages.push({
+    type: "char",
+    charId: char.id,
+    charName: char.name[currentLang] || char.name.ja,
+    charTitle: char.title[currentLang] || char.title.ja,
+    charIcon: char.icon,
+    avatarUrl: char.avatarUrl || null,
+    customAvatarUrl: char.customAvatarUrl || null,
+    text: text,
+    isInitialPhase: isInitialPhase,
+    time: now
+  });
 }
 
 function appendUserMessage(text) {
   const area = document.getElementById("messages-area");
   const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
   const readLabel = currentLang === "en" ? "Read" : "既読";
+  const persona = getUserPersona();
+  const userName = persona.name || (currentLang === "en" ? "You" : "あなた");
+  const userIcon = persona.icon || "🤠";
+
   const row = document.createElement("div");
-  row.className = "flex justify-end items-end gap-1.5 msg-anim";
+  row.className = "flex flex-col items-end gap-1 msg-anim";
   row.innerHTML = `
-    <span class="text-[9px] text-white/80 shrink-0 text-right">${readLabel}<br>${now}</span>
-    <div class="chat-bubble-text relative bg-[#8de055] text-slate-900 leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-tr-none shadow max-w-[85%] bubble-right">
-      ${formatChatText(text)}
+    <div class="flex items-center gap-1.5 text-white/90 text-[11px] font-bold pr-1">
+      <span>${escapeHtml(userName)}</span>
+      <span class="text-base leading-none">${userIcon}</span>
+    </div>
+    <div class="flex justify-end items-end gap-1.5">
+      <span class="text-[9px] text-white/80 shrink-0 text-right">${readLabel}<br>${now}</span>
+      <div class="chat-bubble-text relative bg-[#8de055] text-slate-900 leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-tr-none shadow max-w-[85%] bubble-right">
+        ${formatChatText(text)}
+      </div>
     </div>
   `;
   area.appendChild(row);
   scrollToBottom();
+
+  currentSessionMessages.push({
+    type: "user",
+    speakerName: userName,
+    speakerIcon: userIcon,
+    text: text,
+    time: now
+  });
 }
 
 function appendSystemMessage(text) {
@@ -6815,6 +7333,11 @@ function appendSystemMessage(text) {
   `;
   area.appendChild(div);
   scrollToBottom();
+
+  currentSessionMessages.push({
+    type: "system",
+    text: text
+  });
 }
 
 function appendErrorModal(errDetail) {
