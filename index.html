@@ -18,9 +18,9 @@
   <meta http-equiv="Expires" content="0">
 
   <!-- Icons & Manifest -->
-  <link rel="manifest" href="manifest.json?v=1.0.9">
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/app-icon-192.png?v=1.0.9">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon-v2.png?v=1.0.9">
+  <link rel="manifest" href="manifest.json?v=1.1.0">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/app-icon-192.png?v=1.1.0">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon-v2.png?v=1.1.0">
 
   <script>
     // 🛡️ スマホ等で古いSWキャッシュを即座に更新し、白画面固着を解消するセーフティネット
@@ -498,6 +498,126 @@
       </div>
     </div>
 
+    <!-- ================= 0.05 自作キャラクター作成・編集モーダル ================= -->
+    <div id="custom-char-modal" class="hidden absolute inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-3" onclick="if(event.target === this) closeCustomCharModal()">
+      <div class="bg-white w-full max-w-md max-h-[94%] rounded-2xl shadow-2xl overflow-y-auto flex flex-col p-4 border border-slate-200 space-y-3 animate-in fade-in zoom-in-95 duration-200">
+        
+        <!-- モーダルヘッダー -->
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100 shrink-0">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">🌟</span>
+            <div>
+              <h2 class="text-sm sm:text-base font-bold text-slate-800" id="cc-modal-title">新しい偉人・キャラを作成</h2>
+              <p class="text-[10px] text-slate-500" id="cc-modal-sub">好きな人物や推しを追加して会話に参加させよう</p>
+            </div>
+          </div>
+          <button type="button" onclick="closeCustomCharModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 transition">✕</button>
+        </div>
+
+        <input type="hidden" id="cc-edit-id" value="">
+
+        <!-- アバター写真設定 -->
+        <div class="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
+          <div class="relative shrink-0">
+            <div id="cc-avatar-preview" class="w-16 h-16 rounded-full overflow-hidden border-2 border-amber-400 shadow-md bg-amber-100 flex items-center justify-center text-3xl select-none">
+              🌟
+            </div>
+            <button type="button" onclick="document.getElementById('cc-file-input').click()" class="absolute -bottom-1 -right-1 bg-slate-800 hover:bg-indigo-600 text-white p-1 rounded-full text-xs shadow-md border-2 border-white transition">
+              📷
+            </button>
+          </div>
+          <div class="flex-1 min-w-0 space-y-1">
+            <div class="text-xs font-bold text-slate-800 flex items-center justify-between">
+              <span>アバターアイコン</span>
+              <button type="button" onclick="document.getElementById('cc-file-input').click()" class="text-[10px] bg-white border border-slate-300 hover:bg-slate-100 px-2 py-0.5 rounded font-semibold text-indigo-700 transition">
+                写真を選ぶ
+              </button>
+            </div>
+            <p class="text-[10px] text-slate-500 leading-tight">スマホの写真や好きな画像を設定できます（自動で丸型に最適化）。</p>
+            <input type="file" id="cc-file-input" accept="image/*" class="hidden" onchange="handleCustomAvatarUpload(event)">
+            <input type="hidden" id="cc-avatar-data" value="">
+          </div>
+        </div>
+
+        <!-- 基本情報（名前・肩書） -->
+        <div class="space-y-2">
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-0.5">名前 <span class="text-red-500">*</span></label>
+              <input type="text" id="cc-name-ja" placeholder="例: スティーブ・ジョブズ" class="w-full bg-slate-50 border border-slate-300 focus:border-indigo-500 focus:bg-white rounded-lg px-2.5 py-1.5 text-xs font-medium outline-hidden transition">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-0.5">肩書・二つ名 <span class="text-red-500">*</span></label>
+              <input type="text" id="cc-title-ja" placeholder="例: Apple創業者" class="w-full bg-slate-50 border border-slate-300 focus:border-indigo-500 focus:bg-white rounded-lg px-2.5 py-1.5 text-xs font-medium outline-hidden transition">
+            </div>
+          </div>
+
+          <!-- ✨ AIにおまかせ自動生成ボタン -->
+          <div class="bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-indigo-500/15 border border-amber-300/80 rounded-xl p-2.5 flex items-center justify-between gap-2 shadow-2xs">
+            <div class="min-w-0 flex-1">
+              <div class="text-[11px] font-bold text-amber-950 flex items-center gap-1">
+                <span>✨</span><span>AIにおまかせ生成</span>
+              </div>
+              <p class="text-[9.5px] text-amber-900/80 leading-tight">名前と肩書から、性格・口調・名言を自動入力！</p>
+            </div>
+            <button type="button" id="cc-ai-gen-btn" onclick="autoGenerateCharacterProfile()" class="shrink-0 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1">
+              <span id="cc-ai-gen-icon">✨</span>
+              <span id="cc-ai-gen-text">自動生成</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 時代 & 役割タイプ -->
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-0.5">時代・分野</label>
+            <input type="text" id="cc-era" placeholder="例: 現代・IT / 戦国 / オリジナル" class="w-full bg-slate-50 border border-slate-300 focus:border-indigo-500 focus:bg-white rounded-lg px-2.5 py-1.5 text-xs outline-hidden transition">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-0.5">トーク役職（スタンス）</label>
+            <select id="cc-role" class="w-full bg-slate-50 border border-slate-300 focus:border-indigo-500 focus:bg-white rounded-lg px-2 py-1.5 text-xs outline-hidden transition font-medium">
+              <option value="role_passion">🔥 情熱・行動派（突破力・鼓舞）</option>
+              <option value="role_mind">💡 慎重・知性派（論理・分析）</option>
+              <option value="role_lead">👑 司会進行・リーダー（統率・大局観）</option>
+              <option value="role_peace">🤝 調和・共感派（安心感・人間性）</option>
+              <option value="role_depth">📜 哲学・本質派（根本真理・名言）</option>
+              <option value="role_fun">🎉 ユーモア・ムード派（笑い・前向き）</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 性格・口調ルール -->
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 mb-0.5">口調・話し方ルール <span class="text-red-500">*</span></label>
+          <textarea id="cc-tone" rows="2" placeholder="例: 一人称は「私」。情熱的かつ直球で、妥協のない洗練された言葉遣い。「愚かであれ、ハングリーであれ」と語る。" class="w-full bg-slate-50 border border-slate-300 focus:border-indigo-500 focus:bg-white rounded-lg px-2.5 py-1.5 text-xs leading-relaxed outline-hidden transition resize-none"></textarea>
+        </div>
+
+        <!-- 核となる人生哲学・思想 -->
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 mb-0.5">核となる人生哲学・思想</label>
+          <input type="text" id="cc-philosophy" placeholder="例: 直感と情熱に従い、世界をより美しく革新すること。" class="w-full bg-slate-50 border border-slate-300 focus:border-indigo-500 focus:bg-white rounded-lg px-2.5 py-1.5 text-xs outline-hidden transition">
+        </div>
+
+        <!-- 代表的な名言・座右の銘 -->
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 mb-0.5">代表的な名言・座右の銘</label>
+          <input type="text" id="cc-quote" placeholder="例: ハングリーであれ、愚かであれ。" class="w-full bg-slate-50 border border-slate-300 focus:border-indigo-500 focus:bg-white rounded-lg px-2.5 py-1.5 text-xs outline-hidden transition">
+        </div>
+
+        <!-- ボタンエリア -->
+        <div class="pt-2 flex gap-2">
+          <button type="button" onclick="closeCustomCharModal()" class="w-1/3 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 font-bold py-2 rounded-xl text-xs transition">
+            キャンセル
+          </button>
+          <button type="button" onclick="saveCustomCharacter()" class="w-2/3 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 active:scale-[0.99] text-white font-bold py-2 rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5">
+            <span>💾</span>
+            <span id="cc-save-btn-text">保存して一覧に追加</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
     <!-- ================= 0. 初回APIキー設定・オンボーディングモーダル ================= -->
     <div id="onboarding-modal" class="hidden absolute inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-3">
       <div class="bg-white w-full max-h-[94%] rounded-2xl shadow-2xl overflow-y-auto flex flex-col p-4 border border-slate-200">
@@ -759,6 +879,11 @@
             <span>📲 インストール</span>
           </button>
 
+          <!-- ➕ 自作キャラクター追加ボタン -->
+          <button type="button" onclick="openCustomCharModal()" class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-white px-2.5 py-1 rounded-lg text-xs font-bold shadow-2xs flex items-center gap-1 transition">
+            <span>➕</span> <span id="ui-add-custom-btn">キャラ作成</span>
+          </button>
+
           <!-- ⚙️ 設定画面ボタン -->
           <button type="button" onclick="openSettingsModal()" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 px-2.5 py-1 rounded-lg text-xs font-bold text-slate-700 shadow-2xs flex items-center gap-1 transition">
             <span>⚙️</span> <span id="ui-settings-btn-setup">設定</span>
@@ -792,8 +917,9 @@
 
       <!-- カテゴリフィルター -->
       <div class="mb-1.5 shrink-0">
-                        <div id="category-tabs" class="flex gap-1 overflow-x-auto no-scrollbar pb-0.5">
-          <button onclick="setCategory('ALL')" data-cat="ALL" class="cat-btn shrink-0 text-[11px] px-2.5 py-1 rounded-full font-bold bg-slate-800 text-white">すべて(200)</button>
+        <div id="category-tabs" class="flex gap-1 overflow-x-auto no-scrollbar pb-0.5">
+          <button onclick="setCategory('ALL')" data-cat="ALL" class="cat-btn shrink-0 text-[11px] px-2.5 py-1 rounded-full font-bold bg-slate-800 text-white">すべて</button>
+          <button onclick="setCategory('CUSTOM')" data-cat="CUSTOM" class="cat-btn shrink-0 text-[11px] px-2.5 py-1 rounded-full font-bold bg-amber-100 text-amber-900 border border-amber-300">🌟 自作 (<span id="custom-cat-count">0</span>)</button>
           <button onclick="setCategory('JP')" data-cat="JP" class="cat-btn shrink-0 text-[11px] px-2.5 py-1 rounded-full font-medium bg-slate-200 text-slate-700">🏯 日本史(25)</button>
           <button onclick="setCategory('WORLD')" data-cat="WORLD" class="cat-btn shrink-0 text-[11px] px-2.5 py-1 rounded-full font-medium bg-slate-200 text-slate-700">👑 世界の覇者(25)</button>
           <button onclick="setCategory('PHIL')" data-cat="PHIL" class="cat-btn shrink-0 text-[11px] px-2.5 py-1 rounded-full font-medium bg-slate-200 text-slate-700">📜 思想・哲学(25)</button>
@@ -925,7 +1051,7 @@
 
   </div>
 
-<script src="character_details.js?v=1.0.9"></script>
+<script src="character_details.js?v=1.1.0"></script>
 <script>
 // ============================================================================
 // 🛡️ API通信モード設定（各自のGroq / Gemini / OpenAIキーによる公式直接通信）
@@ -990,7 +1116,7 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.0.9';
+const APP_CLIENT_VERSION = 'v1.1.0';
 let waitingServiceWorker = null;
 let swRegistration = null;
 
@@ -2467,7 +2593,7 @@ const RAW_200_LEGENDS = [
 ];
 const RAW_100_LEGENDS = RAW_200_LEGENDS;
 
-const CHARACTERS = RAW_200_LEGENDS.map((item, idx) => {
+const CHARACTERS_MASTER = RAW_200_LEGENDS.map((item, idx) => {
   const colors = [
     "bg-red-100 border-red-400 text-red-900",
     "bg-sky-100 border-sky-400 text-sky-900",
@@ -2492,6 +2618,27 @@ const CHARACTERS = RAW_200_LEGENDS.map((item, idx) => {
     tone: item[7]
   };
 });
+
+// 自作キャラクター管理用配列＆動的マスターリスト
+let customCharacters = [];
+let CHARACTERS = [...CHARACTERS_MASTER];
+
+function rebuildCharactersList() {
+  CHARACTERS = [...customCharacters, ...CHARACTERS_MASTER];
+  updateCustomCatCount();
+}
+
+function updateCustomCatCount() {
+  const el = document.getElementById("custom-cat-count");
+  if (el) el.innerText = customCharacters.length;
+  const allBtn = document.querySelector('.cat-btn[data-cat="ALL"]');
+  if (allBtn && typeof UI_TEXTS !== "undefined") {
+    const t = UI_TEXTS[currentLang] || UI_TEXTS.ja;
+    if (t && t.cats && t.cats.ALL) {
+      allBtn.innerText = customCharacters.length > 0 ? t.cats.ALL.replace(/200/, String(CHARACTERS.length)) : t.cats.ALL;
+    }
+  }
+}
 
 // ================= AI生成リアル肖像画アイコンマッピング =================
 const CHARACTER_IMAGES = {
@@ -2700,21 +2847,26 @@ const CHARACTER_IMAGES = {
 };
 
 function getCharacterAvatarHtml(c, sizeClass = "w-14 h-14 sm:w-16 sm:h-16", textClass = "text-3xl") {
-  if (CHARACTER_IMAGES[c.id]) {
+  const imgSrc = (c.isCustom && c.customAvatar) ? c.customAvatar : CHARACTER_IMAGES[c.id];
+  const charName = (c.name && (c.name[currentLang] || c.name.ja)) || "Character";
+  if (imgSrc) {
     return `<div class="${sizeClass} rounded-full overflow-hidden shrink-0 border-2 border-white/90 shadow-md bg-white ring-1 ring-black/10">
-      <img src="${CHARACTER_IMAGES[c.id]}" alt="${c.name[currentLang]}" class="w-full h-full object-cover">
+      <img src="${imgSrc}" alt="${charName}" class="w-full h-full object-cover">
     </div>`;
   }
-  return `<div class="${sizeClass} rounded-full flex items-center justify-center ${textClass} shrink-0 border-2 border-white/80 shadow-md ${c.color}">
-    ${c.avatar}
+  const colorClass = c.color || "bg-amber-100 border-amber-400 text-amber-900";
+  return `<div class="${sizeClass} rounded-full flex items-center justify-center ${textClass} shrink-0 border-2 border-white/80 shadow-md ${colorClass}">
+    ${c.avatar || "🌟"}
   </div>`;
 }
 
 function getCharacterChipIcon(c) {
-  if (CHARACTER_IMAGES[c.id]) {
-    return `<img src="${CHARACTER_IMAGES[c.id]}" alt="${c.name[currentLang]}" class="w-5 h-5 rounded-full object-cover inline-block mr-1.5 align-middle border border-slate-300 shadow-xs">`;
+  const imgSrc = (c.isCustom && c.customAvatar) ? c.customAvatar : CHARACTER_IMAGES[c.id];
+  const charName = (c.name && (c.name[currentLang] || c.name.ja)) || "Character";
+  if (imgSrc) {
+    return `<img src="${imgSrc}" alt="${charName}" class="w-5 h-5 rounded-full object-cover inline-block mr-1.5 align-middle border border-slate-300 shadow-xs">`;
   }
-  return `<span class="mr-0.5">${c.avatar}</span>`;
+  return `<span class="mr-0.5">${c.avatar || "🌟"}</span>`;
 }
 
 // ================= 状態管理・多言語辞書 =================
@@ -2742,6 +2894,7 @@ const UI_TEXTS = {
     sendBtn: "送信",
     cats: {
       ALL: "すべて(200)",
+      CUSTOM: "🌟 自作・推し",
       JP: "🏯 日本史(25)",
       WORLD: "👑 世界の覇者(25)",
       PHIL: "📜 思想・哲学(25)",
@@ -2795,6 +2948,7 @@ const UI_TEXTS = {
     sendBtn: "Send",
     cats: {
       ALL: "All (200)",
+      CUSTOM: "🌟 Custom",
       JP: "🏯 Japan (25)",
       WORLD: "👑 Leaders (25)",
       PHIL: "📜 Philosophy (25)",
@@ -3340,6 +3494,7 @@ async function shareAppUrl() {
 }
 
 window.onload = () => {
+  loadCustomCharacters();
   initFontSize();
   initPwaState();
   initAiSettings();
@@ -3428,7 +3583,12 @@ function updateStaticUiTexts() {
 
   document.querySelectorAll(".cat-btn").forEach(btn => {
     const cat = btn.dataset.cat;
-    if (cat && t.cats[cat]) {
+    if (cat === "CUSTOM") {
+      btn.innerHTML = `${t.cats[cat] || "🌟 自作"} (<span id="custom-cat-count">${customCharacters.length}</span>)`;
+    } else if (cat === "ALL") {
+      const allText = t.cats[cat] || `すべて(${CHARACTERS.length})`;
+      btn.innerText = customCharacters.length > 0 ? allText.replace(/200/, String(CHARACTERS.length)) : allText;
+    } else if (cat && t.cats[cat]) {
       btn.innerText = t.cats[cat];
     }
   });
@@ -3485,13 +3645,27 @@ function setCategory(cat) {
   const t = UI_TEXTS[currentLang] || UI_TEXTS.ja;
   document.querySelectorAll(".cat-btn").forEach(btn => {
     const bCat = btn.dataset.cat;
-    if (bCat && t.cats[bCat]) {
+    if (bCat === "CUSTOM") {
+      btn.innerHTML = `${t.cats[bCat] || "🌟 自作"} (<span id="custom-cat-count">${customCharacters.length}</span>)`;
+    } else if (bCat === "ALL") {
+      const allText = t.cats[bCat] || `すべて(${CHARACTERS.length})`;
+      btn.innerText = customCharacters.length > 0 ? allText.replace(/200/, String(CHARACTERS.length)) : allText;
+    } else if (bCat && t.cats[bCat]) {
       btn.innerText = t.cats[bCat];
     }
+
     if (bCat === cat) {
-      btn.className = "cat-btn shrink-0 text-[11px] px-2.5 py-1 rounded-full font-bold bg-slate-800 text-white";
+      if (bCat === "CUSTOM") {
+        btn.className = "cat-btn shrink-0 text-[11px] px-2.5 py-1 rounded-full font-bold bg-amber-500 text-white shadow-xs";
+      } else {
+        btn.className = "cat-btn shrink-0 text-[11px] px-2.5 py-1 rounded-full font-bold bg-slate-800 text-white shadow-xs";
+      }
     } else {
-      btn.className = "cat-btn shrink-0 text-[11px] px-2.5 py-1 rounded-full font-medium bg-slate-200 text-slate-700 hover:bg-slate-300";
+      if (bCat === "CUSTOM") {
+        btn.className = "cat-btn shrink-0 text-[11px] px-2.5 py-1 rounded-full font-medium bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200";
+      } else {
+        btn.className = "cat-btn shrink-0 text-[11px] px-2.5 py-1 rounded-full font-medium bg-slate-200 text-slate-700 hover:bg-slate-300";
+      }
     }
   });
   renderCharacters();
@@ -3520,39 +3694,445 @@ function renderSelectedChips() {
   updateStartButtonState();
 }
 
+// ============================================================================
+// 🌟 自作・カスタムキャラクター管理 (localStorage, 写真圧縮, AI自動生成)
+// ============================================================================
+const CUSTOM_CHARACTERS_STORAGE_KEY = "history_chat_custom_characters_v1";
+
+function loadCustomCharacters() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_CHARACTERS_STORAGE_KEY);
+    customCharacters = raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    console.error("Failed to load custom characters:", e);
+    customCharacters = [];
+  }
+  rebuildCharactersList();
+}
+
+function saveCustomCharacters() {
+  try {
+    localStorage.setItem(CUSTOM_CHARACTERS_STORAGE_KEY, JSON.stringify(customCharacters));
+  } catch (e) {
+    console.error("Failed to save custom characters:", e);
+    alert("端末の保存容量が一杯です。不要な自作キャラクターを整理してください。");
+  }
+}
+
+function openCustomCharModal(editCharId = null) {
+  const modal = document.getElementById("custom-char-modal");
+  if (!modal) return;
+
+  const titleEl = document.getElementById("cc-modal-title");
+  const saveBtnText = document.getElementById("cc-save-btn-text");
+  const editIdInput = document.getElementById("cc-edit-id");
+  const nameJaInput = document.getElementById("cc-name-ja");
+  const titleJaInput = document.getElementById("cc-title-ja");
+  const eraInput = document.getElementById("cc-era");
+  const roleSelect = document.getElementById("cc-role");
+  const toneInput = document.getElementById("cc-tone");
+  const philInput = document.getElementById("cc-philosophy");
+  const quoteInput = document.getElementById("cc-quote");
+  const avatarDataInput = document.getElementById("cc-avatar-data");
+  const avatarPreview = document.getElementById("cc-avatar-preview");
+
+  if (editCharId) {
+    const target = customCharacters.find(c => c.id === editCharId);
+    if (!target) return;
+    if (titleEl) titleEl.innerText = "キャラクターを編集";
+    if (saveBtnText) saveBtnText.innerText = "変更を保存する";
+    if (editIdInput) editIdInput.value = target.id;
+    if (nameJaInput) nameJaInput.value = (target.name && target.name.ja) || "";
+    if (titleJaInput) titleJaInput.value = (target.title && target.title.ja) || "";
+    if (eraInput) eraInput.value = target.era || "";
+    if (roleSelect) roleSelect.value = target.role || "role_passion";
+    if (toneInput) toneInput.value = target.tone || "";
+    if (philInput) philInput.value = target.philosophy || "";
+    const quoteVal = (target.mindset && target.mindset.core && target.mindset.core.ja) || target.quote || "";
+    if (quoteInput) quoteInput.value = quoteVal;
+    if (avatarDataInput) avatarDataInput.value = target.customAvatar || "";
+    if (avatarPreview) {
+      if (target.customAvatar) {
+        avatarPreview.innerHTML = `<img src="${target.customAvatar}" class="w-full h-full object-cover">`;
+      } else {
+        avatarPreview.innerHTML = `🌟`;
+      }
+    }
+  } else {
+    if (titleEl) titleEl.innerText = "新しい偉人・キャラを作成";
+    if (saveBtnText) saveBtnText.innerText = "保存して一覧に追加";
+    if (editIdInput) editIdInput.value = "";
+    if (nameJaInput) nameJaInput.value = "";
+    if (titleJaInput) titleJaInput.value = "";
+    if (eraInput) eraInput.value = "";
+    if (roleSelect) roleSelect.value = "role_passion";
+    if (toneInput) toneInput.value = "";
+    if (philInput) philInput.value = "";
+    if (quoteInput) quoteInput.value = "";
+    if (avatarDataInput) avatarDataInput.value = "";
+    if (avatarPreview) avatarPreview.innerHTML = `🌟`;
+  }
+
+  modal.classList.remove("hidden");
+}
+
+function closeCustomCharModal() {
+  const modal = document.getElementById("custom-char-modal");
+  if (modal) modal.classList.add("hidden");
+}
+
+// スマホ写真・画像ファイルをCanvasで256x256正方形に自動トリミング・圧縮（15KB程度）
+function handleCustomAvatarUpload(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const targetSize = 256;
+      canvas.width = targetSize;
+      canvas.height = targetSize;
+
+      // 正方形にセンタリングしてクロップ
+      const minDim = Math.min(img.width, img.height);
+      const sx = (img.width - minDim) / 2;
+      const sy = (img.height - minDim) / 2;
+
+      ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, targetSize, targetSize);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+
+      const avatarDataInput = document.getElementById("cc-avatar-data");
+      const avatarPreview = document.getElementById("cc-avatar-preview");
+      if (avatarDataInput) avatarDataInput.value = dataUrl;
+      if (avatarPreview) {
+        avatarPreview.innerHTML = `<img src="${dataUrl}" class="w-full h-full object-cover">`;
+      }
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// 共通AI呼び出し関数（単発プロンプト生成用）
+async function callAiDirect(userPrompt) {
+  const activeKeyInfo = getActiveKeyInfo();
+  if (!activeKeyInfo) {
+    throw new Error("APIキーが設定されていません。");
+  }
+  const { provider, key } = activeKeyInfo;
+
+  if (provider === "groq") {
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${key}`
+      },
+      body: JSON.stringify({
+        model: "llama-3.1-8b-instant",
+        messages: [{ role: "user", content: userPrompt }],
+        temperature: 0.7,
+        max_tokens: 500
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error?.message || `Groq HTTP ${res.status}`);
+    return data?.choices?.[0]?.message?.content || "";
+  }
+
+  if (provider === "openai") {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${key}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: userPrompt }],
+        temperature: 0.7,
+        max_tokens: 500
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error?.message || `OpenAI HTTP ${res.status}`);
+    return data?.choices?.[0]?.message?.content || "";
+  }
+
+  if (provider === "gemini") {
+    const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-flash-latest"];
+    let lastErr = "";
+    for (const m of modelsToTry) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${encodeURIComponent(key)}`;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: userPrompt }] }],
+            generationConfig: { temperature: 0.7, maxOutputTokens: 500 }
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          return (data?.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("");
+        }
+        lastErr = data?.error?.message || `HTTP ${res.status}`;
+      } catch (e) {
+        lastErr = e.message;
+      }
+    }
+    throw new Error(lastErr || "Gemini APIエラー");
+  }
+
+  throw new Error("お使いのAIプロバイダーで自動生成ができませんでした。APIキーをご確認ください。");
+}
+
+// ✨ AIにおまかせ自動生成機能（名前と肩書から性格・口調・哲学を自動作成）
+async function autoGenerateCharacterProfile() {
+  const name = document.getElementById("cc-name-ja").value.trim();
+  const title = document.getElementById("cc-title-ja").value.trim();
+
+  if (!name) {
+    alert("先に「名前」を入力してください（例: スティーブ・ジョブズ、宮本武蔵 など）");
+    return;
+  }
+
+  const activeKeyInfo = getActiveKeyInfo();
+  if (!activeKeyInfo) {
+    openOnboardingModal(true);
+    return;
+  }
+
+  const btn = document.getElementById("cc-ai-gen-btn");
+  const btnText = document.getElementById("cc-ai-gen-text");
+  const btnIcon = document.getElementById("cc-ai-gen-icon");
+  const origText = btnText ? btnText.innerText : "自動生成";
+  if (btn) btn.disabled = true;
+  if (btnText) btnText.innerText = "生成中...";
+  if (btnIcon) btnIcon.className = "animate-spin inline-block";
+
+  const prompt = `あなたは歴史・著名人・フィクションキャラクターの専門家です。
+以下の人物について、チャットAIでロールプレイするための設定データを日本語で作成してください。
+
+人物名: ${name}
+肩書: ${title || "著名人"}
+
+以下のJSONフォーマットのみ（マークダウンの\`\`\`jsonブロックなどは一切含めず、プレーンテキストのJSON文字列のみ）で出力してください:
+{
+  "era": "活動した時代や分野（例: 現代・IT革命、戦国時代、古代ギリシャ など10文字以内）",
+  "role": "role_passion または role_mind または role_lead または role_peace または role_depth または role_fun のいずれか1つ",
+  "philosophy": "核となる人生哲学や思想（40〜60文字程度）",
+  "tone": "口調ルール。一人称（私/僕/余/拙者等）や話し方の特徴、語尾など具体的に（60〜100文字程度）",
+  "quote": "代表的な名言または座右の銘（30文字以内）"
+}`;
+
+  try {
+    const rawRes = await callAiDirect(prompt);
+    const jsonMatch = rawRes.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const data = JSON.parse(jsonMatch[0]);
+      if (data.era) document.getElementById("cc-era").value = data.era;
+      if (data.role) document.getElementById("cc-role").value = data.role;
+      if (data.philosophy) document.getElementById("cc-philosophy").value = data.philosophy;
+      if (data.tone) document.getElementById("cc-tone").value = data.tone;
+      if (data.quote) document.getElementById("cc-quote").value = data.quote;
+    } else {
+      alert("AIの自動生成結果を読み取れませんでした。もう一度お試しください。");
+    }
+  } catch (err) {
+    console.error("Auto generate failed:", err);
+    alert(`AI自動生成でエラーが発生しました: ${err.message}`);
+  } finally {
+    if (btn) btn.disabled = false;
+    if (btnText) btnText.innerText = origText;
+    if (btnIcon) btnIcon.className = "";
+  }
+}
+
+// キャラクター保存処理
+function saveCustomCharacter() {
+  const editId = document.getElementById("cc-edit-id").value;
+  const nameJa = document.getElementById("cc-name-ja").value.trim();
+  const titleJa = document.getElementById("cc-title-ja").value.trim();
+  const era = document.getElementById("cc-era").value.trim() || "オリジナル";
+  const role = document.getElementById("cc-role").value || "role_passion";
+  const tone = document.getElementById("cc-tone").value.trim();
+  const philosophy = document.getElementById("cc-philosophy").value.trim() || `${nameJa}の信条に従い語る。`;
+  const quote = document.getElementById("cc-quote").value.trim() || `${nameJa}の信条`;
+  const customAvatar = document.getElementById("cc-avatar-data").value || "";
+
+  if (!nameJa) {
+    alert("「名前」を入力してください。");
+    return;
+  }
+  if (!titleJa) {
+    alert("「肩書・二つ名」を入力してください。");
+    return;
+  }
+  if (!tone) {
+    alert("「口調・話し方ルール」を入力してください（例: 一人称は私、熱血な口調 など）。");
+    return;
+  }
+
+  const roleColorMap = {
+    role_passion: "bg-red-500/20 border-red-500/40 text-red-200",
+    role_mind: "bg-cyan-500/20 border-cyan-500/40 text-cyan-200",
+    role_lead: "bg-purple-500/20 border-purple-500/40 text-purple-200",
+    role_peace: "bg-emerald-500/20 border-emerald-500/40 text-emerald-200",
+    role_depth: "bg-amber-500/20 border-amber-500/40 text-amber-200",
+    role_fun: "bg-pink-500/20 border-pink-500/40 text-pink-200"
+  };
+
+  if (editId) {
+    const idx = customCharacters.findIndex(c => c.id === editId);
+    if (idx !== -1) {
+      customCharacters[idx] = {
+        ...customCharacters[idx],
+        name: { ja: nameJa, en: (customCharacters[idx].name && customCharacters[idx].name.en) || nameJa },
+        title: { ja: titleJa, en: (customCharacters[idx].title && customCharacters[idx].title.en) || titleJa },
+        era: era,
+        role: role,
+        tone: tone,
+        philosophy: philosophy,
+        quote: quote,
+        mindset: { core: { ja: quote, en: quote } },
+        customAvatar: customAvatar || customCharacters[idx].customAvatar,
+        color: roleColorMap[role] || "bg-amber-100 border-amber-400 text-amber-900"
+      };
+    }
+  } else {
+    const newChar = {
+      id: "custom_" + Date.now(),
+      isCustom: true,
+      category: "CUSTOM",
+      avatar: "🌟",
+      customAvatar: customAvatar,
+      name: { ja: nameJa, en: nameJa },
+      title: { ja: titleJa, en: titleJa },
+      era: era,
+      role: role,
+      tone: tone,
+      philosophy: philosophy,
+      quote: quote,
+      mindset: { core: { ja: quote, en: quote } },
+      color: roleColorMap[role] || "bg-amber-100 border-amber-400 text-amber-900"
+    };
+    customCharacters.unshift(newChar);
+    if (selectedIds.length < 5 && !selectedIds.includes(newChar.id)) {
+      selectedIds.push(newChar.id);
+    }
+  }
+
+  saveCustomCharacters();
+  rebuildCharactersList();
+  renderSelectedChips();
+  renderCharacters();
+  closeCustomCharModal();
+  setCategory("CUSTOM");
+}
+
+// キャラクター削除処理
+function deleteCustomCharacter(charId) {
+  const target = customCharacters.find(c => c.id === charId);
+  if (!target) return;
+
+  const charName = (target.name && target.name.ja) || "このキャラクター";
+  if (!confirm(`「${charName}」を削除しますか？\n（元に戻すことはできません）`)) {
+    return;
+  }
+
+  customCharacters = customCharacters.filter(c => c.id !== charId);
+  selectedIds = selectedIds.filter(id => id !== charId);
+
+  saveCustomCharacters();
+  rebuildCharactersList();
+  renderSelectedChips();
+  renderCharacters();
+}
+
 function renderCharacters() {
   const grid = document.getElementById("char-grid");
   const searchEl = document.getElementById("search-input");
   const query = searchEl ? searchEl.value.trim().toLowerCase() : "";
   grid.innerHTML = "";
 
+  const isCustomTab = currentCategory === "CUSTOM";
+
+  // 自作タブまたはALL（検索なし）の場合、先頭に「➕ 新しいキャラを作る」カードを表示
+  if (isCustomTab || (currentCategory === "ALL" && !query)) {
+    const addCard = document.createElement("div");
+    addCard.onclick = () => openCustomCharModal();
+    addCard.className = "cursor-pointer rounded-xl p-2.5 border-2 border-dashed border-amber-400 bg-amber-50/70 hover:bg-amber-100/80 active:scale-98 transition flex items-center justify-center gap-2 select-none min-h-[64px] text-amber-950 group shadow-2xs";
+    addCard.innerHTML = `
+      <span class="text-2xl group-hover:scale-110 transition shrink-0">➕</span>
+      <div class="overflow-hidden flex-1 min-w-0">
+        <div class="font-bold text-xs text-amber-950 leading-snug">偉人・キャラを作成</div>
+        <div class="text-[9.5px] text-amber-800/90 leading-tight truncate">写真やAI自動生成で簡単作成</div>
+      </div>
+    `;
+    grid.appendChild(addCard);
+  }
+
   const filtered = CHARACTERS.filter(c => {
     const matchCat = currentCategory === "ALL" || c.category === currentCategory;
     const matchText = !query ||
-      c.name.ja.toLowerCase().includes(query) ||
-      c.name.en.toLowerCase().includes(query) ||
-      c.title.ja.toLowerCase().includes(query) ||
-      c.philosophy.toLowerCase().includes(query);
+      (c.name && c.name.ja && c.name.ja.toLowerCase().includes(query)) ||
+      (c.name && c.name.en && c.name.en.toLowerCase().includes(query)) ||
+      (c.title && c.title.ja && c.title.ja.toLowerCase().includes(query)) ||
+      (c.philosophy && c.philosophy.toLowerCase().includes(query));
     return matchCat && matchText;
   });
+
+  if (isCustomTab && customCharacters.length === 0) {
+    const emptyNotice = document.createElement("div");
+    emptyNotice.className = "col-span-2 text-center py-6 px-4 text-slate-400 text-xs space-y-1.5";
+    emptyNotice.innerHTML = `
+      <div class="text-3xl">🌟</div>
+      <div class="font-bold text-slate-700">まだ自作キャラクターがいません</div>
+      <div class="text-[10px] text-slate-500 leading-relaxed">上の「偉人・キャラを作成」から、好きな人物や推し、恩師などを自由に追加して会話に参加させられます！</div>
+    `;
+    grid.appendChild(emptyNotice);
+    return;
+  }
 
   filtered.forEach(c => {
     const isSelected = selectedIds.includes(c.id);
     const card = document.createElement("div");
     card.onclick = () => toggleCharacter(c.id);
-    card.className = `cursor-pointer rounded-xl p-2 border-2 transition flex items-center gap-2 select-none min-h-[64px] ${
+    card.className = `cursor-pointer rounded-xl p-2 border-2 transition flex items-center gap-2 select-none min-h-[64px] relative group/card ${
       isSelected ? "bg-indigo-50 border-indigo-600 shadow-sm" : "bg-white border-slate-200 hover:border-slate-300"
     }`;
+
+    const charName = (c.name && (c.name[currentLang] || c.name.ja)) || "";
+    const charTitle = (c.title && (c.title[currentLang] || c.title.ja)) || "";
+
+    // 自作キャラクター用のアクションボタン（編集・削除）
+    const customActionsHtml = c.isCustom ? `
+      <div class="absolute top-1 right-1 flex items-center gap-1 z-10" onclick="event.stopPropagation()">
+        <button type="button" onclick="openCustomCharModal('${c.id}')" title="編集" class="w-5 h-5 bg-white/95 hover:bg-indigo-50 border border-slate-300 rounded text-[9px] flex items-center justify-center text-slate-600 hover:text-indigo-600 shadow-2xs transition">✏️</button>
+        <button type="button" onclick="deleteCustomCharacter('${c.id}')" title="削除" class="w-5 h-5 bg-white/95 hover:bg-red-50 border border-slate-300 rounded text-[9px] flex items-center justify-center text-slate-600 hover:text-red-600 shadow-2xs transition">🗑️</button>
+      </div>
+    ` : '';
+
     card.innerHTML = `
       <div class="relative group shrink-0 cursor-pointer" onclick="event.stopPropagation(); openCharacterDetail('${c.id}')" title="${currentLang === 'en' ? 'View Profile & Feats' : 'プロフィール・実績を見る'}">
         ${getCharacterAvatarHtml(c, "w-11 h-11", "text-xl")}
         <span class="absolute -bottom-1 -right-1 bg-slate-800 text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center border border-white shadow-xs group-hover:scale-110 group-hover:bg-indigo-600 transition">🔍</span>
       </div>
-      <div class="overflow-hidden flex-1 min-w-0">
-        <div class="char-card-name font-bold text-xs text-slate-800 truncate leading-snug">${c.name[currentLang]}</div>
-        <div class="char-card-title text-[10px] text-slate-500 line-clamp-2 leading-tight break-words mt-0.5" title="${c.title[currentLang]}">${c.title[currentLang]}</div>
+      <div class="overflow-hidden flex-1 min-w-0 pr-1">
+        <div class="flex items-center gap-1">
+          <div class="char-card-name font-bold text-xs text-slate-800 truncate leading-snug">${escapeHtml(charName)}</div>
+          ${c.isCustom ? '<span class="text-[8px] font-bold px-1 py-0.2 rounded bg-amber-100 text-amber-800 shrink-0">自作</span>' : ''}
+        </div>
+        <div class="char-card-title text-[10px] text-slate-500 line-clamp-2 leading-tight break-words mt-0.5" title="${escapeHtml(charTitle)}">${escapeHtml(charTitle)}</div>
       </div>
-      ${isSelected ? '<span class="text-indigo-600 font-bold text-xs pr-0.5 shrink-0">✓</span>' : ''}
+      ${customActionsHtml}
+      ${isSelected && !c.isCustom ? '<span class="text-indigo-600 font-bold text-xs pr-0.5 shrink-0">✓</span>' : ''}
+      ${isSelected && c.isCustom ? '<span class="text-indigo-600 font-bold text-xs pr-0.5 shrink-0 pt-3">✓</span>' : ''}
     `;
     grid.appendChild(card);
   });
@@ -3698,7 +4278,7 @@ function openCharacterDetail(charId) {
       }
     }
     if (!quotesList || quotesList.length === 0) {
-      quotesList = [c.tone];
+      quotesList = [c.quote || c.tone];
     }
     quotesList.forEach(q => {
       const quoteEl = document.createElement("div");
