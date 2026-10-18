@@ -290,19 +290,19 @@
   <div class="w-full max-w-full sm:max-w-xl md:max-w-2xl h-[100dvh] sm:h-[920px] bg-white sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col relative border-0 sm:border-4 border-slate-700">
 
     <!-- ================= 0-0. 新バージョン更新通知バナー ================= -->
-    <div id="pwa-update-banner" class="hidden absolute top-2.5 left-2.5 right-2.5 z-50 bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white rounded-2xl p-3 shadow-2xl border border-indigo-400/40 flex items-center justify-between gap-2.5 animate-pulse">
-      <div class="flex items-center gap-2 overflow-hidden">
-        <span class="text-lg shrink-0">✨</span>
+    <div id="pwa-update-banner" class="hidden absolute top-2.5 left-2.5 right-2.5 z-50 bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white rounded-2xl p-3 shadow-2xl border border-indigo-400/40 flex items-center justify-between gap-2.5">
+      <div class="flex items-center gap-2 overflow-hidden cursor-pointer" onclick="openAppUpdateModal()">
+        <span class="text-lg shrink-0 animate-bounce">✨</span>
         <div class="truncate">
-          <p class="text-xs font-bold leading-tight">最新バージョンが届きました！</p>
-          <p class="text-[10px] text-indigo-200 leading-tight">新機能や追加データを反映します</p>
+          <p class="text-xs font-bold leading-tight">新しいバージョンが利用可能です！</p>
+          <p class="text-[10px] text-indigo-200 leading-tight">タップして更新内容（変更点）を確認</p>
         </div>
       </div>
       <div class="flex items-center gap-1.5 shrink-0">
-        <button onclick="applyAppUpdate()" class="bg-indigo-500 hover:bg-indigo-600 active:scale-95 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-md transition">
-          今すぐ更新
+        <button type="button" onclick="openAppUpdateModal()" class="bg-indigo-500 hover:bg-indigo-600 active:scale-95 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-md transition flex items-center gap-1">
+          <span>📋</span><span>更新内容を確認</span>
         </button>
-        <button onclick="dismissAppUpdateBanner()" class="text-indigo-300 hover:text-white p-1 text-xs">
+        <button type="button" onclick="dismissAppUpdateBanner()" class="text-indigo-300 hover:text-white p-1 text-xs">
           ✕
         </button>
       </div>
@@ -377,29 +377,36 @@
 
         <!-- 🔄 1. アップデート＆バージョン管理 -->
         <div class="space-y-2">
-          <!-- 保留中の更新がある場合に常時ハイライト表示される更新バナー（×で消した後でもここからいつでも更新可能） -->
+          <!-- 保留中の更新がある場合に常時ハイライト表示される更新バナー -->
           <div id="settings-update-available" class="hidden bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white p-3 rounded-xl shadow-md space-y-2">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="openAppUpdateModal()">
               <span class="text-xl shrink-0">⚡</span>
               <div>
                 <div class="font-bold text-xs" id="st-up-ready-title">新しいバージョンが利用可能です！</div>
-                <div class="text-[10px] text-amber-100 leading-tight" id="st-up-ready-sub">最新の修正・新機能がダウンロード完了しています</div>
+                <div class="text-[10px] text-amber-100 leading-tight" id="st-up-ready-sub">更新内容（変更点）を確認して適用できます</div>
               </div>
             </div>
-            <button type="button" onclick="applyAppUpdate()" class="w-full bg-white hover:bg-amber-50 active:scale-98 text-amber-900 font-bold py-2 rounded-lg text-xs shadow transition flex items-center justify-center gap-1.5">
-              <span>🚀 今すぐ最新版を適用して更新する</span>
+            <button type="button" onclick="openAppUpdateModal()" class="w-full bg-white hover:bg-amber-50 active:scale-98 text-amber-900 font-bold py-2 rounded-lg text-xs shadow transition flex items-center justify-center gap-1.5">
+              <span>📋</span><span>更新内容を確認してアップデート</span>
             </button>
           </div>
 
-          <!-- バージョン情報 & 手動確認 -->
-          <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between">
-            <div>
-              <div class="text-xs font-bold text-slate-800" id="st-ver-title">📱 現在のバージョン</div>
-              <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.0.6</div>
+          <!-- バージョン情報 & 手動確認 & 更新履歴 -->
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold text-slate-800" id="st-ver-title">📱 現在のバージョン</div>
+                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.4.0</div>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button type="button" onclick="openChangelogModal()" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition flex items-center gap-1">
+                  <span>📋</span><span>更新履歴</span>
+                </button>
+                <button type="button" onclick="checkForAppUpdate(true)" class="bg-indigo-50 hover:bg-indigo-100 active:bg-indigo-200 border border-indigo-200 text-indigo-700 font-bold text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition flex items-center gap-1">
+                  <span>🔄</span><span>更新確認</span>
+                </button>
+              </div>
             </div>
-            <button type="button" onclick="checkForAppUpdate(true)" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition flex items-center gap-1">
-              <span>🔄 最新版を確認</span>
-            </button>
           </div>
         </div>
 
@@ -752,6 +759,57 @@
           <button type="button" onclick="saveCustomCharacter()" class="w-2/3 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 active:scale-[0.99] text-white font-bold py-2 rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5">
             <span>💾</span>
             <span id="cc-save-btn-text">保存して一覧に追加</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ================= 0-B. アプリアップデート＆更新履歴（リリースノート）確認モーダル ================= -->
+    <div id="app-update-modal" class="hidden absolute inset-0 z-[60] bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-3" onclick="if(event.target === this) closeAppUpdateModal()">
+      <div class="bg-white w-full max-w-md max-h-[92%] rounded-2xl shadow-2xl flex flex-col p-4 border border-slate-200">
+        
+        <!-- モーダルヘッダー -->
+        <div class="flex items-center justify-between pb-2.5 mb-2 border-b border-slate-100 shrink-0">
+          <div class="flex items-center gap-2">
+            <span class="text-2xl">✨</span>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <h3 class="text-sm font-bold text-slate-800" id="au-modal-title">アップデート情報</h3>
+                <span id="au-badge-new" class="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">最新</span>
+              </div>
+              <p class="text-[10px] text-slate-500 leading-tight mt-0.5">更新内容を確認して手動でアップデートを適用できます</p>
+            </div>
+          </div>
+          <button type="button" onclick="closeAppUpdateModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold px-2 py-0.5 rounded-md hover:bg-slate-100 transition">✕</button>
+        </div>
+
+        <!-- バージョンステータスカード -->
+        <div class="bg-indigo-50 border border-indigo-200/80 rounded-xl p-2.5 mb-2.5 flex items-center justify-between text-xs shrink-0">
+          <div>
+            <div class="text-[10px] text-indigo-600 font-semibold">現在の利用バージョン</div>
+            <div class="font-bold font-mono text-indigo-950" id="au-current-version-label">v1.3.0</div>
+          </div>
+          <div class="text-indigo-400 font-bold">➔</div>
+          <div class="text-right">
+            <div class="text-[10px] text-emerald-600 font-semibold">最新アップデート</div>
+            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.4.0</div>
+          </div>
+        </div>
+
+        <!-- 更新履歴（リリースノート）タイムライン -->
+        <div class="flex-1 overflow-y-auto space-y-3 pr-1 text-xs" id="app-update-changelog-container">
+          <!-- JSで動的に差分履歴を描画 -->
+        </div>
+
+        <!-- ボタンエリア -->
+        <div class="pt-3 border-t border-slate-100 flex gap-2 shrink-0 mt-2">
+          <button type="button" onclick="closeAppUpdateModal()" class="w-1/3 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 font-bold py-2 rounded-xl text-xs transition">
+            後で
+          </button>
+          <button type="button" id="au-apply-btn" onclick="confirmApplyAppUpdate()" class="w-2/3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-[0.99] text-white font-bold py-2 rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5">
+            <span>🚀</span>
+            <span id="au-apply-btn-text">今すぐアップデートを適用</span>
           </button>
         </div>
 
@@ -1256,9 +1314,75 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.3.0';
+const APP_CLIENT_VERSION = 'v1.4.0';
 let waitingServiceWorker = null;
 let swRegistration = null;
+
+// 📋 全バージョンの変更履歴（リリースノート）マスターデータ
+const APP_CHANGELOG = [
+  {
+    version: "v1.4.0",
+    date: "2026-10-18",
+    title: "🎯 Google検索上位級の公式代表画像自動取得 ＆ リリースノート付き手動アップデート",
+    highlights: [
+      "【公式代表画像】アニメ・マンガ・ゲームの公式代表ビジュアル（AniList CDN）を0.3秒で自動検索＆取得",
+      "【顔スマートクロップ】頭部〜胸元の顔黄金比（上部12%オフセット）で正方形アイコンに自動トリミング",
+      "【手動アップデート】起動時の勝手な自動リロードを完全撤廃。更新内容を確認してからアップデートを適用可能に",
+      "【全履歴確認】過去にアップデートをスキップしていても、間の変更履歴をすべて一覧で確認可能"
+    ]
+  },
+  {
+    version: "v1.3.0",
+    date: "2026-10-18",
+    title: "🌐 WEB画像自動検索エンジン・Wikipedia肖像画連携",
+    highlights: [
+      "Wikipedia / Wikimedia Commons 公式API連携による歴史偉人・実在人物の0.3秒公式画像取得",
+      "ネイティブ画像ローダー化によるAdBlocker・CORS通信エラーの根絶"
+    ]
+  },
+  {
+    version: "v1.2.2",
+    date: "2026-10-18",
+    title: "🛠️ キャラクター保存クラッシュ修正 ＆ クリップボード画像直接貼付",
+    highlights: [
+      "キャラクター自動生成後の保存ボタンクラッシュ（ReferenceError: quote）を完全修正",
+      "モーダル上でCtrl+V（画像コピー貼り付け）するだけで即座にアイコン化する機能の追加"
+    ]
+  },
+  {
+    version: "v1.2.1",
+    date: "2026-10-18",
+    title: "⚡ 0.1秒即時シンボルアイコン生成機能",
+    highlights: [
+      "通信待ち時間ゼロで名前と役職が刻印された美麗グラデーションアイコンを即座に作成"
+    ]
+  },
+  {
+    version: "v1.2.0",
+    date: "2026-10-18",
+    title: "🎮 アニメ・漫画・ゲーム・架空キャラクター対応 ＆ 詳細図鑑フル生成",
+    highlights: [
+      "あらゆる作品のキャラクターをプロレベルでロールプレイ可能なAI自動設定生成",
+      "生い立ち・3大功績・人生の信条・代表名言・相談役職まで網羅した詳細図鑑対応"
+    ]
+  },
+  {
+    version: "v1.1.0",
+    date: "2026-10-18",
+    title: "🌟 カスタムキャラクター自由作成機能",
+    highlights: [
+      "自分だけのオリジナルキャラクターを作成・保存し、200人の偉人と一緒にチャット可能に"
+    ]
+  },
+  {
+    version: "v1.0.9",
+    date: "2026-10-18",
+    title: "📱 スマホPWA白画面防止（Network-Firstキャッシュ制御）",
+    highlights: [
+      "スマホブラウザやPWA起動時のキャッシュトラップを解消し、常に最新状態を表示"
+    ]
+  }
+];
 
 function showAppUpdateBanner(worker) {
   waitingServiceWorker = worker;
@@ -1273,7 +1397,73 @@ function dismissAppUpdateBanner() {
   if (banner) banner.classList.add("hidden");
 }
 
-function applyAppUpdate() {
+// ✨ アップデート確認モーダルを開く（更新内容・過去の差分履歴を全表示）
+function openAppUpdateModal(worker = null) {
+  if (worker) waitingServiceWorker = worker;
+  const modal = document.getElementById("app-update-modal");
+  if (!modal) return;
+
+  const currentVerEl = document.getElementById("au-current-version-label");
+  const targetVerEl = document.getElementById("au-target-version-label");
+  const container = document.getElementById("app-update-changelog-container");
+  const applyBtn = document.getElementById("au-apply-btn");
+  const applyBtnText = document.getElementById("au-apply-btn-text");
+
+  if (currentVerEl) currentVerEl.innerText = APP_CLIENT_VERSION;
+  if (targetVerEl) targetVerEl.innerText = APP_CHANGELOG[0].version;
+
+  // 履歴の描画（最新から過去まで、わかりやすくアコーディオン/リスト表示）
+  if (container) {
+    let html = "";
+    APP_CHANGELOG.forEach((ch, idx) => {
+      const isLatest = idx === 0;
+      const badge = isLatest ? '<span class="bg-emerald-500 text-white text-[9.5px] px-1.5 py-0.2 rounded font-bold">最新</span>' : (ch.version === APP_CLIENT_VERSION ? '<span class="bg-indigo-600 text-white text-[9.5px] px-1.5 py-0.2 rounded font-bold">現在使用中</span>' : '');
+
+      html += `
+        <div class="border ${isLatest ? 'border-emerald-300 bg-emerald-50/50' : 'border-slate-200 bg-slate-50/70'} rounded-xl p-3 space-y-1.5 transition">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <span class="font-bold font-mono text-slate-800 text-xs">${ch.version}</span>
+              ${badge}
+            </div>
+            <span class="text-[10px] text-slate-400 font-mono">${ch.date}</span>
+          </div>
+          <div class="font-bold text-[11px] text-slate-700">${ch.title}</div>
+          <ul class="list-disc list-inside space-y-1 text-[10.5px] text-slate-600 pl-1 leading-snug">
+            ${ch.highlights.map(h => `<li>${h}</li>`).join("")}
+          </ul>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  }
+
+  // もし待機中のワーカーがある場合は「適用する」ボタンを有効化
+  if (applyBtn && applyBtnText) {
+    if (waitingServiceWorker || (swRegistration && swRegistration.waiting)) {
+      applyBtn.classList.remove("hidden");
+      applyBtnText.innerText = "今すぐアップデートを適用";
+    } else {
+      applyBtn.classList.remove("hidden");
+      applyBtnText.innerText = "最新版を再読み込み";
+    }
+  }
+
+  modal.classList.remove("hidden");
+}
+
+function closeAppUpdateModal() {
+  const modal = document.getElementById("app-update-modal");
+  if (modal) modal.classList.add("hidden");
+}
+
+function openChangelogModal() {
+  openAppUpdateModal(null);
+}
+
+// ユーザーの明示的な意志でアップデートを適用
+function confirmApplyAppUpdate() {
+  closeAppUpdateModal();
   if (waitingServiceWorker) {
     waitingServiceWorker.postMessage({ type: 'SKIP_WAITING' });
   } else if (swRegistration && swRegistration.waiting) {
@@ -1281,6 +1471,11 @@ function applyAppUpdate() {
   } else {
     window.location.reload();
   }
+}
+
+// 後方互換性
+function applyAppUpdate() {
+  openAppUpdateModal();
 }
 
 async function checkForAppUpdate(isManual = false) {
@@ -1292,13 +1487,14 @@ async function checkForAppUpdate(isManual = false) {
   try {
     const reg = await navigator.serviceWorker.getRegistration();
     if (!reg) {
-      if (isManual) alert("現在オフラインまたはローカル環境です。");
+      if (isManual) openChangelogModal();
       return;
     }
 
     if (reg.waiting) {
-      // すでにバックグラウンドでダウンロード済みの新バージョンがある場合
+      // すでに待機中の新バージョンがある場合
       showAppUpdateBanner(reg.waiting);
+      if (isManual) openAppUpdateModal(reg.waiting);
       return;
     }
 
@@ -1306,39 +1502,39 @@ async function checkForAppUpdate(isManual = false) {
     await reg.update();
 
     if (isManual) {
-      // わずかに待機して更新が見つかったか判定
       setTimeout(() => {
-        if (!waitingServiceWorker && (!reg.waiting)) {
-          alert(`✅ 現在最新のバージョン (${APP_CLIENT_VERSION}) を使用中です！\n更新はありません。`);
+        if (reg.waiting) {
+          openAppUpdateModal(reg.waiting);
+        } else {
+          openChangelogModal();
         }
       }, 800);
     }
   } catch (err) {
     console.warn("Update check error:", err);
-    if (isManual) alert("更新の確認に失敗しました。ネットワーク接続をご確認ください。");
+    if (isManual) openChangelogModal();
   }
 }
 
-// Service Worker 登録 & アップデート監視
+// Service Worker 登録 & アップデート監視（自動リロード廃止・手動確認化）
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=1.0.9').then((reg) => {
+    navigator.serviceWorker.register('./sw.js?v=1.4.0').then((reg) => {
       swRegistration = reg;
-      reg.update(); // 起動時に常に最新SWの有無をチェック
+      reg.update(); // 起動時に更新の有無をチェック（自動切替はせず通知のみ）
       console.log(`[PWA] Service Worker registered (${APP_CLIENT_VERSION}):`, reg.scope);
 
-      // すでに待機中の新バージョンがあれば即通知
+      // すでに待機中の新バージョンがあれば通知
       if (reg.waiting) {
         showAppUpdateBanner(reg.waiting);
       }
 
-      // 新バージョンのダウンロード開始を検知
+      // 新バージョンのダウンロード完了を検知（通知バナーを出すのみ・自動リロードはしない）
       reg.addEventListener('updatefound', () => {
         const newWorker = reg.installing;
         if (!newWorker) return;
 
         newWorker.addEventListener('statechange', () => {
-          // インストール完了かつ既存のSWが存在する場合（＝初回でなくアップデート）
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
             showAppUpdateBanner(newWorker);
           }
@@ -1348,7 +1544,7 @@ if ('serviceWorker' in navigator) {
       console.log('[PWA] SW registration error:', err);
     });
 
-    // 新しいSWがアクティブ化されたら自動で最新画面にリロード
+    // ユーザーが明示的にSKIP_WAITINGを実行した時だけリロード
     let refreshing = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (!refreshing) {
@@ -4122,7 +4318,7 @@ function processImageSourceToAvatar(src, successMsg = null) {
   img.src = src;
 }
 
-// 🌐 WEB画像自動検索＆顔スマートアイコン自動作成エンジン（Wikipedia公式画像＋AI顔ポートレート）
+// 🌐 WEB画像自動検索＆顔スマートアイコン自動作成エンジン（AniList公式代表画像 ＋ Wikipedia公式画像）
 async function autoFetchWebAvatar(name = null, title = null, notify = false) {
   const charName = name || (document.getElementById("cc-name-ja") ? document.getElementById("cc-name-ja").value.trim() : "");
   const charTitle = title || (document.getElementById("cc-title-ja") ? document.getElementById("cc-title-ja").value.trim() : "");
@@ -4139,36 +4335,71 @@ async function autoFetchWebAvatar(name = null, title = null, notify = false) {
   }
 
   try {
-    // 1. Wikipedia API で公式肖像画・ビジュアルを検索（歴史偉人・著名人・実在人物・作品）
-    const wikiUrl = `https://ja.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(charName)}&prop=pageimages&format=json&pithumbsize=500&origin=*`;
     let foundImg = null;
+    let foundLabel = "";
+
+    // ★ 1. AniList GraphQL API（アニメ・マンガ・ゲーム公式代表ビジュアル検索）
+    // Google検索トップに出てくるような一目でそのキャラとわかる本物の公式代表顔画像を0.2秒で取得！
+    const anilistQuery = `
+      query ($search: String) {
+        Character (search: $search) {
+          name { full native }
+          image { large medium }
+        }
+      }
+    `;
+
     try {
-      const res = await fetch(wikiUrl);
-      if (res.ok) {
-        const data = await res.json();
-        const pages = (data.query && data.query.pages) || {};
-        for (let k in pages) {
-          if (pages[k].thumbnail && pages[k].thumbnail.source) {
-            foundImg = pages[k].thumbnail.source;
-            break;
-          }
+      const aniRes = await fetch("https://graphql.anilist.co", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({ query: anilistQuery, variables: { search: charName } })
+      });
+      if (aniRes.ok) {
+        const aniData = await aniRes.json();
+        const char = aniData.data && aniData.data.Character;
+        if (char && char.image && (char.image.large || char.image.medium)) {
+          foundImg = char.image.large || char.image.medium;
+          foundLabel = "AniList公式代表画像";
         }
       }
     } catch (e) {
-      console.warn("Wikipedia image search error:", e);
+      console.warn("AniList search error:", e);
     }
 
+    // ★ 2. AniListで見つからない場合（歴史偉人・実在著名人など）: Wikipedia公式APIを0.2秒検索！
+    if (!foundImg) {
+      try {
+        const wikiUrl = `https://ja.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(charName)}&prop=pageimages&format=json&pithumbsize=500&origin=*`;
+        const wikiRes = await fetch(wikiUrl);
+        if (wikiRes.ok) {
+          const wikiData = await wikiRes.json();
+          const pages = (wikiData.query && wikiData.query.pages) || {};
+          for (let k in pages) {
+            if (pages[k].thumbnail && pages[k].thumbnail.source) {
+              foundImg = pages[k].thumbnail.source;
+              foundLabel = "Wikipedia公式肖像画";
+              break;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Wikipedia search error:", e);
+      }
+    }
+
+    // ★ 3. 公式代表画像が見つかった場合、顔・上半身スマートクロップを施して即座にセット！
     if (foundImg) {
-      processImageSourceToAvatar(foundImg, notify ? `「${charName}」の公式ビジュアルから顔アイコンを作成しました！` : null);
+      processImageSourceToAvatar(foundImg, notify ? `「${charName}」の${foundLabel}から顔・上半身アイコンを作成しました！` : null);
       if (avatarBadge) {
-        avatarBadge.innerText = "✅ 公式画像を取得";
+        avatarBadge.innerText = `✅ ${foundLabel}を取得`;
         setTimeout(() => avatarBadge.classList.add("hidden"), 3000);
       }
       return;
     }
 
-    // 2. Wikipediaに画像がない場合（アニメ・ゲームキャラ等）:
-    // AIによる「顔・上半身ポートレート特化」イラストを直接画像ロード（fetchを使わないのでBotブロック・CORSエラー完全ゼロ！）
+    // ★ 4. どちらにもない完全オリジナル架空キャラの場合:
+    // AIによる「顔・上半身ポートレート特化」イラストを直接画像ロード
     if (avatarBadge) avatarBadge.innerText = "🎨 顔アイコン生成中...";
     const stylePrompt = `${charName}, ${charTitle}, anime character close-up face portrait, avatar icon, official character art, solo, vibrant, high detail`;
     const seed = Math.floor(Math.random() * 1000000);

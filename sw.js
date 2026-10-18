@@ -1,27 +1,27 @@
 // ============================================================================
 // Service Worker for 偉人トークAI (PWA)
 // ============================================================================
-const APP_VERSION = 'v1.3.0';
+const APP_VERSION = 'v1.4.0';
 const CACHE_NAME = `history-ai-chat-${APP_VERSION}`;
 
 // 初回起動時にキャッシュするコア静的ファイル群
 const CORE_STATIC_ASSETS = [
   './',
   './index.html',
-  './character_details.js?v=1.3.0',
-  './manifest.json?v=1.3.0',
-  './icons/app-icon-192.png?v=1.3.0',
-  './icons/app-icon-maskable.png?v=1.3.0',
-  './icons/app-icon-512.png?v=1.3.0',
-  './icons/apple-touch-icon-v2.png?v=1.3.0',
+  './character_details.js?v=1.4.0',
+  './manifest.json?v=1.4.0',
+  './icons/app-icon-192.png?v=1.4.0',
+  './icons/app-icon-maskable.png?v=1.4.0',
+  './icons/app-icon-512.png?v=1.4.0',
+  './icons/apple-touch-icon-v2.png?v=1.4.0',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/apple-touch-icon.png'
 ];
 
-// 1. インストール時：即座に待機をスキップし、最新SWを有効化
+// 1. インストール時：キャッシュを準備し、ユーザーのアップデート承認を待機
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
+  // 自動スキップを廃止：ユーザーが確認して「アップデート」を押すまで待機状態を維持
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(CORE_STATIC_ASSETS).catch((err) => {
