@@ -13,9 +13,9 @@
   <meta name="mobile-web-app-capable" content="yes">
   
   <!-- Icons & Manifest -->
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json?v=1.0.6">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/app-icon-192.png?v=1.0.6">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon-v2.png?v=1.0.6">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -198,48 +198,70 @@
     body.font-size-lg #settings-modal, body.font-size-lg #onboarding-modal { font-size: 15.5px; }
     body.font-size-xl #settings-modal, body.font-size-xl #onboarding-modal { font-size: 17.5px; }
 
-    /* 📖 キャラクター詳細モーダルの文字サイズ大幅底上げ & スケーリング */
-    #character-detail-modal [id^="char-modal-sec-"] {
-      font-size: var(--modal-sec-title-size, 14.5px) !important;
-      margin-bottom: 0.4rem !important;
+    /* 📖 キャラクター詳細モーダルのタイポグラフィ階層（美しくバランスのとれた文字サイズ） */
+    #character-detail-modal {
+      line-height: 1.65;
     }
+    /* 1. 大見出し（セクションタイトル 📖 人物伝、🏆 主な功績 等） */
+    #character-detail-modal [id^="char-modal-sec-"] {
+      font-size: var(--modal-sec-title-size, 15.5px) !important;
+      font-weight: 700 !important;
+      margin-bottom: 0.5rem !important;
+    }
+    /* 2. 中見出し・サブラベル（功績タイトル、信条/NG/意思決定ラベル、役割ラベル 等） */
+    #character-detail-modal [id^="char-modal-label-"],
+    #character-detail-modal .char-modal-feat-title,
+    #character-detail-modal .char-modal-sub-label {
+      font-size: var(--modal-sub-label-size, 14.5px) !important;
+      font-weight: 700 !important;
+      line-height: 1.4 !important;
+    }
+    /* 3. 本文・説明文（人物伝、功績エピソード本文、思想本文、名言、相談適性本文） */
     #character-detail-modal #char-modal-bio,
-    #character-detail-modal .char-feat-text,
+    #character-detail-modal .char-modal-feat-desc,
     #character-detail-modal [id^="char-modal-mindset-"],
-    #character-detail-modal .char-quote-text,
-    #character-detail-modal .char-quote-ctx,
+    #character-detail-modal .char-modal-quote-text,
     #character-detail-modal #char-modal-advice-role,
     #character-detail-modal #char-modal-advice-best {
       font-size: var(--modal-body-size, 15px) !important;
       line-height: var(--modal-body-lh, 1.65) !important;
+      font-weight: 400 !important;
     }
-    #character-detail-modal [id^="char-modal-label-"] {
-      font-size: var(--modal-label-size, 13px) !important;
+    /* 4. タグ・バッジ・補足（時代、カテゴリ、功績番号、得意トピックバッジ 等） */
+    #character-detail-modal .char-modal-tag,
+    #character-detail-modal .char-modal-feat-num,
+    #character-detail-modal .char-modal-topic-badge {
+      font-size: var(--modal-badge-size, 12.5px) !important;
+      line-height: 1.3 !important;
     }
 
     body.font-size-sm #character-detail-modal {
-      --modal-sec-title-size: 13.5px;
+      --modal-sec-title-size: 14.0px;
+      --modal-sub-label-size: 13.0px;
       --modal-body-size: 13.5px;
       --modal-body-lh: 1.6;
-      --modal-label-size: 12px;
+      --modal-badge-size: 11.5px;
     }
     body.font-size-md #character-detail-modal {
-      --modal-sec-title-size: 15px;
-      --modal-body-size: 15.5px;
+      --modal-sec-title-size: 15.5px;
+      --modal-sub-label-size: 14.5px;
+      --modal-body-size: 15.0px;
       --modal-body-lh: 1.65;
-      --modal-label-size: 13.5px;
+      --modal-badge-size: 12.5px;
     }
     body.font-size-lg #character-detail-modal {
-      --modal-sec-title-size: 17px;
-      --modal-body-size: 17.5px;
+      --modal-sec-title-size: 17.5px;
+      --modal-sub-label-size: 16.0px;
+      --modal-body-size: 17.0px;
       --modal-body-lh: 1.7;
-      --modal-label-size: 15.5px;
+      --modal-badge-size: 14.0px;
     }
     body.font-size-xl #character-detail-modal {
-      --modal-sec-title-size: 19px;
-      --modal-body-size: 20px;
+      --modal-sec-title-size: 20.0px;
+      --modal-sub-label-size: 18.0px;
+      --modal-body-size: 19.5px;
       --modal-body-lh: 1.75;
-      --modal-label-size: 17.5px;
+      --modal-badge-size: 15.5px;
     }
   </style>
 </head>
@@ -272,7 +294,7 @@
       <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-4.5 border border-slate-200 space-y-3.5">
         <div class="flex items-center justify-between pb-2 border-b border-slate-100">
           <div class="flex items-center gap-2.5">
-            <img src="icons/icon-192.png" alt="App Icon" class="w-10 h-10 rounded-xl shadow-md">
+            <img src="icons/app-icon-192.png" alt="App Icon" class="w-10 h-10 rounded-xl shadow-md">
             <div>
               <h3 class="text-sm font-bold text-slate-800">アプリをスマホにインストール</h3>
               <p class="text-[10px] text-slate-500">ホーム画面から全画面でサクサク起動</p>
@@ -345,7 +367,7 @@
           <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between">
             <div>
               <div class="text-xs font-bold text-slate-800" id="st-ver-title">📱 現在のバージョン</div>
-              <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.0.5</div>
+              <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.0.6</div>
             </div>
             <button type="button" onclick="checkForAppUpdate(true)" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition flex items-center gap-1">
               <span>🔄 最新版を確認</span>
@@ -555,26 +577,26 @@
             </div>
             <div class="overflow-hidden flex-1 pr-6">
               <div class="flex flex-wrap items-center gap-1.5 mb-1">
-                <span id="char-modal-cat-badge" class="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-white/15 text-indigo-200 border border-white/10"></span>
-                <span id="char-modal-era-badge" class="text-[9.5px] font-medium px-2 py-0.5 rounded-full bg-slate-800/80 text-amber-200 border border-amber-300/20 truncate max-w-[200px]"></span>
+                <span id="char-modal-cat-badge" class="char-modal-tag font-bold px-2 py-0.5 rounded-full bg-white/15 text-indigo-200 border border-white/10"></span>
+                <span id="char-modal-era-badge" class="char-modal-tag font-medium px-2 py-0.5 rounded-full bg-slate-800/80 text-amber-200 border border-amber-300/20 truncate max-w-[200px]"></span>
               </div>
               <h3 id="char-modal-name-ja" class="text-base sm:text-lg font-bold text-white tracking-wide"></h3>
-              <p id="char-modal-name-en" class="text-[11px] text-slate-300 font-medium"></p>
-              <p id="char-modal-title" class="text-xs text-amber-300 font-semibold mt-1 leading-snug"></p>
+              <p id="char-modal-name-en" class="text-xs text-slate-300 font-medium"></p>
+              <p id="char-modal-title" class="text-xs sm:text-sm text-amber-300 font-semibold mt-1 leading-snug"></p>
             </div>
           </div>
 
           <!-- 🎯 チャットでの役割タイプ（10大ロールバッジ＆相談得意領域） -->
           <div id="char-modal-role-card" class="mt-2.5 pt-2 border-t border-white/10 space-y-1.5">
             <div class="flex items-center justify-between">
-              <span id="char-modal-role-label" class="text-[9.5px] uppercase tracking-wider text-slate-300 font-bold flex items-center gap-1">
+              <span id="char-modal-role-label" class="char-modal-tag uppercase tracking-wider text-slate-300 font-bold flex items-center gap-1">
                 <span>🎯</span> 相談役としてのタイプ
               </span>
-              <span id="char-modal-role-stance" class="text-[9.5px] text-amber-200 font-medium"></span>
+              <span id="char-modal-role-stance" class="char-modal-tag text-amber-200 font-medium"></span>
             </div>
             <!-- 上下2段構成: 1段目タイプ名、2段目トピック横並び -->
             <div id="char-modal-role-badge-box" class="p-2.5 rounded-xl border flex flex-col gap-1.5 shadow-xs">
-              <div id="char-modal-role-name" class="font-bold text-xs sm:text-sm text-white flex items-center gap-1.5 whitespace-nowrap"></div>
+              <div id="char-modal-role-name" class="char-modal-sub-label font-bold text-white flex items-center gap-1.5 whitespace-nowrap"></div>
               <div id="char-modal-role-topics" class="flex flex-wrap items-center gap-1.5 pt-0.5">
                 <!-- JSで得意トピックバッジを生成 -->
               </div>
@@ -587,16 +609,16 @@
 
           <!-- 1. 📖 人物伝・ストーリー -->
           <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs">
-            <div id="char-modal-sec-bio-title" class="flex items-center gap-1.5 font-bold text-indigo-950 text-xs mb-1.5">
+            <div id="char-modal-sec-bio-title" class="flex items-center gap-1.5 font-bold text-indigo-950">
               <span>📖</span>
               <span>人物伝・ストーリー</span>
             </div>
-            <p id="char-modal-bio" class="text-xs text-slate-700 leading-relaxed font-normal"></p>
+            <p id="char-modal-bio" class="text-slate-700 leading-relaxed font-normal"></p>
           </div>
 
           <!-- 2. 🏆 3大功績・歴史的偉業・エピソード -->
           <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs">
-            <div id="char-modal-sec-feats-title" class="flex items-center gap-1.5 font-bold text-amber-900 text-xs mb-2">
+            <div id="char-modal-sec-feats-title" class="flex items-center gap-1.5 font-bold text-amber-900">
               <span>🏆</span>
               <span>主な功績・歴史的偉業・エピソード</span>
             </div>
@@ -607,50 +629,50 @@
 
           <!-- 3. 🧠 思想・思考のコア（価値観・判断基準） -->
           <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs">
-            <div id="char-modal-sec-mindset-title" class="flex items-center gap-1.5 font-bold text-slate-900 text-xs mb-2">
+            <div id="char-modal-sec-mindset-title" class="flex items-center gap-1.5 font-bold text-slate-900">
               <span>🧠</span>
               <span>思想・思考のコア</span>
             </div>
-            <div class="space-y-2 text-[11px]">
+            <div class="space-y-2">
               <div class="bg-indigo-50/70 border border-indigo-100 rounded-lg p-2.5">
-                <span id="char-modal-label-core" class="font-bold text-indigo-900 block mb-0.5">🌟 大切にしている信条</span>
-                <span id="char-modal-mindset-core" class="text-slate-700 leading-snug"></span>
+                <span id="char-modal-label-core" class="char-modal-sub-label font-bold text-indigo-900 block mb-1">🌟 大切にしている信条</span>
+                <span id="char-modal-mindset-core" class="text-slate-700 leading-relaxed block"></span>
               </div>
               <div class="bg-rose-50/70 border border-rose-100 rounded-lg p-2.5">
-                <span id="char-modal-label-dislike" class="font-bold text-rose-900 block mb-0.5">🚫 嫌うこと・NGな姿勢</span>
-                <span id="char-modal-mindset-dislike" class="text-slate-700 leading-snug"></span>
+                <span id="char-modal-label-dislike" class="char-modal-sub-label font-bold text-rose-900 block mb-1">🚫 嫌うこと・NGな姿勢</span>
+                <span id="char-modal-mindset-dislike" class="text-slate-700 leading-relaxed block"></span>
               </div>
               <div class="bg-emerald-50/70 border border-emerald-100 rounded-lg p-2.5">
-                <span id="char-modal-label-decision" class="font-bold text-emerald-900 block mb-0.5">⚖️ 意思決定ルール</span>
-                <span id="char-modal-mindset-decision" class="text-slate-700 leading-snug"></span>
+                <span id="char-modal-label-decision" class="char-modal-sub-label font-bold text-emerald-900 block mb-1">⚖️ 意思決定ルール</span>
+                <span id="char-modal-mindset-decision" class="text-slate-700 leading-relaxed block"></span>
               </div>
             </div>
           </div>
 
           <!-- 4. 💬 代表的な名言・パンチライン集 -->
           <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs">
-            <div id="char-modal-sec-quotes-title" class="flex items-center gap-1.5 font-bold text-slate-900 text-xs mb-2">
+            <div id="char-modal-sec-quotes-title" class="flex items-center gap-1.5 font-bold text-slate-900">
               <span>💬</span>
               <span>代表的な名言・語録</span>
             </div>
-            <div id="char-modal-quotes-container" class="space-y-1.5">
+            <div id="char-modal-quotes-container" class="space-y-2">
               <!-- JSで動的生成 -->
             </div>
           </div>
 
           <!-- 5. 🎭 AIグループチャットでの立ち回り・相談適性 -->
           <div class="bg-gradient-to-br from-indigo-50/90 to-purple-50/90 border border-indigo-200/80 rounded-xl p-3.5 shadow-2xs">
-            <div id="char-modal-sec-advice-title" class="flex items-center gap-1.5 font-bold text-indigo-950 text-xs mb-2">
+            <div id="char-modal-sec-advice-title" class="flex items-center gap-1.5 font-bold text-indigo-950">
               <span>🎭</span>
               <span>AIグループチャットでの立ち回り・相談適性</span>
             </div>
-            <div class="space-y-2 text-[11px]">
+            <div class="space-y-2.5">
               <div>
-                <span id="char-modal-label-role" class="font-bold text-indigo-900 block mb-0.5">📢 このメンバーの役割・立ち回り:</span>
+                <span id="char-modal-label-role" class="char-modal-sub-label font-bold text-indigo-900 block mb-1">📢 このメンバーの役割・立ち回り:</span>
                 <p id="char-modal-advice-role" class="text-slate-700 leading-relaxed"></p>
               </div>
-              <div class="pt-1.5 border-t border-indigo-200/60">
-                <span id="char-modal-label-best" class="font-bold text-purple-900 block mb-0.5">💡 こんなお悩み・テーマに最適:</span>
+              <div class="pt-2 border-t border-indigo-200/60">
+                <span id="char-modal-label-best" class="char-modal-sub-label font-bold text-purple-900 block mb-1">💡 こんなお悩み・テーマに最適:</span>
                 <p id="char-modal-advice-best" class="text-slate-700 leading-relaxed font-medium"></p>
               </div>
             </div>
@@ -776,7 +798,7 @@
             <div class="pt-2 border-t border-slate-200/80 flex items-center justify-between text-[11px] text-slate-500">
               <span class="flex items-center gap-1">
                 <span>📱 バージョン:</span>
-                <span id="app-version-badge" class="font-mono font-bold text-slate-700 bg-white border border-slate-200 px-1.5 py-0.5 rounded">v1.0.5</span>
+                <span id="app-version-badge" class="font-mono font-bold text-slate-700 bg-white border border-slate-200 px-1.5 py-0.5 rounded">v1.0.6</span>
               </span>
               <button type="button" onclick="checkForAppUpdate(true)" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 px-2 py-0.5 rounded-md font-medium text-slate-700 shadow-2xs flex items-center gap-1 transition">
                 <span>🔄 最新版を確認</span>
@@ -915,7 +937,7 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.0.5';
+const APP_CLIENT_VERSION = 'v1.0.6';
 let waitingServiceWorker = null;
 let swRegistration = null;
 
@@ -3493,7 +3515,7 @@ function openCharacterDetail(charId) {
       roleTopicsEl.innerHTML = "";
       (Array.isArray(rTopics) ? rTopics : []).forEach(top => {
         const topBadge = document.createElement("span");
-        topBadge.className = "text-[9.5px] px-2 py-0.5 rounded-full bg-black/40 border border-white/20 text-white font-medium shadow-2xs whitespace-nowrap";
+        topBadge.className = "char-modal-topic-badge px-2.5 py-1 rounded-full bg-black/40 border border-white/20 text-white font-medium shadow-2xs whitespace-nowrap";
         topBadge.innerText = top;
         roleTopicsEl.appendChild(topBadge);
       });
@@ -3515,12 +3537,12 @@ function openCharacterDetail(charId) {
     ];
     featsList.forEach(f => {
       const featCard = document.createElement("div");
-      featCard.className = "flex items-start gap-2.5 p-2.5 rounded-lg bg-slate-50 border border-slate-200/80";
+      featCard.className = "flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200/80 shadow-2xs";
       featCard.innerHTML = `
-        <span class="bg-amber-100 text-amber-900 border border-amber-300 font-bold text-[10px] px-1.5 py-0.5 rounded shrink-0">${f.num}</span>
+        <span class="char-modal-feat-num bg-amber-100 text-amber-900 border border-amber-300 font-bold px-2 py-0.5 rounded shrink-0">${f.num}</span>
         <div class="flex-1 min-w-0">
-          <div class="font-bold text-xs text-slate-900 mb-0.5">${getI18nText(f.title)}</div>
-          <div class="text-[11px] text-slate-600 leading-relaxed font-normal">${getI18nText(f.desc)}</div>
+          <div class="char-modal-feat-title font-bold text-slate-900 mb-1">${getI18nText(f.title)}</div>
+          <div class="char-modal-feat-desc text-slate-700 leading-relaxed font-normal">${getI18nText(f.desc)}</div>
         </div>
       `;
       featsContainer.appendChild(featCard);
@@ -3556,7 +3578,7 @@ function openCharacterDetail(charId) {
     }
     quotesList.forEach(q => {
       const quoteEl = document.createElement("div");
-      quoteEl.className = "p-2.5 rounded-lg bg-slate-50 border-l-4 border-indigo-500 text-slate-800 text-[11px] italic font-medium leading-relaxed";
+      quoteEl.className = "char-modal-quote-text p-3 rounded-xl bg-slate-50 border-l-4 border-indigo-500 text-slate-800 italic font-medium leading-relaxed shadow-2xs";
       const cleanQuote = q.replace(/^[「“"]+|[」”"]+$/g, '');
       quoteEl.innerHTML = isEn ? `“${cleanQuote}”` : `「${cleanQuote}」`;
       quotesContainer.appendChild(quoteEl);
