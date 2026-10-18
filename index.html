@@ -396,7 +396,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <div class="text-xs font-bold text-slate-800" id="st-ver-title">📱 現在のバージョン</div>
-                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.5.0</div>
+                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.5.1</div>
               </div>
               <div class="flex items-center gap-1.5">
                 <button type="button" onclick="openChangelogModal()" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition flex items-center gap-1">
@@ -831,7 +831,7 @@
           <div class="text-indigo-400 font-bold">➔</div>
           <div class="text-right">
             <div class="text-[10px] text-emerald-600 font-semibold">最新アップデート</div>
-            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.5.0</div>
+            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.5.1</div>
           </div>
         </div>
 
@@ -968,6 +968,9 @@
             <span>⏩ あとで設定する（まずは画面を見る）</span>
           </button>
         </div>
+
+      </div>
+    </div>
 
     <!-- ================= 0-D. 自作キャラクター共有モーダル ================= -->
     <div id="share-char-modal" class="hidden absolute inset-0 z-[65] bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-3" onclick="if(event.target === this) closeShareCharModal()">
@@ -1409,7 +1412,7 @@
 
   </div>
 
-<script src="character_details.js?v=1.5.0"></script>
+<script src="character_details.js?v=1.5.1"></script>
 <script>
 // ============================================================================
 // 🛡️ API通信モード設定（各自のGroq / Gemini / OpenAIキーによる公式直接通信）
@@ -1474,12 +1477,21 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.5.0';
+const APP_CLIENT_VERSION = 'v1.5.1';
 let waitingServiceWorker = null;
 let swRegistration = null;
 
 // 📋 全バージョンの変更履歴（リリースノート）マスターデータ
 const APP_CHANGELOG = [
+  {
+    version: "v1.5.1",
+    date: "2026-10-18",
+    title: "🛠️ 【緊急修正】起動時に画面が真っ白になる不具合の解消",
+    highlights: [
+      "【起動不能の緊急修正】オンボーディングモーダルのHTML閉じタグ欠落を修正し、メイン画面が表示されなくなる不具合を完全解消",
+      "【安定性の向上】全モーダルとメイン画面の階層整合性を再検証し、正常起動を担保"
+    ]
+  },
   {
     version: "v1.5.0",
     date: "2026-10-18",
