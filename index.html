@@ -73,12 +73,81 @@
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
+
+    /* ================= 文字サイズ切り替えシステム (小・中・大) ================= */
+    :root {
+      --msg-font-size: 13px;
+      --msg-line-height: 1.55;
+      --name-font-size: 12px;
+      --title-font-size: 10px;
+      --card-title-size: 12px;
+      --card-sub-size: 10px;
+    }
+    body.font-size-md {
+      --msg-font-size: 15px;
+      --msg-line-height: 1.6;
+      --name-font-size: 13.5px;
+      --title-font-size: 11.5px;
+      --card-title-size: 13.5px;
+      --card-sub-size: 11.5px;
+    }
+    body.font-size-lg {
+      --msg-font-size: 17px;
+      --msg-line-height: 1.65;
+      --name-font-size: 15.5px;
+      --title-font-size: 13px;
+      --card-title-size: 15px;
+      --card-sub-size: 13px;
+    }
+
+    /* メッセージ吹き出し動的フォント */
+    .chat-bubble-text {
+      font-size: var(--msg-font-size) !important;
+      line-height: var(--msg-line-height) !important;
+    }
+    .chat-speaker-name {
+      font-size: var(--name-font-size) !important;
+    }
+    .chat-speaker-title {
+      font-size: var(--title-font-size) !important;
+    }
+
+    /* キャラクターカード動的フォント */
+    .char-card-name {
+      font-size: var(--card-title-size) !important;
+    }
+    .char-card-title {
+      font-size: var(--card-sub-size) !important;
+    }
+
+    /* 主要ラベル・テキストの拡大 */
+    body.font-size-md #ui-topic-label,
+    body.font-size-md #ui-mode-label,
+    body.font-size-md #ui-selected-label,
+    body.font-size-md #chat-room-title {
+      font-size: 13.5px !important;
+    }
+    body.font-size-lg #ui-topic-label,
+    body.font-size-lg #ui-mode-label,
+    body.font-size-lg #ui-selected-label,
+    body.font-size-lg #chat-room-title {
+      font-size: 15.5px !important;
+    }
+
+    body.font-size-md #topic-input,
+    body.font-size-md #user-msg-input {
+      font-size: 14px !important;
+    }
+    body.font-size-lg #topic-input,
+    body.font-size-lg #user-msg-input {
+      font-size: 16px !important;
+    }
   </style>
 </head>
-<body class="flex justify-center items-center min-h-screen p-0 sm:p-3">
+<body class="flex justify-center items-center min-h-[100dvh] p-0 sm:p-2 md:p-3 bg-[#0f172a] font-size-md">
 
-  <!-- スマホ枠コンテナ -->
-  <div class="w-full max-w-md h-screen sm:h-[900px] bg-white sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col relative border-0 sm:border-4 border-slate-700">
+  <!-- スマホ枠コンテナ（スマホ時は余白なし100%全画面、PC・タブレット時は最大幅620px） -->
+  <div class="w-full max-w-full sm:max-w-xl md:max-w-2xl h-[100dvh] sm:h-[920px] bg-white sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col relative border-0 sm:border-4 border-slate-700">
 
     <!-- ================= 0-0. 新バージョン更新通知バナー ================= -->
     <div id="pwa-update-banner" class="hidden absolute top-2.5 left-2.5 right-2.5 z-50 bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white rounded-2xl p-3 shadow-2xl border border-indigo-400/40 flex items-center justify-between gap-2.5 animate-pulse">
@@ -397,7 +466,15 @@
           <h1 class="text-base sm:text-lg font-bold text-slate-800" id="ui-title">🏛️ 偉人・著名人200人 AIグループチャット</h1>
           <p class="text-[11px] text-slate-500" id="ui-subtitle">議論・お悩み相談・ブレスト・全肯定・雑談</p>
         </div>
-        <div class="flex items-center gap-1.5">
+        <div class="flex items-center gap-1 sm:gap-1.5 flex-wrap justify-end">
+          <!-- 文字サイズ切り替え (小・中・大) -->
+          <div class="flex items-center bg-white border border-slate-300 rounded-lg p-0.5 shadow-2xs">
+            <span class="text-[10px] text-slate-400 font-bold px-1 select-none">🔤</span>
+            <button type="button" onclick="setFontSize('sm')" class="font-btn-sm text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded font-medium text-slate-600 hover:bg-slate-100 transition">小</button>
+            <button type="button" onclick="setFontSize('md')" class="font-btn-md text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded font-bold bg-indigo-600 text-white shadow-xs transition">中</button>
+            <button type="button" onclick="setFontSize('lg')" class="font-btn-lg text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded font-medium text-slate-600 hover:bg-slate-100 transition">大</button>
+          </div>
+
           <button id="pwa-install-btn" onclick="promptPwaInstall()" class="hidden text-[11px] bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold px-2 py-1 rounded-lg shadow-xs flex items-center gap-1 transition">
             <span>📲 インストール</span>
           </button>
@@ -496,7 +573,7 @@
             <div class="pt-2 border-t border-slate-200/80 flex items-center justify-between text-[11px] text-slate-500">
               <span class="flex items-center gap-1">
                 <span>📱 バージョン:</span>
-                <span id="app-version-badge" class="font-mono font-bold text-slate-700 bg-white border border-slate-200 px-1.5 py-0.5 rounded">v1.0.1</span>
+                <span id="app-version-badge" class="font-mono font-bold text-slate-700 bg-white border border-slate-200 px-1.5 py-0.5 rounded">v1.0.2</span>
               </span>
               <button type="button" onclick="checkForAppUpdate(true)" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 px-2 py-0.5 rounded-md font-medium text-slate-700 shadow-2xs flex items-center gap-1 transition">
                 <span>🔄 最新版を確認</span>
@@ -523,7 +600,14 @@
             <p id="chat-room-members" class="text-[11px] text-slate-300 truncate font-medium"></p>
           </div>
         </div>
-        <div class="flex items-center gap-1.5 shrink-0">
+        <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
+          <!-- 文字サイズ切り替え -->
+          <div class="flex items-center bg-slate-800/90 border border-slate-600 rounded-lg p-0.5 shadow-2xs">
+            <span class="text-[9px] text-slate-400 font-bold px-0.5 select-none">🔤</span>
+            <button type="button" onclick="setFontSize('sm')" class="font-btn-sm text-[10px] px-1.5 py-0.5 rounded font-medium text-slate-300 hover:text-white transition">小</button>
+            <button type="button" onclick="setFontSize('md')" class="font-btn-md text-[10px] px-1.5 py-0.5 rounded font-bold bg-indigo-600 text-white shadow-xs transition">中</button>
+            <button type="button" onclick="setFontSize('lg')" class="font-btn-lg text-[10px] px-1.5 py-0.5 rounded font-medium text-slate-300 hover:text-white transition">大</button>
+          </div>
           <button id="pause-btn" onclick="togglePauseQueue()" class="text-[11px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-200 font-medium flex items-center gap-1">⏸️ 一時停止</button>
           <button id="speed-btn" onclick="toggleSpeed()" class="text-[11px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-200 font-medium">🐢 1.0x</button>
           <button id="flush-btn" onclick="flushDisplayQueue()" class="text-[11px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-200 font-medium">一括表示</button>
@@ -631,7 +715,7 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.0.1';
+const APP_CLIENT_VERSION = 'v1.0.2';
 let waitingServiceWorker = null;
 let swRegistration = null;
 
@@ -2769,7 +2853,42 @@ function deleteCurrentApiKey() {
   selectObProvider(currentObProvider);
 }
 
+// ============================================================================
+// 🔤 文字サイズ切り替えシステム (小: sm, 中: md, 大: lg)
+// ============================================================================
+const STORAGE_KEY_FONT_SIZE = "history_chat_font_size";
+let currentFontSize = "md"; // デフォルト「中（見やすい標準サイズ）」
+
+function setFontSize(size) {
+  if (!["sm", "md", "lg"].includes(size)) size = "md";
+  currentFontSize = size;
+  localStorage.setItem(STORAGE_KEY_FONT_SIZE, size);
+  applyFontSize(size);
+}
+
+function applyFontSize(size) {
+  document.body.classList.remove("font-size-sm", "font-size-md", "font-size-lg");
+  document.body.classList.add(`font-size-${size}`);
+
+  // トップバーおよびチャット画面の切り替えボタングループのアクティブ表示更新
+  ["sm", "md", "lg"].forEach(s => {
+    document.querySelectorAll(`.font-btn-${s}`).forEach(btn => {
+      if (s === size) {
+        btn.className = `font-btn-${s} text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded font-bold bg-indigo-600 text-white shadow-xs transition`;
+      } else {
+        btn.className = `font-btn-${s} text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition`;
+      }
+    });
+  });
+}
+
+function initFontSize() {
+  const saved = localStorage.getItem(STORAGE_KEY_FONT_SIZE) || "md";
+  setFontSize(saved);
+}
+
 window.onload = () => {
+  initFontSize();
   initPwaState();
   initAiSettings();
   updateStaticUiTexts();
@@ -2954,8 +3073,8 @@ function renderCharacters() {
         <span class="absolute -bottom-1 -right-1 bg-slate-800 text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center border border-white shadow-xs group-hover:scale-110 group-hover:bg-indigo-600 transition">🔍</span>
       </div>
       <div class="overflow-hidden flex-1 min-w-0">
-        <div class="font-bold text-xs text-slate-800 truncate leading-snug">${c.name[currentLang]}</div>
-        <div class="text-[10px] text-slate-500 line-clamp-2 leading-tight break-words mt-0.5" title="${c.title[currentLang]}">${c.title[currentLang]}</div>
+        <div class="char-card-name font-bold text-xs text-slate-800 truncate leading-snug">${c.name[currentLang]}</div>
+        <div class="char-card-title text-[10px] text-slate-500 line-clamp-2 leading-tight break-words mt-0.5" title="${c.title[currentLang]}">${c.title[currentLang]}</div>
       </div>
       ${isSelected ? '<span class="text-indigo-600 font-bold text-xs pr-0.5 shrink-0">✓</span>' : ''}
     `;
@@ -4115,12 +4234,12 @@ function appendCharacterMessage(char, text, isInitialPhase = false) {
     ${getCharacterAvatarHtml(char, "w-14 h-14 sm:w-16 sm:h-16", "text-3xl")}
     <div class="flex-1 max-w-[85%]">
       <div class="flex items-center gap-1.5 mb-1">
-        <span class="text-[12px] sm:text-[13px] font-bold text-white drop-shadow-sm">${char.name[currentLang]}</span>
-        <span class="text-[10px] text-white/80">${char.title[currentLang]}</span>
+        <span class="chat-speaker-name font-bold text-white drop-shadow-sm">${char.name[currentLang]}</span>
+        <span class="chat-speaker-title text-white/80">${char.title[currentLang]}</span>
         ${badgeHtml}
       </div>
       <div class="flex items-end gap-1.5">
-        <div class="relative bg-white text-slate-800 text-xs sm:text-[13px] leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-tl-none shadow bubble-left">
+        <div class="chat-bubble-text relative bg-white text-slate-800 leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-tl-none shadow bubble-left">
           ${escapeHtml(text)}
         </div>
         <span class="text-[9px] text-white/80 shrink-0">${now}</span>
@@ -4140,7 +4259,7 @@ function appendUserMessage(text) {
   row.className = "flex justify-end items-end gap-1.5 msg-anim";
   row.innerHTML = `
     <span class="text-[9px] text-white/80 shrink-0 text-right">${readLabel}<br>${now}</span>
-    <div class="relative bg-[#8de055] text-slate-900 text-xs sm:text-[13px] leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-tr-none shadow max-w-[85%] bubble-right">
+    <div class="chat-bubble-text relative bg-[#8de055] text-slate-900 leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-tr-none shadow max-w-[85%] bubble-right">
       ${escapeHtml(text)}
     </div>
   `;
