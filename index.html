@@ -408,7 +408,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <div class="text-xs font-bold text-slate-800" id="st-ver-title">📱 現在のバージョン</div>
-                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.8.7</div>
+                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.8.8</div>
               </div>
               <div class="flex items-center gap-1.5">
                 <button type="button" onclick="openChangelogModal()" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition flex items-center gap-1">
@@ -508,6 +508,23 @@
             </div>
           </button>
         </div>
+
+        <!-- 📤 自作キャラクター一括共有カード -->
+        <button type="button" onclick="closeSettingsModal(); openBatchShareModal();" class="w-full bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 active:scale-[0.99] border border-emerald-300/80 rounded-xl p-3 text-left transition flex items-center justify-between shadow-2xs group cursor-pointer">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-emerald-100 border border-emerald-300 flex items-center justify-center text-lg shrink-0 group-hover:scale-105 transition shadow-2xs">
+              📤
+            </div>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span class="font-bold text-xs text-emerald-950">自作キャラの一括共有</span>
+                <span class="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-200/80 text-emerald-900 border border-emerald-300">BATCH SHARE</span>
+              </div>
+              <p class="text-[10px] text-emerald-800/80 leading-tight mt-0.5">自作キャラを複数選択して1つのURLでまとめて友達に共有</p>
+            </div>
+          </div>
+          <span class="text-emerald-700 font-bold text-sm pr-1 group-hover:translate-x-0.5 transition">→</span>
+        </button>
 
         <!-- 🔤 3. 文字サイズ設定 -->
         <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
@@ -1014,7 +1031,7 @@
           <div class="text-indigo-400 font-bold">➔</div>
           <div class="text-right">
             <div class="text-[10px] text-emerald-600 font-semibold">最新アップデート</div>
-            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.8.7</div>
+            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.8.8</div>
           </div>
         </div>
 
@@ -1216,6 +1233,83 @@
       </div>
     </div>
 
+    <!-- ================= 0-E2. 自作キャラクター一括共有モーダル ================= -->
+    <div id="batch-share-modal" class="hidden absolute inset-0 z-[65] bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-3" onclick="if(event.target === this) closeBatchShareModal()">
+      <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl flex flex-col max-h-[90vh] p-4 border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+        
+        <!-- ヘッダー -->
+        <div class="flex items-center justify-between pb-2 mb-3 border-b border-slate-100 shrink-0">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">📤</span>
+            <div>
+              <h3 class="text-sm font-bold text-slate-800">自作キャラの一括共有</h3>
+              <p class="text-[10px] text-slate-500">共有したい自作キャラを選択してURLを発行します</p>
+            </div>
+          </div>
+          <button type="button" onclick="closeBatchShareModal()" class="text-slate-400 hover:text-slate-600 text-base font-bold px-2 py-0.5 rounded-md hover:bg-slate-100 transition cursor-pointer">✕</button>
+        </div>
+
+        <!-- 自作キャラ一覧選択エリア -->
+        <div id="batch-share-selection-view" class="flex-1 flex flex-col min-h-0 space-y-3">
+          <div class="flex items-center justify-between text-xs text-slate-600 shrink-0 px-0.5">
+            <span class="font-bold">共有するキャラクターを選択</span>
+            <div class="flex gap-2">
+              <button type="button" onclick="selectAllBatchShare(true)" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 transition cursor-pointer">すべて選択</button>
+              <span class="text-slate-300">|</span>
+              <button type="button" onclick="selectAllBatchShare(false)" class="text-[11px] font-bold text-slate-500 hover:text-slate-700 transition cursor-pointer">選択解除</button>
+            </div>
+          </div>
+
+          <!-- スクロール可能なキャラクターチェックリスト -->
+          <div id="batch-share-char-list" class="flex-1 overflow-y-auto space-y-2 pr-1 max-h-[46vh] border border-slate-100 rounded-xl p-1 bg-slate-50/50">
+            <!-- JSで動的生成 -->
+          </div>
+
+          <!-- 発行ボタン -->
+          <div class="pt-2 border-t border-slate-100 flex gap-2 shrink-0">
+            <button type="button" onclick="closeBatchShareModal()" class="w-1/3 py-2.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer">
+              キャンセル
+            </button>
+            <button type="button" id="batch-share-generate-btn" onclick="generateBatchShareUrl()" class="w-2/3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-[0.98] text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+              <span>🔗</span>
+              <span id="batch-share-btn-text">選択したキャラの共有リンクを作成</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- リンク生成後の完了ビュー -->
+        <div id="batch-share-result-view" class="hidden flex flex-col space-y-3">
+          <div class="p-3 bg-emerald-50/90 border border-emerald-200 rounded-xl flex items-center gap-2.5">
+            <span class="text-2xl">✨</span>
+            <div>
+              <h4 class="text-xs font-bold text-emerald-950">一括共有リンクを作成しました！</h4>
+              <p class="text-[10px] text-emerald-700 leading-tight" id="batch-share-result-summary">○体のキャラクターを含んでいます</p>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-slate-700">共有URL</label>
+            <div class="flex gap-2">
+              <input type="text" id="batch-share-url-input" readonly class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs text-slate-700 font-mono focus:outline-none select-all" />
+              <button type="button" onclick="copyBatchShareUrl()" id="batch-share-copy-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm transition flex items-center gap-1 cursor-pointer">
+                <span>📋</span><span>コピー</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex gap-2 pt-1">
+            <button type="button" onclick="backToBatchSelection()" class="w-1/2 py-2 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer">
+              ← 選択に戻る
+            </button>
+            <button type="button" onclick="closeBatchShareModal()" class="w-1/2 py-2 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white transition cursor-pointer">
+              完了
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
     <!-- ================= 0-E. キャラクター受取＆インポートモーダル ================= -->
     <div id="import-char-modal" class="hidden absolute inset-0 z-[65] bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-3" onclick="if(event.target === this) closeImportCharModal()">
       <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl flex flex-col p-4 border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
@@ -1262,9 +1356,33 @@
             <button type="button" onclick="switchToManualImportInput()" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-xl text-xs transition">
               別コード貼付
             </button>
-            <button type="button" onclick="confirmImportCharacter()" class="w-2/3 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 active:scale-[0.99] text-white font-bold py-2 rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5">
+            <button type="button" onclick="confirmImportCharacter()" class="w-2/3 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 active:scale-[0.99] text-white font-bold py-2 rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer">
               <span>📥</span>
               <span>自作キャラに追加する</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 複数キャラクター一括プレビュービュー -->
+        <div id="import-batch-preview-view" class="hidden space-y-3">
+          <div class="bg-gradient-to-br from-indigo-50/90 via-purple-50/80 to-blue-50/80 border-2 border-indigo-200 rounded-xl p-3 shadow-2xs">
+            <div class="flex items-center justify-between mb-2 pb-1.5 border-b border-indigo-100">
+              <span class="text-xs font-bold text-indigo-950 flex items-center gap-1.5">
+                <span>🌟</span><span id="import-batch-count-badge">0体のキャラクター</span>
+              </span>
+              <span class="text-[10px] text-indigo-700 bg-white px-2 py-0.5 rounded-full font-bold border border-indigo-200">一括共有</span>
+            </div>
+            <div id="import-batch-list-container" class="max-h-52 overflow-y-auto space-y-1.5 pr-1">
+              <!-- JSでキャラクター一覧を展開 -->
+            </div>
+          </div>
+          <div class="flex gap-2 pt-1">
+            <button type="button" onclick="switchToManualImportInput()" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-xl text-xs transition cursor-pointer">
+              別コード貼付
+            </button>
+            <button type="button" onclick="confirmImportCharacter()" id="import-batch-confirm-btn" class="w-2/3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 active:scale-[0.99] text-white font-bold py-2 rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer">
+              <span>📥</span>
+              <span id="import-batch-btn-text">まとめて追加する</span>
             </button>
           </div>
         </div>
@@ -1427,16 +1545,25 @@
 
         </div>
 
-        <!-- モーダルフッター（選択ボタン ＆ 共有ボタン ＆ 閉じるボタン） -->
-        <div class="p-3 bg-white border-t border-slate-200 flex gap-2 shrink-0 shadow-lg">
-          <button id="char-modal-share-btn" type="button" onclick="shareCurrentModalCharacter()" class="hidden py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition flex items-center justify-center gap-1 shadow-2xs">
-            <span>🔗</span>
-            <span>共有</span>
+        <!-- 自作キャラクター専用操作バー（編集・共有・削除） -->
+        <div id="char-modal-custom-actions" class="hidden px-3 pt-2.5 pb-0 bg-slate-50 border-t border-slate-200 flex gap-2 shrink-0">
+          <button type="button" onclick="editCurrentModalCharacter()" class="flex-1 py-2 px-2 rounded-xl font-bold text-xs bg-white hover:bg-indigo-50 active:scale-95 text-indigo-700 border border-indigo-200 transition flex items-center justify-center gap-1 shadow-2xs cursor-pointer">
+            <span>✏️</span><span>編集</span>
           </button>
-          <button id="char-modal-select-btn" type="button" onclick="toggleCharacterFromModal()" class="flex-1 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-1.5">
+          <button type="button" onclick="shareCurrentModalCharacter()" class="flex-1 py-2 px-2 rounded-xl font-bold text-xs bg-white hover:bg-emerald-50 active:scale-95 text-emerald-700 border border-emerald-200 transition flex items-center justify-center gap-1 shadow-2xs cursor-pointer">
+            <span>🔗</span><span>共有</span>
+          </button>
+          <button type="button" onclick="deleteCurrentModalCharacter()" class="flex-1 py-2 px-2 rounded-xl font-bold text-xs bg-white hover:bg-red-50 active:scale-95 text-red-600 border border-red-200 transition flex items-center justify-center gap-1 shadow-2xs cursor-pointer">
+            <span>🗑️</span><span>削除</span>
+          </button>
+        </div>
+
+        <!-- モーダルフッター（選択ボタン ＆ 閉じるボタン） -->
+        <div class="p-3 bg-white border-t border-slate-200 flex gap-2 shrink-0 shadow-lg">
+          <button id="char-modal-select-btn" type="button" onclick="toggleCharacterFromModal()" class="flex-1 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer">
             <!-- JSで動的生成 -->
           </button>
-          <button type="button" onclick="closeCharacterDetail()" class="py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+          <button type="button" onclick="closeCharacterDetail()" class="py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer">
             <span id="char-modal-close-btn-text">閉じる</span>
           </button>
         </div>
@@ -1674,14 +1801,14 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.8.7';
+const APP_CLIENT_VERSION = 'v1.8.8';
 let waitingServiceWorker = null;
 let swRegistration = null;
 
 // 📋 全バージョンの変更履歴（リリースノート）マスターデータ
 const APP_CHANGELOG = [
   {
-    version: "v1.8.7",
+    version: "v1.8.8",
     date: "2026-10-18",
     title: "🔤 トーク形式・参加メンバーのバランス調整 ＆ 全体文字サイズ1段階スケールアップ",
     highlights: [
@@ -5498,15 +5625,6 @@ function renderCharacters() {
     const charName = (c.name && (c.name[currentLang] || c.name.ja)) || "";
     const charTitle = (c.title && (c.title[currentLang] || c.title.ja)) || "";
 
-    // 自作キャラクター用のアクションボタン（共有・編集・削除）
-    const customActionsHtml = c.isCustom ? `
-      <div class="absolute top-1 right-1 flex items-center gap-1 z-10" onclick="event.stopPropagation()">
-        <button type="button" onclick="shareCustomCharacter('${c.id}')" title="共有" class="w-5 h-5 bg-white/95 hover:bg-emerald-50 border border-slate-300 rounded text-[9px] flex items-center justify-center text-slate-600 hover:text-emerald-600 shadow-2xs transition">🔗</button>
-        <button type="button" onclick="openCustomCharModal('${c.id}')" title="編集" class="w-5 h-5 bg-white/95 hover:bg-indigo-50 border border-slate-300 rounded text-[9px] flex items-center justify-center text-slate-600 hover:text-indigo-600 shadow-2xs transition">✏️</button>
-        <button type="button" onclick="deleteCustomCharacter('${c.id}')" title="削除" class="w-5 h-5 bg-white/95 hover:bg-red-50 border border-slate-300 rounded text-[9px] flex items-center justify-center text-slate-600 hover:text-red-600 shadow-2xs transition">🗑️</button>
-      </div>
-    ` : '';
-
     card.innerHTML = `
       <div class="relative group shrink-0 cursor-pointer" onclick="event.stopPropagation(); openCharacterDetail('${c.id}')" title="${currentLang === 'en' ? 'View Profile & Feats' : 'プロフィール・実績を見る'}">
         ${getCharacterAvatarHtml(c, "w-11 h-11", "text-xl")}
@@ -5519,9 +5637,7 @@ function renderCharacters() {
         </div>
         <div class="char-card-title text-[10px] text-slate-500 line-clamp-2 leading-tight break-words mt-0.5" title="${escapeHtml(charTitle)}">${escapeHtml(charTitle)}</div>
       </div>
-      ${customActionsHtml}
-      ${isSelected && !c.isCustom ? '<span class="text-indigo-600 font-bold text-xs pr-0.5 shrink-0">✓</span>' : ''}
-      ${isSelected && c.isCustom ? '<span class="text-indigo-600 font-bold text-xs pr-0.5 shrink-0 pt-3">✓</span>' : ''}
+      ${isSelected ? '<span class="text-indigo-600 font-bold text-xs pr-0.5 shrink-0">✓</span>' : ''}
     `;
     grid.appendChild(card);
   });
@@ -5745,13 +5861,13 @@ function openCharacterDetail(charId) {
   const adviceBestEl = document.getElementById("char-modal-advice-best");
   if (adviceBestEl) adviceBestEl.innerText = bestForVal;
 
-  // 共有ボタンの表示制御（自作キャラクターのみ表示）
-  const modalShareBtn = document.getElementById("char-modal-share-btn");
-  if (modalShareBtn) {
+  // 自作キャラクター操作バーの表示制御（編集・共有・削除）
+  const customActionsBar = document.getElementById("char-modal-custom-actions");
+  if (customActionsBar) {
     if (c.isCustom) {
-      modalShareBtn.classList.remove("hidden");
+      customActionsBar.classList.remove("hidden");
     } else {
-      modalShareBtn.classList.add("hidden");
+      customActionsBar.classList.add("hidden");
     }
   }
 
@@ -5839,15 +5955,31 @@ function exportCharacterShareCode(char) {
   return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-// URLセーフBase64文字列からキャラクターデータを復元
+// 複数自作キャラクター一括共有用のBase64エンコード
+function exportBatchCharactersShareCode(charsList) {
+  if (!Array.isArray(charsList) || charsList.length === 0) return "";
+  const dataList = charsList.map(c => createShareableCharData(c)).filter(Boolean);
+  const payload = { v: 1, batch: true, list: dataList };
+  const jsonStr = JSON.stringify(payload);
+  const utf8Bytes = encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (match, p1) => {
+    return String.fromCharCode(parseInt(p1, 16));
+  });
+  const b64 = btoa(utf8Bytes);
+  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+// URLセーフBase64文字列からキャラクターデータ（単体または一括）を復元
 function parseCharacterShareCode(raw) {
   if (!raw || typeof raw !== "string") return null;
   let code = raw.trim();
 
-  // URLから抽出（#share_char=... または ?share_char=...）
-  const urlMatch = code.match(/[#&?]share_char=([A-Za-z0-9_-]+)/);
-  if (urlMatch) {
-    code = urlMatch[1];
+  // 複数一括共有URL (#share_chars=...) または 単体共有URL (#share_char=...) から抽出
+  const batchMatch = code.match(/[#&?]share_chars=([A-Za-z0-9_-]+)/);
+  const singleMatch = code.match(/[#&?]share_char=([A-Za-z0-9_-]+)/);
+  if (batchMatch) {
+    code = batchMatch[1];
+  } else if (singleMatch) {
+    code = singleMatch[1];
   } else if (code.startsWith("HCHAT:")) {
     code = code.substring(6).trim();
   }
@@ -5864,8 +5996,12 @@ function parseCharacterShareCode(raw) {
       Array.from(binStr).map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)).join("")
     );
     const parsed = JSON.parse(jsonStr);
-    if (parsed && parsed.name) {
-      return parsed;
+    if (!parsed) return null;
+    if (parsed.batch && Array.isArray(parsed.list)) {
+      return { isBatch: true, list: parsed.list };
+    }
+    if (parsed.name) {
+      return { isBatch: false, ...parsed };
     }
   } catch (e) {
     console.error("parseCharacterShareCode error:", e);
@@ -5931,10 +6067,24 @@ function shareCustomCharacter(charId) {
   if (modal) modal.classList.remove("hidden");
 }
 
+function editCurrentModalCharacter() {
+  if (!currentDetailCharId) return;
+  const id = currentDetailCharId;
+  closeCharacterDetail();
+  openCustomCharModal(id);
+}
+
 function shareCurrentModalCharacter() {
-  if (currentDetailCharId) {
-    shareCustomCharacter(currentDetailCharId);
-  }
+  if (!currentDetailCharId) return;
+  const id = currentDetailCharId;
+  shareCustomCharacter(id);
+}
+
+function deleteCurrentModalCharacter() {
+  if (!currentDetailCharId) return;
+  const id = currentDetailCharId;
+  closeCharacterDetail();
+  deleteCustomCharacter(id);
 }
 
 function closeShareCharModal() {
@@ -6002,16 +6152,27 @@ async function copyShareCode() {
 }
 
 // ============================================================================
-// 📥 キャラクター受取・インポート処理
+// 📥 キャラクター受取・インポート処理 & 一括共有ロジック
 // ============================================================================
+let currentImportingBatch = null;
+
 function openImportCharModal(prefillCode) {
   const modal = document.getElementById("import-char-modal");
   const previewView = document.getElementById("import-preview-view");
+  const batchPreviewView = document.getElementById("import-batch-preview-view");
   const inputView = document.getElementById("import-input-view");
   const codeInput = document.getElementById("import-code-input");
 
-  if (prefillCode) {
-    const parsed = parseCharacterShareCode(prefillCode);
+  let codeToUse = prefillCode;
+  if (!codeToUse) {
+    const hash = window.location.hash;
+    if (hash && (hash.includes("share_chars=") || hash.includes("share_char="))) {
+      codeToUse = hash;
+    }
+  }
+
+  if (codeToUse) {
+    const parsed = parseCharacterShareCode(codeToUse);
     if (parsed) {
       showImportPreview(parsed);
       if (modal) modal.classList.remove("hidden");
@@ -6021,6 +6182,7 @@ function openImportCharModal(prefillCode) {
 
   // デフォルトはコード入力ビュー
   if (previewView) previewView.classList.add("hidden");
+  if (batchPreviewView) batchPreviewView.classList.add("hidden");
   if (inputView) inputView.classList.remove("hidden");
   if (codeInput) {
     codeInput.value = "";
@@ -6033,13 +6195,16 @@ function closeImportCharModal() {
   const modal = document.getElementById("import-char-modal");
   if (modal) modal.classList.add("hidden");
   currentImportingChar = null;
+  currentImportingBatch = null;
 }
 
 function switchToManualImportInput() {
   const previewView = document.getElementById("import-preview-view");
+  const batchPreviewView = document.getElementById("import-batch-preview-view");
   const inputView = document.getElementById("import-input-view");
   const codeInput = document.getElementById("import-code-input");
   if (previewView) previewView.classList.add("hidden");
+  if (batchPreviewView) batchPreviewView.classList.add("hidden");
   if (inputView) inputView.classList.remove("hidden");
   if (codeInput) {
     codeInput.value = "";
@@ -6075,10 +6240,61 @@ function loadFromImportInput() {
   showImportPreview(parsed);
 }
 
-function showImportPreview(parsedChar) {
-  currentImportingChar = parsedChar;
+function showImportPreview(parsedData) {
   const previewView = document.getElementById("import-preview-view");
+  const batchPreviewView = document.getElementById("import-batch-preview-view");
   const inputView = document.getElementById("import-input-view");
+
+  if (inputView) inputView.classList.add("hidden");
+
+  // 複数一括共有の場合
+  if (parsedData && parsedData.isBatch && Array.isArray(parsedData.list)) {
+    currentImportingBatch = parsedData.list;
+    currentImportingChar = null;
+
+    if (previewView) previewView.classList.add("hidden");
+    if (batchPreviewView) batchPreviewView.classList.remove("hidden");
+
+    const badge = document.getElementById("import-batch-count-badge");
+    if (badge) badge.innerText = `${parsedData.list.length}体のキャラクター`;
+
+    const container = document.getElementById("import-batch-list-container");
+    if (container) {
+      container.innerHTML = parsedData.list.map((c, idx) => {
+        const dummy = {
+          ...c,
+          isCustom: true,
+          avatar: "🌟",
+          customAvatar: c.customAvatar
+        };
+        const cName = (c.name && (c.name.ja || c.name)) || `キャラクター ${idx + 1}`;
+        const cTitle = (c.title && (c.title.ja || c.title)) || "";
+        const cAvatarHtml = getCharacterAvatarHtml(dummy, "w-10 h-10", "text-lg");
+        return `
+          <div class="flex items-center gap-2.5 p-2 bg-white rounded-xl border border-indigo-100 shadow-2xs">
+            <div class="shrink-0">${cAvatarHtml}</div>
+            <div class="overflow-hidden flex-1 min-w-0">
+              <div class="font-bold text-xs text-slate-800 truncate">${escapeHtml(cName)}</div>
+              ${cTitle ? `<div class="text-[10px] text-indigo-700 truncate font-semibold">${escapeHtml(cTitle)}</div>` : ""}
+            </div>
+            <span class="text-[9px] bg-indigo-50 text-indigo-700 font-bold px-1.5 py-0.5 rounded border border-indigo-200 shrink-0">追加対象</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    const btnText = document.getElementById("import-batch-btn-text");
+    if (btnText) btnText.innerText = `${parsedData.list.length}体をまとめて追加`;
+    return;
+  }
+
+  // 単体共有の場合
+  currentImportingChar = parsedData;
+  currentImportingBatch = null;
+
+  if (batchPreviewView) batchPreviewView.classList.add("hidden");
+  if (previewView) previewView.classList.remove("hidden");
+
   const avatarEl = document.getElementById("import-preview-avatar");
   const nameEl = document.getElementById("import-preview-name");
   const titleEl = document.getElementById("import-preview-title");
@@ -6087,20 +6303,20 @@ function showImportPreview(parsedChar) {
   const philEl = document.getElementById("import-preview-philosophy");
 
   const dummyChar = {
-    ...parsedChar,
+    ...parsedData,
     isCustom: true,
     avatar: "🌟",
-    customAvatar: parsedChar.customAvatar
+    customAvatar: parsedData.customAvatar
   };
 
   if (avatarEl) avatarEl.innerHTML = getCharacterAvatarHtml(dummyChar, "w-14 h-14", "text-2xl");
-  const charName = (parsedChar.name && (parsedChar.name.ja || parsedChar.name)) || "";
-  const charTitle = (parsedChar.title && (parsedChar.title.ja || parsedChar.title)) || "";
+  const charName = (parsedData.name && (parsedData.name.ja || parsedData.name)) || "";
+  const charTitle = (parsedData.title && (parsedData.title.ja || parsedData.title)) || "";
   if (nameEl) nameEl.innerText = charName;
   if (titleEl) titleEl.innerText = charTitle;
 
-  const rName = parsedChar.realName || "";
-  const aNames = parsedChar.aliasNames || "";
+  const rName = parsedData.realName || "";
+  const aNames = parsedData.aliasNames || "";
   if (namesEl) {
     if (rName || aNames) {
       let txt = "";
@@ -6113,63 +6329,105 @@ function showImportPreview(parsedChar) {
     }
   }
 
-  if (toneEl) toneEl.innerText = parsedChar.tone || "（未設定）";
-  if (philEl) philEl.innerText = parsedChar.philosophy || "（未設定）";
+  if (toneEl) toneEl.innerText = parsedData.tone || "（未設定）";
+  if (philEl) philEl.innerText = parsedData.philosophy || "（未設定）";
+}
 
-  if (inputView) inputView.classList.add("hidden");
-  if (previewView) previewView.classList.remove("hidden");
+// 単一キャラクターデータオブジェクトを生成するヘルパー
+function buildCustomCharFromImport(p, indexOffset = 0) {
+  const nameJa = (p.name && (p.name.ja || p.name)) || "共有キャラクター";
+  const titleJa = (p.title && (p.title.ja || p.title)) || "";
+  const role = p.role || "role_passion";
+
+  const roleColorMap = {
+    role_passion: "bg-red-500/20 border-red-500/40 text-red-200",
+    role_mind: "bg-cyan-500/20 border-cyan-500/40 text-cyan-200",
+    role_lead: "bg-purple-500/20 border-purple-500/40 text-purple-200",
+    role_peace: "bg-emerald-500/20 border-emerald-500/40 text-emerald-200",
+    role_depth: "bg-amber-500/20 border-amber-500/40 text-amber-200",
+    role_fun: "bg-pink-500/20 border-pink-500/40 text-pink-200"
+  };
+
+  return {
+    id: "custom_" + (Date.now() + indexOffset),
+    isCustom: true,
+    category: "CUSTOM",
+    avatar: "🌟",
+    customAvatar: p.customAvatar || "",
+    name: { ja: nameJa, en: (p.name && p.name.en) || nameJa },
+    title: { ja: titleJa, en: (p.title && p.title.en) || titleJa },
+    realName: p.realName || nameJa,
+    aliasNames: p.aliasNames || "",
+    era: p.era || "オリジナル",
+    role: role,
+    tone: p.tone || "",
+    philosophy: p.philosophy || `${nameJa}の信条に従い語る。`,
+    quote: p.quote || p.philosophy || "",
+    bio: p.bio || { ja: p.philosophy, en: p.philosophy },
+    feats: Array.isArray(p.feats) && p.feats.length > 0 ? p.feats : [
+      { num: "01", title: { ja: "独自の道の確立", en: "Unique Path" }, desc: { ja: p.philosophy, en: p.philosophy } }
+    ],
+    mindset: p.mindset || {
+      core: { ja: p.quote || p.philosophy, en: p.quote || p.philosophy },
+      dislike: { ja: "理不尽な妥協", en: "Pointless compromise" },
+      decision: { ja: `「${p.philosophy}」を最重要の行動軸とする`, en: "Act according to core belief" }
+    },
+    quotes: p.quotes || { ja: [p.quote || p.philosophy], en: [p.quote || p.philosophy] },
+    advice: p.advice || {
+      role: { ja: p.tone, en: p.tone },
+      bestFor: { ja: `${titleJa}の視点から現状を打破したいとき`, en: "Seeking fresh perspectives" }
+    },
+    color: roleColorMap[role] || "bg-amber-100 border-amber-400 text-amber-900"
+  };
 }
 
 function confirmImportCharacter() {
+  // 一括インポートの場合
+  if (currentImportingBatch && Array.isArray(currentImportingBatch) && currentImportingBatch.length > 0) {
+    try {
+      const addedNames = [];
+      currentImportingBatch.forEach((p, idx) => {
+        const newChar = buildCustomCharFromImport(p, idx * 10);
+        const nameJa = newChar.name.ja;
+        const existingIdx = customCharacters.findIndex(c => c.name && c.name.ja === nameJa);
+        if (existingIdx !== -1) {
+          // 上書き
+          newChar.id = customCharacters[existingIdx].id;
+          customCharacters[existingIdx] = newChar;
+        } else {
+          customCharacters.unshift(newChar);
+        }
+        addedNames.push(nameJa);
+      });
+
+      saveCustomCharacters();
+      rebuildCharactersList();
+      renderSelectedChips();
+      renderCharacters();
+      closeImportCharModal();
+      setCategory("CUSTOM");
+
+      if (window.location.hash.includes("share_chars=") || window.location.hash.includes("share_char=")) {
+        history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
+
+      alert(`🎉 ${addedNames.length}体のキャラクターを一括追加しました！\n(${addedNames.join("、")})`);
+      return;
+    } catch (err) {
+      console.error("batch import error:", err);
+      alert("一括インポート中にエラーが発生しました: " + (err.message || err));
+      return;
+    }
+  }
+
+  // 単体インポートの場合
   if (!currentImportingChar) return;
   try {
     const p = currentImportingChar;
-    const nameJa = (p.name && (p.name.ja || p.name)) || "共有キャラクター";
-    const titleJa = (p.title && (p.title.ja || p.title)) || "";
-    const role = p.role || "role_passion";
+    const newChar = buildCustomCharFromImport(p, 0);
+    const nameJa = newChar.name.ja;
 
-    const roleColorMap = {
-      role_passion: "bg-red-500/20 border-red-500/40 text-red-200",
-      role_mind: "bg-cyan-500/20 border-cyan-500/40 text-cyan-200",
-      role_lead: "bg-purple-500/20 border-purple-500/40 text-purple-200",
-      role_peace: "bg-emerald-500/20 border-emerald-500/40 text-emerald-200",
-      role_depth: "bg-amber-500/20 border-amber-500/40 text-amber-200",
-      role_fun: "bg-pink-500/20 border-pink-500/40 text-pink-200"
-    };
-
-    const newChar = {
-      id: "custom_" + Date.now(),
-      isCustom: true,
-      category: "CUSTOM",
-      avatar: "🌟",
-      customAvatar: p.customAvatar || "",
-      name: { ja: nameJa, en: (p.name && p.name.en) || nameJa },
-      title: { ja: titleJa, en: (p.title && p.title.en) || titleJa },
-      realName: p.realName || nameJa,
-      aliasNames: p.aliasNames || "",
-      era: p.era || "オリジナル",
-      role: role,
-      tone: p.tone || "",
-      philosophy: p.philosophy || `${nameJa}の信条に従い語る。`,
-      quote: p.quote || p.philosophy || "",
-      bio: p.bio || { ja: p.philosophy, en: p.philosophy },
-      feats: Array.isArray(p.feats) && p.feats.length > 0 ? p.feats : [
-        { num: "01", title: { ja: "独自の道の確立", en: "Unique Path" }, desc: { ja: p.philosophy, en: p.philosophy } }
-      ],
-      mindset: p.mindset || {
-        core: { ja: p.quote || p.philosophy, en: p.quote || p.philosophy },
-        dislike: { ja: "理不尽な妥協", en: "Pointless compromise" },
-        decision: { ja: `「${p.philosophy}」を最重要の行動軸とする`, en: "Act according to core belief" }
-      },
-      quotes: p.quotes || { ja: [p.quote || p.philosophy], en: [p.quote || p.philosophy] },
-      advice: p.advice || {
-        role: { ja: p.tone, en: p.tone },
-        bestFor: { ja: `${titleJa}の視点から現状を打破したいとき`, en: "Seeking fresh perspectives" }
-      },
-      color: roleColorMap[role] || "bg-amber-100 border-amber-400 text-amber-900"
-    };
-
-    // 重複チェック（名前が完全一致する場合の確認）
+    // 重複チェック
     const existingIdx = customCharacters.findIndex(c => c.name && c.name.ja === nameJa);
     if (existingIdx !== -1) {
       if (!confirm(`同名の自作キャラクター「${nameJa}」が既に存在します。上書きしますか？\n（「キャンセル」を押すと別枠として新しく追加されます）`)) {
@@ -6194,7 +6452,7 @@ function confirmImportCharacter() {
     setCategory("CUSTOM");
 
     // URLハッシュのクリア
-    if (window.location.hash.includes("share_char=")) {
+    if (window.location.hash.includes("share_chars=") || window.location.hash.includes("share_char=")) {
       history.replaceState(null, "", window.location.pathname + window.location.search);
     }
 
@@ -6209,11 +6467,151 @@ function confirmImportCharacter() {
 function checkShareUrlOnLoad() {
   try {
     const hash = window.location.hash;
-    if (hash && hash.includes("share_char=")) {
+    if (hash && (hash.includes("share_chars=") || hash.includes("share_char="))) {
       openImportCharModal(hash);
     }
   } catch (e) {
     console.warn("checkShareUrlOnLoad error:", e);
+  }
+}
+
+// ============================================================================
+// 📤 自作キャラクター一括共有モーダルコントローラー
+// ============================================================================
+let batchShareSelectedIds = new Set();
+
+function openBatchShareModal() {
+  const modal = document.getElementById("batch-share-modal");
+  const selectionView = document.getElementById("batch-share-selection-view");
+  const resultView = document.getElementById("batch-share-result-view");
+
+  if (!modal) return;
+  if (selectionView) selectionView.classList.remove("hidden");
+  if (resultView) resultView.classList.add("hidden");
+
+  // 自作キャラクターが存在しない場合
+  if (!customCharacters || customCharacters.length === 0) {
+    alert("共有可能な自作キャラクターがまだ作成されていません。\nまずは「＋ 新規作成」からキャラクターを作成してください。");
+    return;
+  }
+
+  // 初期状態では全選択
+  batchShareSelectedIds = new Set(customCharacters.map(c => c.id));
+  renderBatchShareList();
+  updateBatchShareBtn();
+
+  modal.classList.remove("hidden");
+}
+
+function closeBatchShareModal() {
+  const modal = document.getElementById("batch-share-modal");
+  if (modal) modal.classList.add("hidden");
+}
+
+function renderBatchShareList() {
+  const listContainer = document.getElementById("batch-share-char-list");
+  if (!listContainer) return;
+
+  listContainer.innerHTML = customCharacters.map(c => {
+    const isChecked = batchShareSelectedIds.has(c.id);
+    const charName = (c.name && (c.name.ja || c.name)) || "キャラクター";
+    const charTitle = (c.title && (c.title.ja || c.title)) || "";
+    const avatarHtml = getCharacterAvatarHtml(c, "w-10 h-10", "text-lg");
+
+    return `
+      <label class="flex items-center gap-2.5 p-2 bg-white rounded-xl border border-slate-200 hover:border-indigo-300 transition cursor-pointer select-none">
+        <input type="checkbox" onchange="toggleBatchShareItem('${c.id}')" ${isChecked ? "checked" : ""} class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 shrink-0" />
+        <div class="shrink-0">${avatarHtml}</div>
+        <div class="overflow-hidden flex-1 min-w-0">
+          <div class="font-bold text-xs text-slate-800 truncate">${escapeHtml(charName)}</div>
+          ${charTitle ? `<div class="text-[10px] text-slate-500 truncate">${escapeHtml(charTitle)}</div>` : ""}
+        </div>
+      </label>
+    `;
+  }).join("");
+}
+
+function toggleBatchShareItem(id) {
+  if (batchShareSelectedIds.has(id)) {
+    batchShareSelectedIds.delete(id);
+  } else {
+    batchShareSelectedIds.add(id);
+  }
+  updateBatchShareBtn();
+}
+
+function selectAllBatchShare(select) {
+  if (select) {
+    batchShareSelectedIds = new Set(customCharacters.map(c => c.id));
+  } else {
+    batchShareSelectedIds.clear();
+  }
+  renderBatchShareList();
+  updateBatchShareBtn();
+}
+
+function updateBatchShareBtn() {
+  const btn = document.getElementById("batch-share-generate-btn");
+  const btnText = document.getElementById("batch-share-btn-text");
+  const count = batchShareSelectedIds.size;
+  if (btn) {
+    btn.disabled = count === 0;
+  }
+  if (btnText) {
+    btnText.innerText = count > 0 ? `選択した${count}体の共有リンクを作成` : "キャラクターを選択してください";
+  }
+}
+
+function generateBatchShareUrl() {
+  const selectedChars = customCharacters.filter(c => batchShareSelectedIds.has(c.id));
+  if (selectedChars.length === 0) {
+    alert("共有するキャラクターを1体以上選択してください。");
+    return;
+  }
+
+  const b64 = exportBatchCharactersShareCode(selectedChars);
+  if (!b64) {
+    alert("共有リンクの生成に失敗しました。");
+    return;
+  }
+
+  const baseUrl = window.location.origin + window.location.pathname;
+  const shareUrl = `${baseUrl}#share_chars=${b64}`;
+
+  const selectionView = document.getElementById("batch-share-selection-view");
+  const resultView = document.getElementById("batch-share-result-view");
+  const urlInput = document.getElementById("batch-share-url-input");
+  const summaryEl = document.getElementById("batch-share-result-summary");
+
+  if (selectionView) selectionView.classList.add("hidden");
+  if (resultView) resultView.classList.remove("hidden");
+  if (urlInput) urlInput.value = shareUrl;
+  if (summaryEl) summaryEl.innerText = `${selectedChars.length}体のキャラクターを含んでいます`;
+}
+
+function backToBatchSelection() {
+  const selectionView = document.getElementById("batch-share-selection-view");
+  const resultView = document.getElementById("batch-share-result-view");
+  if (selectionView) selectionView.classList.remove("hidden");
+  if (resultView) resultView.classList.add("hidden");
+}
+
+async function copyBatchShareUrl() {
+  const urlInput = document.getElementById("batch-share-url-input");
+  if (!urlInput || !urlInput.value) return;
+
+  try {
+    await navigator.clipboard.writeText(urlInput.value);
+    const copyBtn = document.getElementById("batch-share-copy-btn");
+    if (copyBtn) {
+      const orig = copyBtn.innerHTML;
+      copyBtn.innerHTML = "<span>✅</span><span>コピー完了！</span>";
+      setTimeout(() => { copyBtn.innerHTML = orig; }, 2000);
+    }
+  } catch (e) {
+    urlInput.select();
+    document.execCommand("copy");
+    alert("共有リンクをクリップボードにコピーしました！");
   }
 }
 
@@ -6225,6 +6623,7 @@ window.addEventListener("keydown", (e) => {
     closeCharacterDetail();
     closeShareCharModal();
     closeImportCharModal();
+    closeBatchShareModal();
   }
 });
 
@@ -7611,21 +8010,25 @@ function appendUserMessage(text) {
   const persona = getUserPersona();
   const isPersonaActive = persona && persona.enabled && persona.name;
   const userName = isPersonaActive ? persona.name : (currentLang === "en" ? "You" : "あなた");
-  const userIcon = isPersonaActive ? (persona.icon || "🤠") : "";
+  const userIcon = isPersonaActive ? (persona.icon || "🤠") : "🤠";
 
   const row = document.createElement("div");
-  row.className = "flex flex-col items-end gap-1 msg-anim";
+  // AIメッセージと同じく左右対称にアバターを配置し、最大幅85%まで自然に広がるフレックスコンテナ
+  row.className = "flex items-start justify-end gap-2.5 sm:gap-3 msg-anim";
   row.innerHTML = `
-    ${isPersonaActive ? `
-    <div class="flex items-center gap-1.5 text-white/90 text-[11px] font-bold pr-1">
-      <span>${escapeHtml(userName)}</span>
-      <span class="text-base leading-none">${userIcon}</span>
-    </div>` : ``} 
-    <div class="flex justify-end items-end gap-1.5">
-      <span class="text-[9px] text-white/80 shrink-0 text-right">${readLabel}<br>${now}</span>
-      <div class="chat-bubble-text relative bg-[#8de055] text-slate-900 leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-tr-none shadow max-w-[85%] bubble-right">
-        ${formatChatText(text)}
+    <div class="flex-1 max-w-[85%] flex flex-col items-end">
+      <div class="flex items-center gap-1.5 mb-1 pr-1">
+        <span class="chat-speaker-name font-bold text-white drop-shadow-sm">${escapeHtml(userName)}</span>
       </div>
+      <div class="flex items-end justify-end gap-1.5 w-full">
+        <span class="text-[9px] text-white/80 shrink-0 text-right leading-tight">${readLabel}<br>${now}</span>
+        <div class="chat-bubble-text relative bg-[#8de055] text-slate-900 leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-tr-none shadow bubble-right break-words max-w-full">
+          ${formatChatText(text)}
+        </div>
+      </div>
+    </div>
+    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-2xl sm:text-3xl shadow-md border-2 border-white/80 shrink-0 select-none mt-0.5">
+      ${userIcon}
     </div>
   `;
   area.appendChild(row);
