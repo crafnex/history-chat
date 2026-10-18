@@ -408,7 +408,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <div class="text-xs font-bold text-slate-800" id="st-ver-title">📱 現在のバージョン</div>
-                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.7.0</div>
+                <div class="text-[11px] text-slate-500 font-mono mt-0.5" id="settings-version-label">v1.7.1</div>
               </div>
               <div class="flex items-center gap-1.5">
                 <button type="button" onclick="openChangelogModal()" class="bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition flex items-center gap-1">
@@ -843,7 +843,7 @@
           <div class="text-indigo-400 font-bold">➔</div>
           <div class="text-right">
             <div class="text-[10px] text-emerald-600 font-semibold">最新アップデート</div>
-            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.7.0</div>
+            <div class="font-bold font-mono text-emerald-800" id="au-target-version-label">v1.7.1</div>
           </div>
         </div>
 
@@ -1451,7 +1451,7 @@
 
   </div>
 
-<script src="mode_topics.js?v=1.7.0"></script>
+<script src="mode_topics.js?v=1.7.1"></script>
 <script src="character_details.js?v=1.7.0"></script>
 <script>
 // ============================================================================
@@ -1517,12 +1517,22 @@ function initPwaState() {
 // ============================================================================
 // 🔄 アプリバージョン管理 & Service Worker アップデート検知
 // ============================================================================
-const APP_CLIENT_VERSION = 'v1.7.0';
+const APP_CLIENT_VERSION = 'v1.7.1';
 let waitingServiceWorker = null;
 let swRegistration = null;
 
 // 📋 全バージョンの変更履歴（リリースノート）マスターデータ
 const APP_CHANGELOG = [
+  {
+    version: "v1.7.1",
+    date: "2026-10-18",
+    title: "📝 全トークサンプルのNo統一フォーマット化 ＆ 入力欄の視認性最適化",
+    highlights: [
+      "【No.〇〇 本文への完全統一】全10モード・計2,000トピックすべてを『No.1 〜 No.100 本文』のシンプルで明快な形式へ統一",
+      "【無駄なプレフィックスの全廃】『恋人シチュエーション No.56』等の冗長なラベルや定型修飾句を徹底排除し、入力欄での見切れ・文字圧迫を完全解消",
+      "【トピック履歴ナビゲーションの視認性向上】通し番号が明快になったことで、履歴切替（◀ / ▶）時にも目的のテーマが瞬時に把握可能に"
+    ]
+  },
   {
     version: "v1.7.0",
     date: "2026-10-18",
