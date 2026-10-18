@@ -1,7 +1,7 @@
 {
-  "name": "偉人AIグループチャット",
-  "short_name": "偉人チャット",
-  "description": "200人の歴史偉人・賢人・レジェンドと議論できるAIチャットアプリ",
+  "name": "✨ 偉人トークAI",
+  "short_name": "偉人トーク",
+  "description": "歴史の偉人＆著名人200人と語るAIグループチャット",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

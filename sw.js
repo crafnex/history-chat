@@ -1,7 +1,7 @@
 // ============================================================================
-// Service Worker for 偉人AIグループチャット (PWA)
+// Service Worker for 偉人トークAI (PWA)
 // ============================================================================
-const APP_VERSION = 'v1.0.4';
+const APP_VERSION = 'v1.0.5';
 const CACHE_NAME = `history-ai-chat-${APP_VERSION}`;
 
 // 初回起動時にキャッシュするコア静的ファイル群
